@@ -1,0 +1,113 @@
+@startuml sequence_happy_path
+skinparam shadowing false
+skinparam defaultFontName Arial
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceLifeLineBorderColor #888888
+skinparam sequenceParticipantBorderColor #555555
+skinparam sequenceParticipantBackgroundColor #FAFAFA
+skinparam noteBackgroundColor #FFFDE7
+skinparam noteBorderColor #CCBB55
+
+title Innova AI — Happy Path: от первого сообщения до лида
+
+actor "Пользователь" as User
+participant "Сайт / Avito" as Channel
+participant "Middleware" as MW
+participant "State Machine" as SM
+participant "LLM Engine" as LLM
+participant "Knowledge Base" as KB
+database "Redis" as Redis
+database "PostgreSQL" as PG
+participant "Lead Builder" as LB
+queue "Redis Queue" as Queue
+participant "CRM / TG / Webhook" as External
+
+== GREETING ==
+
+User -> Channel : Первое сообщение
+Channel -> MW : POST /message
+MW -> Redis : Загрузить сессию + tenant config
+Redis --> MW : state=GREETING, настройки клиента
+MW -> SM : handle(GREETING)
+SM -> LLM : Сгенерировать приветствие
+LLM --> SM : Приветственное сообщение
+SM -> Redis : Сохранить сессию (state=FAQ)
+SM --> MW : Ответ
+MW --> Channel : Приветствие
+Channel --> User : Показать приветствие
+
+== FAQ ==
+
+User -> Channel : Вопрос по услуге
+Channel -> MW : POST /message
+MW -> Redis : Загрузить сессию (state=FAQ)
+MW -> SM : handle(FAQ)
+SM -> KB : vector_search(query, tenant_id)
+KB --> SM : Топ-3 релевантных фрагмента
+SM -> LLM : generate(контекст KB + история + вопрос)
+LLM --> SM : Ответ + intent=INTERESTED
+SM -> Redis : Сохранить сессию (state=QUALIFICATION)
+SM --> MW : Ответ на вопрос
+MW --> Channel : Ответ
+Channel --> User : Показать ответ
+
+== QUALIFICATION ==
+
+loop пока есть незаполненные обязательные поля
+
+  SM -> LLM : Сформулировать вопрос по следующему полю
+  LLM --> SM : Уточняющий вопрос
+  SM --> MW : Вопрос
+  MW --> Channel : Вопрос
+  Channel --> User : Показать вопрос
+
+  User -> Channel : Ответ
+  Channel -> MW : POST /message
+  MW -> SM : handle(QUALIFICATION)
+  SM -> LLM : extract_fields(ответ)
+  LLM --> SM : Извлечённые поля {service, budget, deadline}
+  SM -> Redis : Обновить session.qualification_data
+
+end
+
+SM -> Redis : Сохранить сессию (state=CONTACT_CAPTURE)
+
+== CONTACT_CAPTURE ==
+
+SM -> LLM : Сформулировать запрос контакта
+LLM --> SM : Запрос телефона / email
+SM --> MW : Запрос
+MW --> Channel : Сообщение
+Channel --> User : Показать запрос
+
+User -> Channel : Телефон / email
+Channel -> MW : POST /message
+MW -> SM : handle(CONTACT_CAPTURE)
+SM -> SM : validate_contact()
+SM -> Redis : Сохранить контакт в сессии (state=LEAD_READY)
+
+== LEAD_READY — синхронно: ответ пользователю ==
+
+SM --> MW : Подтверждение
+MW --> Channel : "Спасибо, заявка принята"
+Channel --> User : Показать подтверждение
+
+note over LB, Queue
+  Пользователь уже получил ответ.
+  Дальше — асинхронно.
+end note
+
+== LEAD_READY — асинхронно: сборка и доставка ==
+
+MW -> LB : build_lead(session)
+LB -> LLM : summarize(история диалога)
+LLM --> LB : summary + priority + next_action
+LB -> PG : INSERT lead
+PG --> LB : lead_id
+LB -> Queue : enqueue(lead_id, destinations)
+LB -> PG : UPDATE session (state=CLOSED)
+
+Queue -> External : Доставить карточку лида
+External --> Queue : OK
+
+@enduml
