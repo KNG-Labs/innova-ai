@@ -1,0 +1,100 @@
+@startuml Component_Diagram
+
+skinparam componentStyle rectangle
+
+' ── Каналы входа ──
+package "«subsystem» Каналы входа" {
+    [Telegram Bot] <<component>>
+    [Сайт] <<component>>
+    [Авито] <<component>>
+}
+
+interface "IMessage" as IMessage
+[Telegram Bot] --> IMessage
+[Сайт] --> IMessage
+[Авито] --> IMessage
+
+' ── Движок диалога ──
+package "«subsystem» Движок диалога" {
+    [Middleware] <<component>>
+    [State Machine] <<component>>
+    [Lead Builder] <<component>>
+
+    [Middleware] ..> [State Machine] : «use»
+    [State Machine] ..> [Lead Builder] : «use»
+}
+
+IMessage --> [Middleware]
+
+interface "ILeadReady" as ILeadReady
+[Lead Builder] --> ILeadReady
+
+' ── AI-слой ──
+package "«subsystem» AI-слой" {
+    [LLM Engine] <<component>>
+    [Knowledge Base] <<component>>
+
+    [LLM Engine] ..> [Knowledge Base] : «use»
+}
+
+[State Machine] ..> [LLM Engine] : «use»
+
+interface "IAnswer" as IAnswer
+[LLM Engine] --> IAnswer
+
+' ── Очередь ──
+[Message Queue] <<queue>>
+
+ILeadReady --> [Message Queue]
+IAnswer --> [State Machine]
+
+' ── Внешние системы ──
+package "«subsystem» Внешние системы" {
+    [CRM] <<component>>
+    [TG Manager] <<component>>
+    [Webhook] <<component>>
+    [Analytics] <<component>>
+    [Calendar] <<component>>
+}
+
+[Message Queue] --> [CRM]
+[Message Queue] --> [TG Manager]
+[Message Queue] --> [Webhook]
+[Message Queue] --> [Analytics]
+[Message Queue] --> [Calendar]
+
+' ── Хранилища ──
+database "PostgreSQL" as PostgreSQL
+database "Redis" as Redis
+database "Qdrant" as Qdrant
+database "S3" as S3
+
+[Middleware] ..> Redis : «use»\nсессия, rate limit
+[Middleware] ..> PostgreSQL : «use»\nнастройки tenant
+[State Machine] ..> PostgreSQL : «use»\nсостояние диалога
+[Lead Builder] ..> PostgreSQL : «use»\nкарточка лида
+[Knowledge Base] ..> Qdrant : «use»\nвекторный поиск
+[Message Queue] ..> Redis : «use»\nочередь задач
+[Knowledge Base] ..> S3 : «use»\nпросканированные страницы
+[Middleware] -[hidden]left-> PostgreSQL
+
+
+' ── Interface блоки ──
+note right of IMessage
+  + getText(): String
+  + getSender(): String
+  + getChannel(): Enum
+end note
+
+note right of ILeadReady
+  + getName(): String
+  + getContact(): String
+  + getService(): String
+end note
+
+note right of IAnswer
+  + getText(): String
+  + getIntent(): String
+end note
+
+@enduml

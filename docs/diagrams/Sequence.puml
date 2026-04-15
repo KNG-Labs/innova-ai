@@ -26,8 +26,10 @@ participant "CRM / TG / Webhook" as External
 
 User -> Channel : Первое сообщение
 Channel -> MW : POST /message
-MW -> Redis : Загрузить сессию + tenant config
-Redis --> MW : state=GREETING, настройки клиента
+MW -> Redis : Загрузить сессию
+Redis --> MW : state=GREETING
+MW -> PG : Загрузить настройки tenant
+PG --> MW : настройки клиента
 MW -> SM : handle(GREETING)
 SM -> LLM : Сгенерировать приветствие
 LLM --> SM : Приветственное сообщение
@@ -42,9 +44,9 @@ User -> Channel : Вопрос по услуге
 Channel -> MW : POST /message
 MW -> Redis : Загрузить сессию (state=FAQ)
 MW -> SM : handle(FAQ)
-SM -> KB : vector_search(query, tenant_id)
-KB --> SM : Топ-3 релевантных фрагмента
-SM -> LLM : generate(контекст KB + история + вопрос)
+SM -> LLM : generate(вопрос + история)
+LLM -> KB : vector_search(query, tenant_id)
+KB --> LLM : Топ-3 релевантных фрагмента
 LLM --> SM : Ответ + intent=INTERESTED
 SM -> Redis : Сохранить сессию (state=QUALIFICATION)
 SM --> MW : Ответ на вопрос
@@ -99,7 +101,7 @@ end note
 
 == LEAD_READY — асинхронно: сборка и доставка ==
 
-MW -> LB : build_lead(session)
+SM -> LB : build_lead(session)
 LB -> LLM : summarize(история диалога)
 LLM --> LB : summary + priority + next_action
 LB -> PG : INSERT lead
