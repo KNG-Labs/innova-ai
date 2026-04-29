@@ -59,5 +59,5 @@ INNOVA_AI/
 
 ## Документация
 
-- `docs/innova_ai_prd_full.md` — продуктовые требования, ICP, use cases, метрики
+- `docs/PRD.md` — продуктовые требования, ICP, use cases, метрики
 - `docs/System_Design.md` — архитектура, схема БД, очередь лидов, multi-tenancy

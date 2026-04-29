@@ -1,23 +1,17 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
-from pydantic import BaseModel
 
-app = FastAPI()
+from app.core.di import close_app_state, init_app_state
+from app.router.message_router import router as message_router
 
-class MessageRequest(BaseModel):
-    text: str
-    session_id: str
-    
-class MessageResponse(BaseModel):
-    text: str
-    intent: str   # о чем спрашивал пользователь, тематика 
-    
-    
-def llm_sub(text: str) -> MessageResponse:
-    return MessageResponse(
-        text='Здравствуйте! Чем могу помочь?',
-        intent='greeting'
-    )
-    
-@app.post('/message', response_model=MessageResponse)
-def handle_message(request: MessageRequest) -> MessageResponse:
-    return llm_sub(request.text)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_app_state(app)
+    yield
+    await close_app_state(app)
+
+
+app = FastAPI(lifespan=lifespan)
+app.include_router(message_router)
