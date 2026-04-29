@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 
-from app.gateway.llm_client import StubLLMClient
+from app.client.llm_client import StubLLMClient
 from app.service.message_service import MessageService
 
 

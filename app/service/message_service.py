@@ -1,5 +1,5 @@
 from app.core.schemas import MessageRequest, MessageResponse
-from app.gateway.llm_client import LLMClient
+from app.client.llm_client import LLMClient
 
 
 class MessageService:
