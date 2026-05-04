@@ -25,11 +25,16 @@ class OpenRouterClient(LLMClient):
             "Content-Type": "application/json",
         }
 
+        # Используем model_dump для сериализации Pydantic модели в словарь,
+        # который будет преобразован в JSON.
+        # exclude_none=True убирает все поля со значением None.
+        payload = request.model_dump(exclude_none=True, by_alias=True)
+
         try:
             response = await self._http.post(
                 url,
                 headers=headers,
-                json=self._build_payload(request),
+                json=payload,
                 timeout=60,
             )
             response.raise_for_status()
@@ -37,12 +42,8 @@ class OpenRouterClient(LLMClient):
         except httpx.TimeoutException as exc:
             raise RuntimeError("LLM provider request timed out") from exc
         except httpx.HTTPError as exc:
-            raise RuntimeError("LLM provider request failed") from exc
+            # Попытаемся извлечь тело ошибки для лучшей диагностики
+            error_body = exc.response.text
+            raise RuntimeError(f"LLM provider request failed with status {exc.response.status_code}: {error_body}") from exc
         except ValidationError as exc:
             raise RuntimeError("LLM provider returned invalid response schema") from exc
-
-    @staticmethod
-    def _build_payload(request: ChatCompletionRequest) -> dict:
-        """Строит payload для OpenRouter API."""
-        payload = request.model_dump(exclude_none=True)
-        return payload
