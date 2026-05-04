@@ -1,20 +1,44 @@
-from dataclasses import dataclass
 from typing import Protocol
 
-
-@dataclass(frozen=True)
-class LLMReply:
-    text: str
-    intent: str
+from app.schemas.openai import (
+    ChatChoice,
+    ChatChoiceMessage,
+    ChatCompletionRequest,
+    ChatCompletionResponse,
+    ChatUsage,
+)
 
 
 class LLMClient(Protocol):
-    async def generate_reply(self, text: str) -> LLMReply: ...
+    async def create_chat_completion(
+        self,
+        request: ChatCompletionRequest,
+    ) -> ChatCompletionResponse: ...
 
 
+# Заглушка
 class StubLLMClient:
-    async def generate_reply(self, text: str) -> LLMReply:
-        return LLMReply(
-            text="Здравствуйте! Чем могу помочь?",
-            intent="greeting",
+    async def create_chat_completion(
+        self,
+        request: ChatCompletionRequest,
+    ) -> ChatCompletionResponse:
+        return ChatCompletionResponse(
+            id="1",
+            object="chat.completion",
+            created=0,
+            model=request.model,
+            choices=[
+                ChatChoice(
+                    index=0,
+                    message=ChatChoiceMessage(
+                        role="assistant", content="Здравствуйте! Чем могу помочь?"
+                    ),
+                    finish_reason="stop",
+                )
+            ],
+            usage=ChatUsage(
+                prompt_tokens=0,
+                completion_tokens=0,
+                total_tokens=0,
+            ),
         )
