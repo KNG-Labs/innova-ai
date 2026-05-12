@@ -25,9 +25,7 @@ async def init_app_state(app: FastAPI) -> None:
 
         if not api_key:
             await http_client.aclose()
-            raise RuntimeError(
-                "OPENROUTER_API_KEY is required"
-            )
+            raise RuntimeError("OPENROUTER_API_KEY is required")
 
         llm_client = OpenRouterClient(
             http=http_client,
@@ -49,5 +47,5 @@ async def close_app_state(app: FastAPI) -> None:
         await http_client.aclose()
 
 
-def get_message_service(request: Request) -> MessageService:
+async def get_message_service(request: Request) -> MessageService:
     return request.app.state.message_service

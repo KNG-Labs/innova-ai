@@ -7,8 +7,8 @@ from app.schemas.openai import (
     ChatChoiceMessage,
     ChatCompletionRequest,
     ChatCompletionResponse,
-    ChatMessage,
     ChatUsage,
+    UserMessage,
 )
 from app.service.message import MessageService
 
@@ -40,7 +40,7 @@ def build_response(model: str) -> ChatCompletionResponse:
 async def test_handle_chat_completion_delegates() -> None:
     request = ChatCompletionRequest(
         model="test-model",
-        messages=[ChatMessage(role="user", content="hi")],
+        messages=[UserMessage(content="hi")],
     )
     expected = build_response(model=request.model)
 

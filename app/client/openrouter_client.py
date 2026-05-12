@@ -1,4 +1,5 @@
 import httpx
+from openai import APIStatusError, APITimeoutError, AsyncOpenAI, OpenAIError
 from pydantic import ValidationError
 
 from app.client.llm_client import LLMClient
@@ -12,37 +13,55 @@ class OpenRouterClient(LLMClient):
         base_url: str,
         api_key: str,
     ) -> None:
-        self._http = http
-        self._base_url = base_url.rstrip("/")
-        self._api_key = api_key
+        self._client = AsyncOpenAI(
+            base_url=base_url.rstrip("/"),
+            api_key=api_key,
+            http_client=http,
+        )
 
     async def create_chat_completion(
         self, request: ChatCompletionRequest
     ) -> ChatCompletionResponse:
-        url = f"{self._base_url}/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {self._api_key}",
-            "Content-Type": "application/json",
-        }
-
-        # Используем model_dump для сериализации Pydantic модели в словарь,
-        # который будет преобразован в JSON.
-        # exclude_none=True убирает все поля со значением None.
-        payload = request.model_dump(exclude_none=True, by_alias=True)
+        completion_params = request.to_sdk_completion_params()
+        extra_body = request.to_openrouter_extra_body()
 
         try:
-            response = await self._http.post(
-                url,
-                headers=headers,
-                json=payload,
-                timeout=60,
-            )
-            response.raise_for_status()
-            return ChatCompletionResponse.model_validate(response.json())
-        except httpx.TimeoutException as exc:
+            if extra_body is not None:
+                # reasoning не является стандартным параметром OpenAI Chat Completions,
+                # поэтому для OpenRouter его нужно пробросить как extra_body.
+                response = await self._client.chat.completions.create(
+                    **completion_params,
+                    extra_body=extra_body,
+                )
+            else:
+                response = await self._client.chat.completions.create(
+                    **completion_params,
+                )
+            return ChatCompletionResponse.model_validate(response.model_dump())
+        except APITimeoutError as exc:
             raise RuntimeError("LLM provider request timed out") from exc
-        except httpx.HTTPError as exc:
-            error_body = exc.response.json().get("error")
-            raise RuntimeError(f"LLM provider request failed with status {exc.response.status_code}: {error_body}") from exc
+        except APIStatusError as exc:
+            error_body = _extract_error_body(exc)
+            raise RuntimeError(
+                f"LLM provider request failed with status {exc.status_code}: {error_body}"
+            ) from exc
+        except OpenAIError as exc:
+            raise RuntimeError("LLM provider request failed") from exc
         except ValidationError as exc:
             raise RuntimeError("LLM provider returned invalid response schema") from exc
+
+
+def _extract_error_body(exc: APIStatusError) -> str:
+    if isinstance(exc.body, dict):
+        error = exc.body.get("error")
+        if isinstance(error, dict):
+            message = error.get("message")
+            if message:
+                return str(message)
+        if error:
+            return str(error)
+
+    if exc.body:
+        return str(exc.body)
+
+    return "unknown error"

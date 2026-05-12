@@ -3,7 +3,8 @@ import pytest
 pytestmark = pytest.mark.integration
 
 
-def test_chat_completions_returns_stub_response(client) -> None:
+@pytest.mark.asyncio
+async def test_chat_completions_returns_stub_response(client) -> None:
     payload = {
         "model": "test-model",
         "messages": [
@@ -11,7 +12,7 @@ def test_chat_completions_returns_stub_response(client) -> None:
         ],
     }
 
-    response = client.post("/v1/chat/completions", json=payload)
+    response = await client.post("/message-to-model", json=payload)
 
     assert response.status_code == 200
     data = response.json()
@@ -22,8 +23,9 @@ def test_chat_completions_returns_stub_response(client) -> None:
     assert data["choices"][0]["message"]["content"]
 
 
-def test_chat_completions_validation_error(client) -> None:
-    response = client.post("/v1/chat/completions", json={"model": "test-model"})
+@pytest.mark.asyncio
+async def test_chat_completions_validation_error(client) -> None:
+    response = await client.post("/message-to-model", json={"model": "test-model"})
 
     assert response.status_code == 422
     assert response.json()["detail"]

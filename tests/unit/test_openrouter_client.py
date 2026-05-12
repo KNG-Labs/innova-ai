@@ -1,10 +1,11 @@
-import json
+from unittest.mock import AsyncMock
 
 import httpx
 import pytest
+from openai import APIStatusError, APITimeoutError
 
 from app.client.openrouter_client import OpenRouterClient
-from app.schemas.openai import ChatCompletionRequest, ChatMessage
+from app.schemas.openai import ChatCompletionRequest, UserMessage
 
 pytestmark = pytest.mark.unit
 
@@ -12,7 +13,7 @@ pytestmark = pytest.mark.unit
 def build_request() -> ChatCompletionRequest:
     return ChatCompletionRequest(
         model="test-model",
-        messages=[ChatMessage(role="user", content="hi")],
+        messages=[UserMessage(content="hi")],
     )
 
 
@@ -37,83 +38,117 @@ def build_response(model: str) -> dict:
     }
 
 
+class FakeSDKResponse:
+    def __init__(self, payload: dict) -> None:
+        self._payload = payload
+
+    def model_dump(self) -> dict:
+        return self._payload
+
+
 @pytest.mark.asyncio
 async def test_openrouter_client_sends_request_and_parses_response() -> None:
-    captured: dict[str, object] = {}
+    sdk_create = AsyncMock(return_value=FakeSDKResponse(build_response("test-model")))
 
-    def handler(request: httpx.Request) -> httpx.Response:
-        captured["url"] = str(request.url)
-        captured["headers"] = request.headers
-        captured["json"] = json.loads(request.content.decode("utf-8"))
-        response_body = build_response(model=captured["json"]["model"])
-        return httpx.Response(200, json=response_body)
-
-    transport = httpx.MockTransport(handler)
-    async with httpx.AsyncClient(transport=transport) as http:
+    async with httpx.AsyncClient() as http:
         client = OpenRouterClient(
             http=http,
             base_url="https://openrouter.ai/api/v1/",
             api_key="test-key",
         )
+        client._client.chat.completions.create = sdk_create
         response = await client.create_chat_completion(build_request())
 
-    assert captured["url"] == "https://openrouter.ai/api/v1/chat/completions"
-    headers = captured["headers"]
-    assert headers is not None
-    assert headers["Authorization"] == "Bearer test-key"
-
-    payload = captured["json"]
-    assert payload is not None
-    assert payload["model"] == "test-model"
-    assert "reasoning" not in payload
+    sdk_create.assert_awaited_once_with(
+        model="test-model",
+        messages=[{"role": "user", "content": "hi"}],
+    )
 
     assert response.model == "test-model"
     assert response.choices[0].message.content == "ok"
 
 
 @pytest.mark.asyncio
-async def test_openrouter_client_http_error() -> None:
-    def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(401, json={"error": "unauthorized"})
+async def test_openrouter_client_passes_reasoning_in_extra_body() -> None:
+    request = ChatCompletionRequest(
+        model="test-model",
+        messages=[UserMessage(content="hi")],
+        reasoning=True,
+    )
+    sdk_create = AsyncMock(return_value=FakeSDKResponse(build_response("test-model")))
 
-    transport = httpx.MockTransport(handler)
-    async with httpx.AsyncClient(transport=transport) as http:
+    async with httpx.AsyncClient() as http:
         client = OpenRouterClient(
             http=http,
             base_url="https://openrouter.ai/api/v1",
             api_key="test-key",
         )
+        client._client.chat.completions.create = sdk_create
+        await client.create_chat_completion(request)
+
+    sdk_create.assert_awaited_once_with(
+        model="test-model",
+        messages=[{"role": "user", "content": "hi"}],
+        extra_body={"reasoning": {"enabled": True}},
+    )
+
+
+@pytest.mark.asyncio
+async def test_openrouter_client_http_error() -> None:
+    request = httpx.Request("POST", "https://openrouter.ai/api/v1/chat/completions")
+    response = httpx.Response(401, json={"error": "unauthorized"}, request=request)
+    sdk_create = AsyncMock(
+        side_effect=APIStatusError(
+            "unauthorized",
+            response=response,
+            body={"error": "unauthorized"},
+        )
+    )
+
+    async with httpx.AsyncClient() as http:
+        client = OpenRouterClient(
+            http=http,
+            base_url="https://openrouter.ai/api/v1",
+            api_key="test-key",
+        )
+        client._client.chat.completions.create = sdk_create
         with pytest.raises(RuntimeError, match="status 401: unauthorized"):
             await client.create_chat_completion(build_request())
 
 
 @pytest.mark.asyncio
 async def test_openrouter_client_timeout_error() -> None:
-    def handler(request: httpx.Request) -> httpx.Response:
-        raise httpx.TimeoutException("timeout")
+    sdk_create = AsyncMock(
+        side_effect=APITimeoutError(
+            request=httpx.Request(
+                "POST",
+                "https://openrouter.ai/api/v1/chat/completions",
+            )
+        )
+    )
 
-    transport = httpx.MockTransport(handler)
-    async with httpx.AsyncClient(transport=transport) as http:
+    async with httpx.AsyncClient() as http:
         client = OpenRouterClient(
             http=http,
             base_url="https://openrouter.ai/api/v1",
             api_key="test-key",
         )
+        client._client.chat.completions.create = sdk_create
         with pytest.raises(RuntimeError, match="timed out"):
             await client.create_chat_completion(build_request())
 
 
 @pytest.mark.asyncio
 async def test_openrouter_client_invalid_schema() -> None:
-    def handler(request: httpx.Request) -> httpx.Response:
-        return httpx.Response(200, json={"id": "cmpl-1"})
-
-    transport = httpx.MockTransport(handler)
-    async with httpx.AsyncClient(transport=transport) as http:
+    async with httpx.AsyncClient() as http:
         client = OpenRouterClient(
             http=http,
             base_url="https://openrouter.ai/api/v1",
             api_key="test-key",
         )
+        client._client.chat.completions.create = AsyncMock(
+            return_value=FakeSDKResponse({"id": "cmpl-1"})
+        )
+
         with pytest.raises(RuntimeError, match="invalid response schema"):
             await client.create_chat_completion(build_request())

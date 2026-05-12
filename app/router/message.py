@@ -8,7 +8,7 @@ from app.service.message import MessageService
 router = APIRouter()
 
 
-@router.post("/v1/chat/completions", response_model=ChatCompletionResponse)
+@router.post("/message-to-model", response_model=ChatCompletionResponse)
 async def create_chat_completion(
     request: ChatCompletionRequest,
     message_service: MessageService = Depends(get_message_service),

@@ -1,80 +1,99 @@
-from typing import Any, Literal, List
+from __future__ import annotations
 
-from pydantic import BaseModel, Field, field_validator
+from typing import Any, Annotated, cast
+
+from openai.types.chat.chat_completion import ChatCompletion as SDKChatCompletion
+from openai.types.chat.chat_completion import Choice as SDKChatChoice
+from openai.types.chat.chat_completion_message import (
+    ChatCompletionMessage as SDKChatChoiceMessage,
+)
+from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
+from openai.types.chat.chat_completion_user_message_param import (
+    ChatCompletionUserMessageParam,
+)
+from openai.types.chat.completion_create_params import (
+    CompletionCreateParamsNonStreaming,
+)
+from openai.types.completion_usage import CompletionUsage as SDKChatUsage
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from typing_extensions import Literal
 
 
-class ReasoningConfig(BaseModel):
-    """Конфигурация reasoning для OpenRouter. {"enabled": true}"""
-    enabled: bool
+ChatChoice = SDKChatChoice
+ChatChoiceMessage = SDKChatChoiceMessage
+ChatUsage = SDKChatUsage
+ChatCompletionResponse = SDKChatCompletion
 
 
-class ChatMessage(BaseModel):
-    """
-    Один элемент истории диалога.
-    """
-    role: Literal["system", "user", "assistant", "tool"]
+class UserMessage(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    role: Literal["user"] = "user"
+    content: str
+
+    def to_sdk_message_param(self) -> ChatCompletionUserMessageParam:
+        return {
+            "role": "user",
+            "content": self.content,
+        }
+
+
+class AssistantMessage(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    role: Literal["assistant"] = "assistant"
     content: str | None = None
+    reasoning_details: list[dict[str, Any]] | None = Field(default=None)
 
-    # Поле для сохранения контекста "размышлений" модели.
-    # API возвращает и ожидает список.
-    reasoning_details: List[dict[str, Any]] | None = Field(default=None)
-
-    @field_validator('reasoning_details', mode='before')
+    @field_validator("reasoning_details", mode="before")
     @classmethod
-    def reasoning_details_not_empty(cls, v) -> List[dict[str, Any]] | None:
-        """Если клиент вместо списка/null присылает пустой или некорректный объект,
-        считаем, что деталей нет (None)"""
-        if isinstance(v, dict):
+    def reasoning_details_not_empty(cls, value: Any) -> list[dict[str, Any]] | None:
+        if isinstance(value, dict):
             return None
-        return v
+        return value
+
+    @model_validator(mode="after")
+    def validate_payload(self) -> "AssistantMessage":
+        if self.content is None and self.reasoning_details is None:
+            raise ValueError("assistant message requires content or reasoning_details")
+        return self
+
+    def to_sdk_message_param(self) -> ChatCompletionMessageParam:
+        assistant_message: dict[str, Any] = {
+            "role": "assistant",
+        }
+        if self.content is not None:
+            assistant_message["content"] = self.content
+        if self.reasoning_details is not None:
+            # OpenRouter expects this field in the assistant history message,
+            # even though it is outside the standard OpenAI schema.
+            assistant_message["reasoning_details"] = self.reasoning_details
+        return cast(ChatCompletionMessageParam, cast(object, assistant_message))
+
+
+ChatMessage = Annotated[UserMessage | AssistantMessage, Field(discriminator="role")]
 
 
 class ChatCompletionRequest(BaseModel):
-    """
-    Входной payload для /v1/chat/completions.
-    """
+    """Минимальный payload для OpenRouter через OpenAI SDK."""
+
+    model_config = ConfigDict(extra="forbid")
 
     model: str = Field(default="openai/gpt-oss-120b:free")
     messages: list[ChatMessage]
-    temperature: float | None = Field(default=0.7, ge=0.0, le=2.0)
-    max_tokens: int | None = Field(default=500, ge=1)
-    stream: bool = False
-    reasoning: ReasoningConfig | None = None
+    reasoning: bool = False
 
+    def to_sdk_completion_params(self) -> CompletionCreateParamsNonStreaming:
+        sdk_messages: list[ChatCompletionMessageParam] = [
+            message.to_sdk_message_param() for message in self.messages
+        ]
+        return {
+            "model": self.model,
+            "messages": sdk_messages,
+        }
 
-# --- Схемы для ответа ---
+    def to_openrouter_extra_body(self) -> dict[str, Any] | None:
+        if not self.reasoning:
+            return None
 
-class ChatChoiceMessage(BaseModel):
-    """Сообщение ассистента в ответе."""
-
-    role: Literal["assistant"]
-    content: str | None = None
-    # API возвращает список деталей "размышлений"
-    reasoning_details: List[dict[str, Any]] | None = None
-
-
-class ChatChoice(BaseModel):
-    """Один вариант ответа."""
-
-    index: int
-    message: ChatChoiceMessage
-    finish_reason: Literal["stop", "length", "tool_calls", "content_filter"] | None
-
-
-class ChatUsage(BaseModel):
-    """Статистика токенов."""
-
-    prompt_tokens: int
-    completion_tokens: int
-    total_tokens: int
-
-
-class ChatCompletionResponse(BaseModel):
-    """Стандартный ответ OpenAI-совместимого API."""
-
-    id: str
-    object: Literal["chat.completion"]
-    created: int
-    model: str
-    choices: list[ChatChoice]
-    usage: ChatUsage | None = None
+        return {"reasoning": {"enabled": True}}
