@@ -21,7 +21,7 @@ class ChatMessage(BaseModel):
 
     @field_validator('reasoning_details', mode='before')
     @classmethod
-    def handle_invalid_details(cls, v):
+    def reasoning_details_not_empty(cls, v) -> List[dict[str, Any]] | None:
         """Если клиент вместо списка/null присылает пустой или некорректный объект,
         считаем, что деталей нет (None)"""
         if isinstance(v, dict):

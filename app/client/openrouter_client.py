@@ -42,8 +42,7 @@ class OpenRouterClient(LLMClient):
         except httpx.TimeoutException as exc:
             raise RuntimeError("LLM provider request timed out") from exc
         except httpx.HTTPError as exc:
-            # Попытаемся извлечь тело ошибки для лучшей диагностики
-            error_body = exc.response.text
+            error_body = exc.response.json().get("error")
             raise RuntimeError(f"LLM provider request failed with status {exc.response.status_code}: {error_body}") from exc
         except ValidationError as exc:
             raise RuntimeError("LLM provider returned invalid response schema") from exc

@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from app.di import close_app_state, init_app_state
 from app.router.message import router as message_router
 
+
 load_dotenv()
 
 
