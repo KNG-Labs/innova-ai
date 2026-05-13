@@ -39,7 +39,6 @@ class MessageService:
         setattr(response, "innova_ai", self._build_business_metadata(analysis))
         return response
 
-
     @staticmethod
     def _build_business_metadata(analysis: MessageAnalysis) -> dict[str, object]:
         return {
@@ -48,10 +47,9 @@ class MessageService:
             "next_step": analysis.next_step,
         }
 
-
     @staticmethod
     def _build_fallback_response(
-            request: ChatCompletionRequest,
+        request: ChatCompletionRequest,
         *,
         error: str,
         retryable: bool,

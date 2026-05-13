@@ -26,7 +26,7 @@ class LLMProviderError(RuntimeError):
 class StubLLMClient:
     @staticmethod
     async def create_chat_completion(
-            request: ChatCompletionRequest,
+        request: ChatCompletionRequest,
     ) -> ChatCompletionResponse:
         return ChatCompletionResponse(
             id="1",

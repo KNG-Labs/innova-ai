@@ -75,10 +75,14 @@ class DialogBusinessProcessor:
         if not isinstance(original, UserMessage):
             raise ValueError("last user message must be a user message")
 
-        normalized_content = self._normalizer.normalize(original.content)  # нормализация
+        normalized_content = self._normalizer.normalize(
+            original.content
+        )  # нормализация
         intent = self._intent_detector.detect(normalized_content)
         normalized_messages = list(request.messages)  # копия списка сообщений
-        normalized_messages[user_message_index] = UserMessage(content=normalized_content)
+        normalized_messages[user_message_index] = UserMessage(
+            content=normalized_content
+        )
         # замена последнего сообщения на очищенную версию
         # другие сообщения нужны как контекст для LLM, но intent обычно надо определять по последней реплике.
 
