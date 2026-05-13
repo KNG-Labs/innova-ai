@@ -5,6 +5,11 @@ import httpx
 
 from app.client.llm_client import LLMClient, StubLLMClient
 from app.client.openrouter_client import OpenRouterClient
+from app.service.business import (
+    DialogBusinessProcessor,
+    IntentDetector,
+    MessageNormalizer,
+)
 from app.service.message import MessageService
 
 
@@ -36,8 +41,17 @@ async def init_app_state(app: FastAPI) -> None:
         await http_client.aclose()
         raise RuntimeError(f"Unsupported LLM_PROVIDER: {provider}")
 
-    message_service = MessageService(llm_client)
+    message_normalizer = MessageNormalizer()
+    intent_detector = IntentDetector()
+    business_processor = DialogBusinessProcessor(
+        normalizer=message_normalizer,
+        intent_detector=intent_detector,
+    )
+    message_service = MessageService(llm_client, business_processor)
     app.state.llm_client = llm_client
+    app.state.message_normalizer = message_normalizer
+    app.state.intent_detector = intent_detector
+    app.state.business_processor = business_processor
     app.state.message_service = message_service
 
 
@@ -49,3 +63,7 @@ async def close_app_state(app: FastAPI) -> None:
 
 async def get_message_service(request: Request) -> MessageService:
     return request.app.state.message_service
+
+
+async def get_message_normalizer(request: Request) -> MessageNormalizer:
+    return request.app.state.message_normalizer

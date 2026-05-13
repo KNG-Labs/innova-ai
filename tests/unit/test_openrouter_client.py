@@ -5,7 +5,7 @@ import pytest
 from openai import APIStatusError, APITimeoutError
 
 from app.client.openrouter_client import OpenRouterClient
-from app.schemas.openai import ChatCompletionRequest, UserMessage
+from app.schemas.message import ChatCompletionRequest, UserMessage
 
 pytestmark = pytest.mark.unit
 

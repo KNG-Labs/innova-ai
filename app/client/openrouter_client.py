@@ -2,8 +2,8 @@ import httpx
 from openai import APIStatusError, APITimeoutError, AsyncOpenAI, OpenAIError
 from pydantic import ValidationError
 
-from app.client.llm_client import LLMClient
-from app.schemas.openai import ChatCompletionRequest, ChatCompletionResponse
+from app.client.llm_client import LLMClient, LLMProviderError
+from app.schemas.message import ChatCompletionRequest, ChatCompletionResponse
 
 
 class OpenRouterClient(LLMClient):
@@ -39,16 +39,26 @@ class OpenRouterClient(LLMClient):
                 )
             return ChatCompletionResponse.model_validate(response.model_dump())
         except APITimeoutError as exc:
-            raise RuntimeError("LLM provider request timed out") from exc
+            raise LLMProviderError(
+                "LLM provider request timed out",
+                retryable=True,
+            ) from exc
         except APIStatusError as exc:
             error_body = _extract_error_body(exc)
-            raise RuntimeError(
-                f"LLM provider request failed with status {exc.status_code}: {error_body}"
+            raise LLMProviderError(
+                f"LLM provider request failed with status {exc.status_code}: "
+                f"{error_body}",
+                retryable=exc.status_code == 429 or exc.status_code >= 500,
             ) from exc
         except OpenAIError as exc:
-            raise RuntimeError("LLM provider request failed") from exc
+            raise LLMProviderError(
+                "LLM provider request failed", retryable=True
+            ) from exc
         except ValidationError as exc:
-            raise RuntimeError("LLM provider returned invalid response schema") from exc
+            raise LLMProviderError(
+                "LLM provider returned invalid response schema",
+                retryable=False,
+            ) from exc
 
 
 def _extract_error_body(exc: APIStatusError) -> str:

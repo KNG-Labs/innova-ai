@@ -2,13 +2,19 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from app.schemas.openai import (
+from app.schemas.message import (
     ChatChoice,
     ChatChoiceMessage,
     ChatCompletionRequest,
     ChatCompletionResponse,
     ChatUsage,
     UserMessage,
+)
+from app.client.llm_client import LLMProviderError
+from app.service.business import (
+    DialogBusinessProcessor,
+    IntentDetector,
+    MessageNormalizer,
 )
 from app.service.message import MessageService
 
@@ -36,19 +42,61 @@ def build_response(model: str) -> ChatCompletionResponse:
     )
 
 
+def build_business_processor() -> DialogBusinessProcessor:
+    return DialogBusinessProcessor(
+        normalizer=MessageNormalizer(),
+        intent_detector=IntentDetector(),
+    )
+
+
 @pytest.mark.asyncio
-async def test_handle_chat_completion_delegates() -> None:
+async def test_handle_chat_completion_normalizes_and_detects_intent() -> None:
     request = ChatCompletionRequest(
         model="test-model",
-        messages=[UserMessage(content="hi")],
+        messages=[UserMessage(content="  Сколько   стоит консультация?  ")],
     )
     expected = build_response(model=request.model)
 
     llm_client = AsyncMock()
     llm_client.create_chat_completion.return_value = expected
 
-    service = MessageService(llm_client)
+    service = MessageService(llm_client, build_business_processor())
     result = await service.handle_chat_completion(request)
 
-    llm_client.create_chat_completion.assert_awaited_once_with(request)
+    normalized_request = llm_client.create_chat_completion.await_args.args[0]
+    assert normalized_request.messages[0].content == "Сколько стоит консультация?"
     assert result == expected
+    assert result.innova_ai == {
+        "normalized_message": "Сколько стоит консультация?",
+        "intent": "pricing",
+        "next_step": "send_pricing_summary",
+    }
+
+
+@pytest.mark.asyncio
+async def test_handle_chat_completion_returns_fallback_on_provider_error() -> None:
+    request = ChatCompletionRequest(
+        model="test-model",
+        messages=[UserMessage(content="Нужна консультация")],
+    )
+    llm_client = AsyncMock()
+    llm_client.create_chat_completion.side_effect = LLMProviderError(
+        "LLM provider request timed out",
+        retryable=True,
+    )
+
+    service = MessageService(llm_client, build_business_processor())
+    result = await service.handle_chat_completion(request)
+
+    assert result.model == "test-model"
+    assert result.choices[0].message.content
+    assert result.innova_ai == {
+        "normalized_message": "Нужна консультация",
+        "intent": "lead_request",
+        "next_step": "collect_contact",
+    }
+    assert result.innova_ai_error == {
+        "provider_error": "LLM provider request timed out",
+        "retryable": True,
+        "fallback": True,
+    }

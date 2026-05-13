@@ -26,6 +26,8 @@ ChatCompletionResponse = SDKChatCompletion
 
 
 class UserMessage(BaseModel):
+    """Сообщение пользователя"""
+
     model_config = ConfigDict(extra="forbid")
 
     role: Literal["user"] = "user"
@@ -39,6 +41,8 @@ class UserMessage(BaseModel):
 
 
 class AssistantMessage(BaseModel):
+    """Сообщение ассистента (модели)"""
+
     model_config = ConfigDict(extra="forbid")
 
     role: Literal["assistant"] = "assistant"

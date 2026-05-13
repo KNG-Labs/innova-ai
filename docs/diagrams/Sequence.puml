@@ -25,7 +25,7 @@ participant "CRM / TG / Webhook" as External
 == GREETING ==
 
 User -> Channel : Первое сообщение
-Channel -> MW : POST /message
+Channel -> MW : POST /message-to-model
 MW -> Redis : Загрузить сессию
 Redis --> MW : state=GREETING
 MW -> PG : Загрузить настройки tenant
@@ -41,7 +41,7 @@ Channel --> User : Показать приветствие
 == FAQ ==
 
 User -> Channel : Вопрос по услуге
-Channel -> MW : POST /message
+Channel -> MW : POST /message-to-model
 MW -> Redis : Загрузить сессию (state=FAQ)
 MW -> SM : handle(FAQ)
 SM -> LLM : generate(вопрос + история)
@@ -64,7 +64,7 @@ loop пока есть незаполненные обязательные по�
   Channel --> User : Показать вопрос
 
   User -> Channel : Ответ
-  Channel -> MW : POST /message
+  Channel -> MW : POST /message-to-model
   MW -> SM : handle(QUALIFICATION)
   SM -> LLM : extract_fields(ответ)
   LLM --> SM : Извлечённые поля {service, budget, deadline}
@@ -83,7 +83,7 @@ MW --> Channel : Сообщение
 Channel --> User : Показать запрос
 
 User -> Channel : Телефон / email
-Channel -> MW : POST /message
+Channel -> MW : POST /message-to-model
 MW -> SM : handle(CONTACT_CAPTURE)
 SM -> SM : validate_contact()
 SM -> Redis : Сохранить контакт в сессии (state=LEAD_READY)

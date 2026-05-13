@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from app.schemas.openai import (
+from app.schemas.message import (
     ChatChoice,
     ChatChoiceMessage,
     ChatCompletionRequest,
@@ -16,11 +16,17 @@ class LLMClient(Protocol):
     ) -> ChatCompletionResponse: ...
 
 
+class LLMProviderError(RuntimeError):
+    def __init__(self, message: str, *, retryable: bool = False) -> None:
+        super().__init__(message)
+        self.retryable = retryable
+
+
 # Заглушка
 class StubLLMClient:
+    @staticmethod
     async def create_chat_completion(
-        self,
-        request: ChatCompletionRequest,
+            request: ChatCompletionRequest,
     ) -> ChatCompletionResponse:
         return ChatCompletionResponse(
             id="1",
