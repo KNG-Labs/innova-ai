@@ -30,11 +30,16 @@ INNOVA_AI/
 │   │   └── openrouter_client.py  # OpenRouter через официальный OpenAI SDK
 │   ├── router/
 │   │   ├── __init__.py
-│   │   └── message.py       # POST /message-to-model
+│   │   └── message.py       # POST /message
 │   ├── service/
 │   │   ├── __init__.py
-│   │   ├── business.py      # Нормализация, intent detection, next_step
-│   │   └── message.py       # Оркестрация use case и fallback
+│   │   ├── business_service.py      # Нормализация, бизнес-анализ, next_step
+│   │   ├── message_service.py       # Оркестрация use case и fallback
+│   │   └── intent_detector/
+│   │       ├── __init__.py
+│   │       ├── base_intent_detector.py
+│   │       ├── keyword_intent_detector.py
+│   │       └── llm_intent_detector.py
 │   └── schemas/
 │       ├── __init__.py
 │       └── message.py       # OpenAI-compatible request/response схемы
@@ -66,7 +71,7 @@ INNOVA_AI/
 ### Endpoint
 
 ```text
-POST /message-to-model
+POST /message
 ```
 
 Endpoint принимает `ChatCompletionRequest` с историей сообщений в формате `messages` и возвращает `ChatCompletionResponse`.
@@ -77,7 +82,7 @@ Endpoint принимает `ChatCompletionRequest` с историей сооб
 HTTP request
   -> router/message.py
   -> MessageService
-  -> DialogBusinessProcessor
+  -> DialogBusinessService
   -> LLMClient
   -> OpenRouter API или StubLLMClient
   -> ChatCompletionResponse
@@ -87,7 +92,7 @@ HTTP request
 
 - `router` принимает HTTP-запрос, валидирует payload через Pydantic и получает сервис через `Depends`.
 - `MessageService` оркестрирует use case: запускает бизнес-обработку, вызывает LLM-клиент и возвращает fallback при ошибке провайдера.
-- `DialogBusinessProcessor` нормализует последнее `user`-сообщение, определяет intent и формирует `next_step`.
+- `DialogBusinessService` нормализует последнее `user`-сообщение, определяет intent и формирует `next_step`.
 - `LLMClient` задаёт общий интерфейс для LLM-провайдеров.
 - `OpenRouterClient` изолирует работу с OpenRouter через официальный OpenAI SDK и приводит ошибки SDK к внутреннему `LLMProviderError`.
 
@@ -132,7 +137,7 @@ HTTP request
 - Создаёт `httpx.AsyncClient` при старте приложения.
 - Выбирает LLM-провайдер на основе `LLM_PROVIDER`: `stub` или `openrouter`.
 - Валидирует конфигурацию для реального провайдера.
-- Создаёт `MessageNormalizer`, `IntentDetector`, `DialogBusinessProcessor`.
+- Создаёт `MessageNormalizer`, выбирает стратегию intent detection и передаёт её в `DialogBusinessService`.
 - Создаёт `MessageService` и кладёт зависимости в `app.state`.
 - Отдаёт сервис в router через `Depends(get_message_service)`.
 
@@ -185,7 +190,7 @@ uv run uvicorn app.main:app --reload
 ### 4. Тестовый запрос
 
 ```bash
-curl -X POST http://localhost:8000/message-to-model \
+curl -X POST http://localhost:8000/message \
   -H "Content-Type: application/json" \
   -d '{
     "model": "google/gemma-4-26b-a4b-it:free",

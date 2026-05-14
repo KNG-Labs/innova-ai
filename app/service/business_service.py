@@ -1,14 +1,10 @@
 from __future__ import annotations
 
 import re
-from typing import Literal
-
 from pydantic import BaseModel, ConfigDict
 
 from app.schemas.message import ChatCompletionRequest, UserMessage
-
-
-Intent = Literal["lead_request", "pricing", "support", "general"]
+from app.service.intent_detector.base_intent_detector import BaseIntentDetector, Intent
 
 
 class MessageAnalysis(BaseModel):
@@ -33,35 +29,16 @@ class MessageNormalizer:
         return normalized
 
 
-class IntentDetector:
-    """Класс для Определения намерения пользователя"""
-
-    _lead_keywords = ("заявк", "консультац", "связ", "оставить контакт", "купить")
-    _pricing_keywords = ("цен", "стоим", "прайс", "тариф", "сколько")
-    _support_keywords = ("ошибк", "не работает", "проблем", "помогите", "support")
-
-    def detect(self, content: str) -> Intent:
-        lowered = content.lower()
-
-        if any(keyword in lowered for keyword in self._pricing_keywords):
-            return "pricing"
-        if any(keyword in lowered for keyword in self._lead_keywords):
-            return "lead_request"
-        if any(keyword in lowered for keyword in self._support_keywords):
-            return "support"
-        return "general"
-
-
-class DialogBusinessProcessor:
+class DialogBusinessService:
     def __init__(
         self,
         normalizer: MessageNormalizer,
-        intent_detector: IntentDetector,
+        intent_detector: BaseIntentDetector,
     ) -> None:
         self._normalizer = normalizer
         self._intent_detector = intent_detector
 
-    def prepare_request(
+    async def prepare_request(
         self,
         request: ChatCompletionRequest,
     ) -> tuple[ChatCompletionRequest, MessageAnalysis]:
@@ -78,7 +55,7 @@ class DialogBusinessProcessor:
         normalized_content = self._normalizer.normalize(
             original.content
         )  # нормализация
-        intent = self._intent_detector.detect(normalized_content)
+        intent = await self._intent_detector.detect(normalized_content)
         normalized_messages = list(request.messages)  # копия списка сообщений
         normalized_messages[user_message_index] = UserMessage(
             content=normalized_content

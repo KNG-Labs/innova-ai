@@ -21,7 +21,7 @@ async def test_chat_completions_returns_business_metadata(client) -> None:
         ],
     }
 
-    response = await client.post("/message-to-model", json=payload)
+    response = await client.post("/message", json=payload)
 
     assert response.status_code == 200
     data = response.json()
@@ -39,7 +39,7 @@ async def test_chat_completions_returns_business_metadata(client) -> None:
 
 @pytest.mark.asyncio
 async def test_chat_completions_validation_error(client) -> None:
-    response = await client.post("/message-to-model", json={"model": "test-model"})
+    response = await client.post("/message", json={"model": "test-model"})
 
     assert response.status_code == 422
     assert response.json()["detail"]
@@ -77,7 +77,7 @@ async def test_chat_completions_can_override_service_dependency(client) -> None:
     app.dependency_overrides[get_message_service] = override_message_service
     try:
         response = await client.post(
-            "/message-to-model",
+            "/message",
             json={
                 "model": "test-model",
                 "messages": [{"role": "user", "content": "hi"}],

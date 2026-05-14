@@ -11,12 +11,12 @@ from app.schemas.message import (
     UserMessage,
 )
 from app.client.llm_client import LLMProviderError
-from app.service.business import (
-    DialogBusinessProcessor,
-    IntentDetector,
+from app.service.business_service import (
+    DialogBusinessService,
     MessageNormalizer,
 )
-from app.service.message import MessageService
+from app.service.intent_detector.keyword_intent_detector import KeywordIntentDetector
+from app.service.message_service import MessageService
 
 pytestmark = pytest.mark.unit
 
@@ -42,10 +42,10 @@ def build_response(model: str) -> ChatCompletionResponse:
     )
 
 
-def build_business_processor() -> DialogBusinessProcessor:
-    return DialogBusinessProcessor(
+def build_business_processor() -> DialogBusinessService:
+    return DialogBusinessService(
         normalizer=MessageNormalizer(),
-        intent_detector=IntentDetector(),
+        intent_detector=KeywordIntentDetector(),
     )
 
 

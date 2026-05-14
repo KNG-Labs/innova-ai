@@ -8,14 +8,14 @@ from app.schemas.message import (
     ChatCompletionResponse,
     ChatUsage,
 )
-from app.service.business import DialogBusinessProcessor, MessageAnalysis
+from app.service.business_service import DialogBusinessService, MessageAnalysis
 
 
 class MessageService:
     def __init__(
         self,
         llm_client: LLMClient,
-        business_processor: DialogBusinessProcessor,
+        business_processor: DialogBusinessService,
     ) -> None:
 
         self._llm_client = llm_client
@@ -25,7 +25,7 @@ class MessageService:
         self, request: ChatCompletionRequest
     ) -> ChatCompletionResponse:
 
-        normalized_request, analysis = self._business_processor.prepare_request(request)
+        normalized_request, analysis = await self._business_processor.prepare_request(request)
 
         try:
             response = await self._llm_client.create_chat_completion(normalized_request)

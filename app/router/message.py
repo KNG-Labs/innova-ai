@@ -2,13 +2,13 @@ from fastapi import APIRouter, Depends
 
 from app.di import get_message_service
 from app.schemas.message import ChatCompletionResponse, ChatCompletionRequest
-from app.service.message import MessageService
+from app.service.message_service import MessageService
 
 
 router = APIRouter()
 
 
-@router.post("/message-to-model", response_model=ChatCompletionResponse)
+@router.post("/message", response_model=ChatCompletionResponse)
 async def create_chat_completion(
     request: ChatCompletionRequest,
     message_service: MessageService = Depends(get_message_service),
