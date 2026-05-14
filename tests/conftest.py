@@ -3,7 +3,7 @@ import pytest
 import pytest_asyncio
 
 from app.di import close_app_state, init_app_state
-from app.main import app
+from main import app
 
 
 @pytest_asyncio.fixture

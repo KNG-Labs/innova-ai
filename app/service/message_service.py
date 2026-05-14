@@ -25,7 +25,9 @@ class MessageService:
         self, request: ChatCompletionRequest
     ) -> ChatCompletionResponse:
 
-        normalized_request, analysis = await self._business_processor.prepare_request(request)
+        normalized_request, analysis = await self._business_processor.prepare_request(
+            request
+        )
 
         try:
             response = await self._llm_client.create_chat_completion(normalized_request)

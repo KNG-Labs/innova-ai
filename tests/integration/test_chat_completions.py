@@ -1,7 +1,7 @@
 import pytest
 
 from app.di import get_message_service
-from app.main import app
+from main import app
 from app.schemas.message import (
     ChatChoice,
     ChatChoiceMessage,

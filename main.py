@@ -12,10 +12,10 @@ load_dotenv()
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-    await init_app_state(app)
+async def lifespan(current_app: FastAPI) -> AsyncIterator[None]:
+    await init_app_state(current_app)
     yield
-    await close_app_state(app)
+    await close_app_state(current_app)
 
 
 app = FastAPI(lifespan=lifespan)
