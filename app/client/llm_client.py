@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from app.schemas.message import (
+from app.schemas.openai_message import (
     ChatChoice,
     ChatChoiceMessage,
     ChatCompletionRequest,

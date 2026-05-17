@@ -2,7 +2,7 @@ import pytest
 
 from app.di import get_message_service
 from main import app
-from app.schemas.message import (
+from app.schemas.openai_message import (
     ChatChoice,
     ChatChoiceMessage,
     ChatCompletionResponse,

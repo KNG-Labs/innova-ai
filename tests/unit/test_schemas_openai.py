@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from app.schemas.message import (
+from app.schemas.openai_message import (
     AssistantMessage,
     ChatCompletionRequest,
     UserMessage,

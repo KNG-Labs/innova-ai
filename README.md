@@ -184,7 +184,7 @@ OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 ### 3. Запуск сервера
 
 ```bash
-uv run uvicorn app.main:app --reload
+uv run uvicorn main:app --reload
 ```
 
 ### 4. Тестовый запрос

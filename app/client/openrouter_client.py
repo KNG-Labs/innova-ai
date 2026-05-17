@@ -3,7 +3,7 @@ from openai import APIStatusError, APITimeoutError, AsyncOpenAI, OpenAIError
 from pydantic import ValidationError
 
 from app.client.llm_client import LLMClient, LLMProviderError
-from app.schemas.message import ChatCompletionRequest, ChatCompletionResponse
+from app.schemas.openai_message import ChatCompletionRequest, ChatCompletionResponse
 
 
 class OpenRouterClient(LLMClient):

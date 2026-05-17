@@ -1,7 +1,7 @@
 from time import time
 
 from app.client.llm_client import LLMClient, LLMProviderError
-from app.schemas.message import (
+from app.schemas.openai_message import (
     ChatChoice,
     ChatChoiceMessage,
     ChatCompletionRequest,

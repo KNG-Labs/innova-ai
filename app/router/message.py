@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 
 from app.di import get_message_service
-from app.schemas.message import ChatCompletionResponse, ChatCompletionRequest
+from app.schemas.openai_message import ChatCompletionResponse, ChatCompletionRequest
 from app.service.message_service import MessageService
 
 
