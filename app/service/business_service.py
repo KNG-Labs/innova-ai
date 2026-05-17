@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from pydantic import BaseModel, ConfigDict
 
-from app.schemas.openai_message import ChatCompletionRequest, UserMessage
+from app.schemas.openai_schema import ChatCompletionRequest, UserMessage
 from app.service.intent_detector.base_intent_detector import BaseIntentDetector, Intent
 
 

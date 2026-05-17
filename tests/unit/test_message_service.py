@@ -2,7 +2,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from app.schemas.openai_message import (
+from app.schemas.openai_schema import (
     ChatChoice,
     ChatChoiceMessage,
     ChatCompletionRequest,

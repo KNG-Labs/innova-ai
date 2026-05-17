@@ -1,4 +1,4 @@
-from app.schemas.agent_message import (
+from app.schemas.agent_schema import (
     AgentMessageRequest,
     AgentMessageResponse,
     Channel,
