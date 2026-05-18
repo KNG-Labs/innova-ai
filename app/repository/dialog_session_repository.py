@@ -33,7 +33,6 @@ class DialogSessionRepository:
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
-
     async def get_active_by_user_id(self, user_id: UUID) -> DialogSession | None:
         stmt = (
             select(DialogSession)

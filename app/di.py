@@ -118,10 +118,12 @@ async def get_agent_service(
         intent_detector=request.app.state.intent_detector,
     )
 
+
 async def get_session_service(
     db_session: AsyncSession = Depends(get_db_session),
 ) -> SessionService:
     return SessionService(db_session=db_session)
+
 
 async def get_message_service(request: Request) -> MessageService:
     """

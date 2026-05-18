@@ -41,6 +41,7 @@ class MessageRepository:
             select(Message)
             .where(Message.session_id == session_id)
             .order_by(Message.created_at.asc())
+            .limit(20)
         )
 
         result = await self._session.execute(stmt)

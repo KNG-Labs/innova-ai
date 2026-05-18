@@ -13,7 +13,7 @@ from app.schemas.session_schema import (
 
 
 class SessionNotFoundError(Exception):
-    """Ошибка если сессия диалога не найдена"""
+    """Ошибка, если сессия диалога не найдена"""
 
     pass
 
