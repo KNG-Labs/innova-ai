@@ -2,6 +2,7 @@ from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from app.models import DialogSession
 
@@ -21,6 +22,17 @@ class DialogSessionRepository:
 
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
+
+    async def get_by_id_with_user(self, session_id: UUID) -> DialogSession | None:
+        stmt = (
+            select(DialogSession)
+            .options(selectinload(DialogSession.user))
+            .where(DialogSession.id == session_id)
+        )
+
+        result = await self._session.execute(stmt)
+        return result.scalar_one_or_none()
+
 
     async def get_active_by_user_id(self, user_id: UUID) -> DialogSession | None:
         stmt = (
@@ -47,7 +59,9 @@ class DialogSessionRepository:
 
         return dialog_session
 
-    async def get_or_create_active_session(self, *, user_id: UUID, session_id: UUID | None) -> DialogSession:
+    async def get_or_create_active_session(
+        self, *, user_id: UUID, session_id: UUID | None
+    ) -> DialogSession:
         if session_id is not None:
             existing_session = await self.get_by_id(session_id)
 

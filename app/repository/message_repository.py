@@ -16,12 +16,12 @@ class MessageRepository:
         self._session = session
 
     async def create(
-            self,
-            *,
-            session_id: UUID,
-            role: str,
-            content: str,
-            message_metadata: dict | None = None,
+        self,
+        *,
+        session_id: UUID,
+        role: str,
+        content: str,
+        message_metadata: dict | None = None,
     ) -> Message:
 
         message = Message(

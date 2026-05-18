@@ -20,12 +20,12 @@ from app.service.intent_detector.base_intent_detector import BaseIntentDetector
 
 class AgentService:
     def __init__(
-            self,
-            *,
-            db_session: AsyncSession,
-            llm_client: LLMClient,
-            normalizer: MessageNormalizer,
-            intent_detector: BaseIntentDetector,
+        self,
+        *,
+        db_session: AsyncSession,
+        llm_client: LLMClient,
+        normalizer: MessageNormalizer,
+        intent_detector: BaseIntentDetector,
     ) -> None:
 
         self._db_session = db_session
@@ -37,7 +37,9 @@ class AgentService:
         self._sessions = DialogSessionRepository(db_session)
         self._messages = MessageRepository(db_session)
 
-    async def handle_message(self, request: AgentMessageRequest) -> AgentMessageResponse:
+    async def handle_message(
+        self, request: AgentMessageRequest
+    ) -> AgentMessageResponse:
 
         normalized_content = self._normalizer.normalize(request.content)
         intent = await self._intent_detector.detect(normalized_content)

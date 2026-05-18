@@ -7,5 +7,5 @@ __all__ = [
     "DialogSessionRepository",
     "MessageRepository",
     "UserRepository",
-    "LeadRepository"
+    "LeadRepository",
 ]

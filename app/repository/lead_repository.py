@@ -89,9 +89,7 @@ class LeadRepository:
 
     async def list_by_user_id(self, user_id: UUID) -> list[Lead]:
         stmt = (
-            select(Lead)
-            .where(Lead.user_id == user_id)
-            .order_by(Lead.created_at.desc())
+            select(Lead).where(Lead.user_id == user_id).order_by(Lead.created_at.desc())
         )
 
         result = await self._session.execute(stmt)
