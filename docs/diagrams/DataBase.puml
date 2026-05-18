@@ -1,0 +1,74 @@
+@startuml Innova_AI_Database
+
+title Innova AI — текущая схема PostgreSQL
+
+hide circle
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+
+entity "users" as users {
+  * id : UUID <<PK>>
+  --
+  * anonymous_id : varchar(128)
+  * channel : varchar(32)
+  * created_at : timestamptz
+  * updated_at : timestamptz
+  --
+  UNIQUE(channel, anonymous_id)
+}
+
+entity "dialog_sessions" as dialog_sessions {
+  * id : UUID <<PK>>
+  --
+  * user_id : UUID <<FK>>
+  * state : varchar(32)
+  * created_at : timestamptz
+  * updated_at : timestamptz
+  closed_at : timestamptz
+}
+
+entity "messages" as messages {
+  * id : UUID <<PK>>
+  --
+  * session_id : UUID <<FK>>
+  * role : varchar(32)
+  * content : text
+  message_metadata : jsonb
+  * created_at : timestamptz
+}
+
+entity "leads" as leads {
+  * id : UUID <<PK>>
+  --
+  * user_id : UUID <<FK>>
+  * session_id : UUID <<FK, UNIQUE>>
+  * status : varchar(32)
+  contact : jsonb
+  qualification : jsonb
+  summary : text
+  * created_at : timestamptz
+  * updated_at : timestamptz
+}
+
+users ||--o{ dialog_sessions : "has sessions"
+dialog_sessions ||--o{ messages : "has messages"
+
+users ||--o{ leads : "has leads"
+dialog_sessions ||--o| leads : "may produce lead"
+
+note right of users
+  anonymous user identity:
+  channel + anonymous_id
+end note
+
+note right of dialog_sessions
+  state examples:
+  GREETING
+  FAQ
+  QUALIFICATION
+  CONTACT_CAPTURE
+  LEAD_READY
+  CLOSED
+end note
+
+@enduml

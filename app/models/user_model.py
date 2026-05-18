@@ -58,7 +58,7 @@ class User(Base):
         nullable=False,
     )
 
-    session: Mapped[list[DialogSession]] = relationship(
+    sessions: Mapped[list[DialogSession]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
     )
