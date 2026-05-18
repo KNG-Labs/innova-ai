@@ -29,7 +29,7 @@ class StoredMessageResponse(BaseModel):
     """Response для GET /session/{session_id}/messages"""
 
     model_config = ConfigDict(extra="forbid")
-    
+
     id: UUID
     session_id: UUID
     role: MessageRole
