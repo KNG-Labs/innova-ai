@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.exceptions import SessionOwnershipError
 from app.models import DialogSession
 
 
@@ -19,7 +20,6 @@ class DialogSessionRepository:
 
     async def get_by_id(self, session_id: UUID) -> DialogSession | None:
         stmt = select(DialogSession).where(DialogSession.id == session_id)
-
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -65,6 +65,11 @@ class DialogSessionRepository:
             existing_session = await self.get_by_id(session_id)
 
             if existing_session is not None:
+                if existing_session.user_id != user_id:
+                    raise SessionOwnershipError(
+                        session_id=session_id,
+                        user_id=user_id,
+                    )
                 return existing_session
 
         active_session = await self.get_active_by_user_id(user_id)

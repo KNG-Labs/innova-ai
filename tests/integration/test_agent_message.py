@@ -291,3 +291,94 @@ async def test_post_message_rejects_unknown_channel(client) -> None:
     )
 
     assert response.status_code == 422
+
+
+
+@pytest.mark.asyncio
+async def test_post_message_rejects_session_belonging_to_other_user(
+    client,
+) -> None:
+    """
+    Тест: чужой session_id должен быть отклонён с 403.
+    IDOR-проверка: пользователь не может писать в чужую сессию.
+    """
+    # 1. Владелец создаёт свою сессию
+    owner_response = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "user-owner",
+            "channel": "website",
+            "content": "Привет, я владелец этой сессии",
+        },
+    )
+    assert owner_response.status_code == 200
+    owner_data = owner_response.json()
+    owner_session_id = owner_data["session_id"]
+
+    # 2. Злоумышленник создаёт свою отдельную сессию
+    attacker_first = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "user-attacker",
+            "channel": "website",
+            "content": "Я другой пользователь",
+        },
+    )
+    assert attacker_first.status_code == 200
+
+    # 3. Злоумышленник пытается писать в чужую сессию
+    attack_response = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "user-attacker",
+            "channel": "website",
+            "session_id": owner_session_id,
+            "content": "Хочу подмешать сообщение в чужую историю",
+        },
+    )
+
+    assert attack_response.status_code == 403
+    assert (
+        "does not belong" in attack_response.json()["detail"].lower()
+    )
+
+    # 4. Проверяем, что история владельца не изменилась —
+    #    сообщение злоумышленника НЕ попало в чужую сессию
+    messages_response = await client.get(
+        f"/sessions/{owner_session_id}/messages"
+    )
+    assert messages_response.status_code == 200
+    messages = messages_response.json()
+
+    # Было ровно 2 сообщения: user + assistant от владельца
+    assert len(messages) == 2
+    assert messages[0]["content"] == "Привет, я владелец этой сессии"
+    assert all(
+        "подмешать" not in m["content"] for m in messages
+    ), "Чужое сообщение не должно попасть в историю"
+
+
+@pytest.mark.asyncio
+async def test_post_message_rejects_nonexistent_session_id(client) -> None:
+    """
+    Тест: если передан несуществующий session_id,
+    система не падает, а создаёт новую сессию (graceful fallback).
+    """
+    from uuid import uuid4
+
+    fake_session_id = str(uuid4())
+
+    response = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "user-with-fake-session",
+            "channel": "website",
+            "session_id": fake_session_id,
+            "content": "Привет",
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    # Создаётся новая сессия, а не используется фейковая
+    assert data["session_id"] != fake_session_id
