@@ -47,7 +47,7 @@ class SessionService:
         if dialog_session is None:
             raise SessionNotFoundError
 
-        messages = await self._messages.list_by_session_id(session_id)
+        messages = await self._messages.list_messages_by_session_id(session_id)
 
         return [
             StoredMessageResponse(

@@ -1,4 +1,3 @@
-
 import pytest
 
 
@@ -293,7 +292,6 @@ async def test_post_message_rejects_unknown_channel(client) -> None:
     assert response.status_code == 422
 
 
-
 @pytest.mark.asyncio
 async def test_post_message_rejects_session_belonging_to_other_user(
     client,
@@ -338,24 +336,20 @@ async def test_post_message_rejects_session_belonging_to_other_user(
     )
 
     assert attack_response.status_code == 403
-    assert (
-        "does not belong" in attack_response.json()["detail"].lower()
-    )
+    assert "does not belong" in attack_response.json()["detail"].lower()
 
     # 4. Проверяем, что история владельца не изменилась —
     #    сообщение злоумышленника НЕ попало в чужую сессию
-    messages_response = await client.get(
-        f"/sessions/{owner_session_id}/messages"
-    )
+    messages_response = await client.get(f"/sessions/{owner_session_id}/messages")
     assert messages_response.status_code == 200
     messages = messages_response.json()
 
     # Было ровно 2 сообщения: user + assistant от владельца
     assert len(messages) == 2
     assert messages[0]["content"] == "Привет, я владелец этой сессии"
-    assert all(
-        "подмешать" not in m["content"] for m in messages
-    ), "Чужое сообщение не должно попасть в историю"
+    assert all("подмешать" not in m["content"] for m in messages), (
+        "Чужое сообщение не должно попасть в историю"
+    )
 
 
 @pytest.mark.asyncio

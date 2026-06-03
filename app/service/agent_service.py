@@ -67,7 +67,9 @@ class AgentService:
             },
         )
 
-        history = await self._messages.list_by_session_id(dialog_session.id)
+        history = await self._messages.list_recent_messages(
+            dialog_session.id,
+            limit=20)
         llm_request = self._build_llm_request(history)
 
         llm_response = await self._llm_client.create_chat_completion(llm_request)

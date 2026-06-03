@@ -12,6 +12,7 @@ NextStep = Literal[
     "continue_dialogue",
 ]
 
+
 class DialogPolicy:
     """
     Бизнес-правила диалога.
@@ -29,7 +30,6 @@ class DialogPolicy:
         if intent == "support":
             return "ask_support_details"
         return "continue_dialogue"
-
 
 
 class MessageNormalizer:
