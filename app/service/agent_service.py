@@ -14,7 +14,7 @@ from app.schemas.openai_schema import (
     ChatCompletionRequest,
     UserMessage,
 )
-from app.service.business_service import MessageNormalizer
+from app.service.business_service import MessageNormalizer, DialogPolicy
 from app.service.intent_detector.base_intent_detector import BaseIntentDetector
 
 
@@ -26,12 +26,14 @@ class AgentService:
         llm_client: LLMClient,
         normalizer: MessageNormalizer,
         intent_detector: BaseIntentDetector,
+        dialog_policy: DialogPolicy,
     ) -> None:
 
         self._db_session = db_session
         self._llm_client = llm_client
         self._normalizer = normalizer
         self._intent_detector = intent_detector
+        self._dialog_policy = dialog_policy
 
         self._users = UserRepository(db_session)
         self._sessions = DialogSessionRepository(db_session)
@@ -43,7 +45,7 @@ class AgentService:
 
         normalized_content = self._normalizer.normalize(request.content)
         intent = await self._intent_detector.detect(normalized_content)
-        next_step = self._next_step_for(intent)
+        next_step = self._dialog_policy.next_step_for(intent)
 
         user = await self._users.get_or_create_anonymous_user(
             channel=request.channel.value,
@@ -119,13 +121,3 @@ class AgentService:
             return "Извините, сейчас не удалось сформировать ответ."
 
         return content
-
-    @staticmethod
-    def _next_step_for(intent: str) -> str:
-        if intent == "lead_request":
-            return "collect_contact"
-        if intent == "pricing":
-            return "send_pricing_summary"
-        if intent == "support":
-            return "ask_support_details"
-        return "continue_dialog"

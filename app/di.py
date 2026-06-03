@@ -10,7 +10,7 @@ from app.client.openrouter_client import OpenRouterClient
 from app.db.session import create_engine as create_db_engine
 from app.db.session import create_session_maker
 from app.service.agent_service import AgentService
-from app.service.business_service import MessageNormalizer
+from app.service.business_service import MessageNormalizer, DialogPolicy
 from app.service.intent_detector import KeywordIntentDetector
 from app.service.intent_detector.base_intent_detector import BaseIntentDetector
 from app.service.session_service import SessionService
@@ -34,9 +34,11 @@ async def init_app_state(app: FastAPI) -> None:
 
     normalizer = MessageNormalizer()
     intent_detector = KeywordIntentDetector()
+    dialog_policy = DialogPolicy()
 
     app.state.normalizer = normalizer
     app.state.intent_detector = intent_detector
+    app.state.dialog_policy = dialog_policy
 
     llm_provider = os.getenv("LLM_PROVIDER", "stub").strip().lower()
 
@@ -105,6 +107,7 @@ async def get_agent_service(
         llm_client=request.app.state.llm_client,
         normalizer=request.app.state.normalizer,
         intent_detector=request.app.state.intent_detector,
+        dialog_policy=request.app.state.dialog_policy,
     )
 
 
