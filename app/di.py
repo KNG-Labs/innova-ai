@@ -10,10 +10,9 @@ from app.client.openrouter_client import OpenRouterClient
 from app.db.session import create_engine as create_db_engine
 from app.db.session import create_session_maker
 from app.service.agent_service import AgentService
-from app.service.business_service import DialogBusinessService, MessageNormalizer
+from app.service.business_service import MessageNormalizer
 from app.service.intent_detector import KeywordIntentDetector
 from app.service.intent_detector.base_intent_detector import BaseIntentDetector
-from app.service.message_service import MessageService
 from app.service.session_service import SessionService
 
 
@@ -67,16 +66,6 @@ async def init_app_state(app: FastAPI) -> None:
 
     app.state.llm_client = llm_client
 
-    # Оставляем временно
-    business_processor = DialogBusinessService(
-        normalizer=normalizer,
-        intent_detector=intent_detector,
-    )
-    app.state.message_service = MessageService(
-        llm_client=llm_client,
-        business_processor=business_processor,
-    )
-
 
 async def close_app_state(app: FastAPI) -> None:
     http_client = getattr(app.state, "http_client", None)
@@ -123,11 +112,3 @@ async def get_session_service(
     db_session: AsyncSession = Depends(get_db_session),
 ) -> SessionService:
     return SessionService(db_session=db_session)
-
-
-async def get_message_service(request: Request) -> MessageService:
-    """
-    Можно удалить позже, когда уберем старый MessageService.
-    """
-
-    return request.app.state.message_service

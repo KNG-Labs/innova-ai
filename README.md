@@ -85,7 +85,6 @@ INNOVA_AI/
 │       ├── agent_service.py
 │       ├── session_service.py
 │       ├── business_service.py
-│       ├── message_service.py
 │       └── intent_detector/
 │           ├── __init__.py
 │           ├── base_intent_detector.py
@@ -113,7 +112,6 @@ INNOVA_AI/
     │   └── test_sessions_session_id.py
     └── unit/
         ├── __init__.py
-        ├── test_message_service.py
         ├── test_openrouter_client.py
         └── test_schemas_openai.py
 ```
