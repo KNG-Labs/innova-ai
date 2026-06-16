@@ -128,14 +128,13 @@ INNOVA_AI/
 
 ```text
 HTTP request
-  -> message_router.py
-  -> AgentService
-  -> UserRepository
-  -> DialogSessionRepository
-  -> MessageRepository
-  -> LLMClient
-  -> PostgreSQL
-  -> AgentMessageResponse
+  → AgentService
+  → Ag2AgentClient.decide()   ← AG2 ConversableAgent здесь
+  → AgentDecision (Pydantic)  ← structured output + валидация
+  → state_machine.resolve()   ← переходы состояний кодом, не LLM
+  → DialogSessionRepository.update_state()
+  → LeadRepository.upsert_draft()
+  → AgentMessageResponse
 ```
 
 ### Read-flow для проверки памяти

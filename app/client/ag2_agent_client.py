@@ -1,5 +1,4 @@
 import json
-from typing import Protocol
 
 from autogen import ConversableAgent, LLMConfig
 from pydantic import BaseModel, ValidationError
@@ -9,6 +8,7 @@ from app.schemas.agent_schema import DialogState
 
 class AgentDecision(BaseModel):
     """Структурированный ответ агента после обработки сообщения."""
+
     answer: str
     intent: str
     next_state: DialogState
@@ -48,13 +48,14 @@ _SYSTEM_PROMPT = """\
 Никакого текста вне JSON. Только валидный JSON.
 """
 
+
 class Ag2AgentClient:
     """Adapter для AG2 ConversableAgent.
 
     Не вызывается из router напрямую — только из AgentService.
     """
 
-    def __init__(self, model: str, api_key:str, base_url: str) -> None:
+    def __init__(self, model: str, api_key: str, base_url: str) -> None:
         llm_config = LLMConfig(
             model=model,
             api_key=api_key,
@@ -67,12 +68,13 @@ class Ag2AgentClient:
             human_input_mode="NEVER",
         )
 
-    async def decide(self,
-                     user_message: str,
-                     history: list[dict], # [{"role": "user"|"assistant", "content": str}]
-                     current_state: str,
-                     qualification_data: dict,
-                     ) -> AgentDecision:
+    async def decide(
+        self,
+        user_message: str,
+        history: list[dict],  # [{"role": "user"|"assistant", "content": str}]
+        current_state: str,
+        qualification_data: dict,
+    ) -> AgentDecision:
         """Вызвать агента и вернуть структурированное решение."""
 
         context = _build_context_message(current_state, qualification_data)

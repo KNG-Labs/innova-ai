@@ -42,7 +42,7 @@ class MessageRepository:
         Используется read-route:
         GET /sessions/{session_id}/messages
         """
-        
+
         stmt = (
             select(Message)
             .where(Message.session_id == session_id)
@@ -53,10 +53,10 @@ class MessageRepository:
         return list(result.scalars().all())
 
     async def list_recent_messages(
-            self,
-            session_id: UUID,
-            *,
-            limit: int,
+        self,
+        session_id: UUID,
+        *,
+        limit: int,
     ) -> list[Message]:
         """Вернуть последние сообщения сессии (для LLM-контекста).
 

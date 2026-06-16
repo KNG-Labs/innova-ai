@@ -1,7 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.client.ag2_agent_client import Ag2AgentClient, AgentDecision
-from app.client.llm_client import LLMClient
 from app.repository import LeadRepository
 from app.repository.dialog_session_repository import DialogSessionRepository
 from app.repository.message_repository import MessageRepository
@@ -16,8 +15,7 @@ from app.schemas.openai_schema import (
     ChatCompletionRequest,
     UserMessage,
 )
-from app.service.business_service import MessageNormalizer, DialogPolicy
-from app.service.intent_detector.base_intent_detector import BaseIntentDetector
+from app.service.business_service import MessageNormalizer
 from app.service.state_machine import resolve_next_state
 
 
@@ -26,12 +24,12 @@ class AgentService:
         self,
         *,
         db_session: AsyncSession,
-        ag2_client: Ag2AgentClient,
+        llm_client: Ag2AgentClient,
         normalizer: MessageNormalizer,
     ) -> None:
 
         self._db_session = db_session
-        self._ag2_client = ag2_client
+        self._llm_client = llm_client
         self._normalizer = normalizer
 
         self._users = UserRepository(db_session)
@@ -63,10 +61,7 @@ class AgentService:
 
         # История для AG2 (последние 20 сообщений)
         history_rows = await self._messages.list_recent_messages(session.id, limit=20)
-        history = [
-            {"role": m.role, "content": m.content}
-            for m in history_rows
-        ]
+        history = [{"role": m.role, "content": m.content} for m in history_rows]
 
         # Сохранение входящего сообщения
         user_message = await self._messages.create(
@@ -76,7 +71,7 @@ class AgentService:
         )
 
         # Вызов AG2
-        decision: AgentDecision = await self._ag2_client.decide(
+        decision: AgentDecision = await self._llm_client.decide(
             user_message=content,
             history=history,
             current_state=current_state.value,
@@ -87,10 +82,14 @@ class AgentService:
         next_state = resolve_next_state(current_state, decision)
 
         # Обновить qualification_data
-        merged_qualification_data = {**qualification_data, **decision.qualification_data}
+        merged_qualification_data = {
+            **qualification_data,
+            **decision.qualification_data,
+        }
         # Убрать None-значения которые перезаписали бы реальные данные
-        merged_qual = {k: v for k, v in merged_qualification_data.items() if v is not None}
-
+        merged_qual = {
+            k: v for k, v in merged_qualification_data.items() if v is not None
+        }
 
         # Сохранение ответа ассистента
         assistant_message = await self._messages.create(

@@ -30,3 +30,4 @@ markers = [
     "unit: fast, no external dependencies",
     "integration: requires running app",
 ]
+asyncio_mode = "auto"

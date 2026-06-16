@@ -101,12 +101,8 @@ class LeadRepository:
         return result.scalar_one_or_none()
 
     async def upsert_draft(
-            self,
-            user_id: UUID,
-            session_id: UUID,
-            qualification: dict,
-            summary: str | None
-                           ) -> Lead:
+        self, user_id: UUID, session_id: UUID, qualification: dict, summary: str | None
+    ) -> Lead:
         lead = await self.get_by_session(session_id)
         if lead is None:
             lead = Lead(

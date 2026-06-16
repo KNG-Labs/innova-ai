@@ -3,9 +3,21 @@ from app.client.ag2_agent_client import AgentDecision
 
 # Допустимые переходы
 _ALLOWED_TRANSITIONS: dict[DialogState, set[DialogState]] = {
-    DialogState.GREETING: {DialogState.FAQ, DialogState.QUALIFICATION, DialogState.CONTACT_CAPTURE},
-    DialogState.FAQ: {DialogState.FAQ, DialogState.QUALIFICATION, DialogState.CONTACT_CAPTURE},
-    DialogState.QUALIFICATION: {DialogState.QUALIFICATION, DialogState.CONTACT_CAPTURE, DialogState.CLOSED},
+    DialogState.GREETING: {
+        DialogState.FAQ,
+        DialogState.QUALIFICATION,
+        DialogState.CONTACT_CAPTURE,
+    },
+    DialogState.FAQ: {
+        DialogState.FAQ,
+        DialogState.QUALIFICATION,
+        DialogState.CONTACT_CAPTURE,
+    },
+    DialogState.QUALIFICATION: {
+        DialogState.QUALIFICATION,
+        DialogState.CONTACT_CAPTURE,
+        DialogState.CLOSED,
+    },
     DialogState.CONTACT_CAPTURE: {DialogState.LEAD_READY},
     DialogState.LEAD_READY: {DialogState.CLOSED},
     DialogState.CLOSED: set(),
@@ -13,9 +25,10 @@ _ALLOWED_TRANSITIONS: dict[DialogState, set[DialogState]] = {
 
 _REQUIRED_FIELDS = {"service", "deadline", "budget", "contact"}
 
+
 def resolve_next_state(
-        current: DialogState,
-        decision: AgentDecision,
+    current: DialogState,
+    decision: AgentDecision,
 ) -> DialogState:
     """Детерминированно определяет следующее состояние.
 
@@ -39,7 +52,4 @@ def resolve_next_state(
 
 def is_lead_ready(qualification_data: dict) -> bool:
     """Все обязательные поля собраны."""
-    return all(
-        qualification_data.get(field)
-        for field in _REQUIRED_FIELDS
-    )
+    return all(qualification_data.get(field) for field in _REQUIRED_FIELDS)

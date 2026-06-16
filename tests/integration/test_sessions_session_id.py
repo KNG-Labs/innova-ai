@@ -30,7 +30,7 @@ async def test_get_session_returns_session_details(client) -> None:
 
     assert session_data["id"] == message_data["session_id"]
     assert session_data["user_id"] == message_data["user_id"]
-    assert session_data["state"] == "GREETING"
+    assert session_data["state"] == "QUALIFICATION"
     assert session_data["channel"] == "website"
     assert session_data["created_at"]
     assert session_data["updated_at"]
