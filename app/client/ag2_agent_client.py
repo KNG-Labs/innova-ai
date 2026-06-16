@@ -12,7 +12,7 @@ class AgentDecision(BaseModel):
     answer: str
     intent: str
     next_state: DialogState
-    qualification: dict[str, str | None]
+    qualification_data: dict[str, str | None]
     missing_fields: list[str]
     lead_ready: bool
     lead_summary: str | None = None
