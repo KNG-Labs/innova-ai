@@ -111,3 +111,26 @@ def _parse_reply(reply: str | dict | None) -> AgentDecision:
         return AgentDecision.model_validate(data)
     except (json.JSONDecodeError, ValidationError):
         return _FALLBACK_DECISION
+
+
+class FakeAg2AgentClient:
+    """Заглушка для тестов без LLM key."""
+
+    def __init__(self, responses: list[AgentDecision] | None = None) -> None:
+        self._responses = responses or []
+        self._call_count = 0
+
+    async def decide(self, **kwargs) -> AgentDecision:
+        if self._responses and self._call_count < len(self._responses):
+            result = self._responses[self._call_count]
+        else:
+            result = AgentDecision(
+                answer="Расскажите подробнее о задаче.",
+                intent="general",
+                next_state=DialogState.QUALIFICATION,
+                qualification_data={},
+                missing_fields=["service", "deadline", "budget", "contact"],
+                lead_ready=False,
+            )
+        self._call_count += 1
+        return result

@@ -6,7 +6,6 @@ from fastapi import FastAPI, Request, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.client.llm_client import LLMClient, StubLLMClient
-from app.client.openrouter_client import OpenRouterClient
 from app.db.session import create_engine as create_db_engine
 from app.db.session import create_session_maker
 from app.service.agent_service import AgentService
@@ -42,31 +41,19 @@ async def init_app_state(app: FastAPI) -> None:
 
     llm_provider = os.getenv("LLM_PROVIDER", "stub").strip().lower()
 
-    if llm_provider == "stub":
-        llm_client: LLMClient = StubLLMClient()
-    elif llm_provider == "openrouter":
+    if llm_provider == "ag2":
         api_key = os.getenv("OPENROUTER_API_KEY", "").strip()
-        if not api_key:
-            await http_client.aclose()
-            await db_engine.dispose()
-            raise RuntimeError("OPENROUTER_API_KEY is required")
-
-        base_url = os.getenv(
-            "OPENROUTER_BASE_URL",
-            "https://openrouter.ai/api/v1",
-        ).strip()
-
-        llm_client = OpenRouterClient(
-            http=http_client,
-            base_url=base_url,
-            api_key=api_key,
-        )
+        base_url = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1").strip()
+        model = os.getenv("AG2_MODEL", "openai/gpt-4o-mini").strip()
+        from app.client.ag2_agent_client import Ag2AgentClient
+        ag2_client = Ag2AgentClient(model=model, api_key=api_key, base_url=base_url)
+    elif llm_provider == "stub":
+        from app.client.ag2_agent_client import FakeAg2AgentClient
+        ag2_client = FakeAg2AgentClient()
     else:
-        await http_client.aclose()
-        await db_engine.dispose()
         raise RuntimeError(f"Unsupported LLM_PROVIDER: {llm_provider}")
 
-    app.state.llm_client = llm_client
+    app.state.ag2_client = ag2_client
 
 
 async def close_app_state(app: FastAPI) -> None:
@@ -104,10 +91,8 @@ async def get_agent_service(
 ) -> AgentService:
     return AgentService(
         db_session=db_session,
-        llm_client=request.app.state.llm_client,
+        ag2_client=request.app.state.llm_client,
         normalizer=request.app.state.normalizer,
-        intent_detector=request.app.state.intent_detector,
-        dialog_policy=request.app.state.dialog_policy,
     )
 
 
