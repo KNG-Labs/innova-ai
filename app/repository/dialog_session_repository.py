@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -78,3 +78,11 @@ class DialogSessionRepository:
             return active_session
 
         return await self.create(user_id=user_id)
+
+    async def update_state(self, session_id: UUID, state: str) -> None:
+        stmt = (
+            update(DialogSession)
+            .where(DialogSession.id == session_id)
+            .values(state=state)
+        )
+        await self._session.execute(stmt)

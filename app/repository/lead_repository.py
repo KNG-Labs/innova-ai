@@ -94,3 +94,31 @@ class LeadRepository:
 
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
+
+    async def get_by_session(self, session_id: UUID) -> Lead | None:
+        stmt = select(Lead).where(Lead.session_id == session_id)
+        result = await self._session.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def upsert_draft(
+            self,
+            user_id: UUID,
+            session_id: UUID,
+            qualification: dict,
+            summary: str | None
+                           ) -> Lead:
+        lead = await self.get_by_session(session_id)
+        if lead is None:
+            lead = Lead(
+                user_id=user_id,
+                session_id=session_id,
+                status="draft",
+                qualification=qualification,
+                summary=summary,
+            )
+            self._session.add(lead)
+        else:
+            lead.qualification = qualification
+            if summary:
+                lead.summary = summary
+        return lead
