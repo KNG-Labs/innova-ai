@@ -56,11 +56,11 @@ class Ag2AgentClient:
     """
 
     def __init__(self, model: str, api_key: str, base_url: str) -> None:
-        llm_config = LLMConfig(
-            model=model,
-            api_key=api_key,
-            base_url=base_url,
-        )
+        llm_config = LLMConfig({
+            "model": model,
+            "api_key": api_key,
+            "base_url": base_url,
+        })
         self._agent = ConversableAgent(
             name="innova_lead_agent",
             system_message=_SYSTEM_PROMPT,
