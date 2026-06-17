@@ -8,6 +8,7 @@ from app.client.ag2_agent_client import (
 from app.schemas.agent_schema import DialogState
 from app.service.state_machine import resolve_next_state, is_lead_ready
 
+pytestmark = pytest.mark.unit
 
 def test_parse_reply_valid_json():
     raw = '{"answer":"Привет","intent":"pricing","next_state":"FAQ","qualification_data":{},"missing_fields":["service"],"lead_ready":false}'

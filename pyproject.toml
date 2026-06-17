@@ -29,5 +29,6 @@ dev = [
 markers = [
     "unit: fast, no external dependencies",
     "integration: requires running app",
+    "e2e: end-to-end tests, requires PostgreSQL",
 ]
 asyncio_mode = "auto"

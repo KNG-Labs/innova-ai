@@ -4,6 +4,7 @@ from app.client.ag2_agent_client import FakeAg2AgentClient
 from app.schemas.agent_schema import AgentDecision, DialogState
 from main import app
 
+pytestmark = pytest.mark.e2e
 
 @pytest.mark.asyncio
 async def test_full_lead_flow_reaches_lead_ready(client) -> None:

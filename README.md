@@ -2,6 +2,8 @@
 
 AI-ассистент для лидогенерации и клиентской коммуникации в digital-каналах. Проект развивается из простого LLM endpoint в backend агентного диалога с памятью, сессиями, историей сообщений и будущим lead-flow.
 
+> Scope и план реализации: [docs/MVP_ROADMAP.md](docs/MVP_ROADMAP.md)
+
 ---
 
 ## Что это
@@ -30,7 +32,7 @@ Innova AI — backend-слой conversational AI продукта. Сервис 
 - PostgreSQL
 - Alembic
 - httpx
-- OpenAI SDK / OpenRouter
+- AG2 (AutoGen) через OpenRouter
 - pytest / pytest-asyncio
 - uv
 
@@ -40,80 +42,86 @@ Innova AI — backend-слой conversational AI продукта. Сервис 
 
 ```text
 INNOVA_AI/
-├── .env.example
-├── .gitignore
-├── .python-version
+├── app
+│   ├── client
+│   │   ├── __init__.py
+│   │   ├── ag2_agent_client.py
+│   │   ├── llm_client.py
+│   │   └── openrouter_client.py
+│   ├── db
+│   │   ├── __init__.py
+│   │   ├── base.py
+│   │   └── session.py
+│   ├── models
+│   │   ├── __init__.py
+│   │   ├── dialog_session_model.py
+│   │   ├── lead_model.py
+│   │   ├── message_model.py
+│   │   └── user_model.py
+│   ├── repository
+│   │   ├── __init__.py
+│   │   ├── dialog_session_repository.py
+│   │   ├── lead_repository.py
+│   │   ├── message_repository.py
+│   │   └── user_repository.py
+│   ├── router
+│   │   ├── __init__.py
+│   │   ├── message_router.py
+│   │   └── session_router.py
+│   ├── schemas
+│   │   ├── __init__.py
+│   │   ├── agent_schema.py
+│   │   ├── openai_schema.py
+│   │   └── session_schema.py
+│   ├── service
+│   │   ├── intent_detector
+│   │   │   ├── __init__.py
+│   │   │   ├── base_intent_detector.py
+│   │   │   ├── keyword_intent_detector.py
+│   │   │   └── llm_intent_detector.py
+│   │   ├── __init__.py
+│   │   ├── agent_service.py
+│   │   ├── business_service.py
+│   │   ├── session_service.py
+│   │   └── state_machine.py
+│   ├── __init__.py
+│   ├── di.py
+│   └── exceptions.py
+├── docs
+│   ├── diagrams
+│   │   ├── Components.puml
+│   │   ├── DataBase.puml
+│   │   ├── Sequence.puml
+│   │   └── current_sequenes.puml
+│   ├── MVP_ROADMAP.md
+│   ├── PRD.md
+│   └── System_Design.md
+├── migrations
+│   ├── versions
+│   │   └── 8cd1e0d95b7a_create_tables.py
+│   ├── README
+│   ├── env.py
+│   └── script.py.mako
+├── tests
+│   ├── e2e
+│   │   ├── __init__.py
+│   │   └── test_agent_message.py
+│   ├── integration
+│   │   ├── __init__.py
+│   │   ├── test_agent_message.py
+│   │   └── test_sessions_session_id.py
+│   ├── unit
+│   │   ├── __init__.py
+│   │   ├── test_ag2_flow.py
+│   │   ├── test_business_service.py
+│   │   ├── test_openrouter_client.py
+│   │   └── test_schemas_openai.py
+│   ├── __init__.py
+│   └── conftest.py
+├── README.md
 ├── alembic.ini
 ├── main.py
-├── pyproject.toml
-├── uv.lock
-├── README.md
-├── app/
-│   ├── __init__.py
-│   ├── di.py
-│   ├── client/
-│   │   ├── __init__.py
-│   │   ├── llm_client.py
-│   │   └── openrouter_client.py
-│   ├── db/
-│   │   ├── __init__.py
-│   │   ├── base.py
-│   │   └── session.py
-│   ├── models/
-│   │   ├── __init__.py
-│   │   ├── user_model.py
-│   │   ├── dialog_session_model.py
-│   │   ├── message_model.py
-│   │   └── lead_model.py
-│   ├── repository/
-│   │   ├── __init__.py
-│   │   ├── user_repository.py
-│   │   ├── dialog_session_repository.py
-│   │   ├── message_repository.py
-│   │   └── lead_repository.py
-│   ├── router/
-│   │   ├── __init__.py
-│   │   ├── message_router.py
-│   │   └── session_router.py
-│   ├── schemas/
-│   │   ├── __init__.py
-│   │   ├── agent_schema.py
-│   │   ├── session_schema.py
-│   │   └── openai_schema.py
-│   └── service/
-│       ├── __init__.py
-│       ├── agent_service.py
-│       ├── session_service.py
-│       ├── business_service.py
-│       └── intent_detector/
-│           ├── __init__.py
-│           ├── base_intent_detector.py
-│           ├── keyword_intent_detector.py
-│           └── llm_intent_detector.py
-├── docs/
-│   ├── PRD.md
-│   ├── System_Design.md
-│   └── diagrams/
-│       ├── Components.puml
-│       ├── DataBase.puml
-│       └── Sequence.puml
-├── migrations/
-│   ├── env.py
-│   ├── README
-│   ├── script.py.mako
-│   └── versions/
-│       └── 8cd1e0d95b7a_create_tables.py
-└── tests/
-    ├── __init__.py
-    ├── conftest.py
-    ├── integration/
-    │   ├── __init__.py
-    │   ├── test_agent_message.py
-    │   └── test_sessions_session_id.py
-    └── unit/
-        ├── __init__.py
-        ├── test_openrouter_client.py
-        └── test_schemas_openai.py
+└── pyproject.toml
 ```
 
 ---
@@ -298,7 +306,7 @@ LEAD_READY
 CLOSED
 ```
 
-На текущем этапе полноценная машина состояний ещё не реализована, но модель БД и API уже подготовлены под неё.
+Машина состояний реализована в `app/service/state_machine.py`. Переходы между состояниями детерминированы кодом, не LLM.
 
 ---
 
@@ -408,10 +416,10 @@ LLM_PROVIDER=stub
 DATABASE_URL=postgresql+asyncpg://innova:innova@localhost:5432/innova_ai
 ```
 
-Для OpenRouter:
+Для работы с реальным LLM (AG2 через OpenRouter):
 
 ```env
-LLM_PROVIDER=openrouter
+LLM_PROVIDER=ag2
 OPENROUTER_API_KEY=sk-or-v1-your-key-here
 OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 DATABASE_URL=postgresql+asyncpg://innova:innova@localhost:5432/innova_ai
@@ -529,20 +537,6 @@ uv run pytest -m unit
 uv run pytest -m integration
 ```
 
-Интеграционные тесты проверяют:
-
-- создание анонимного пользователя;
-- создание сессии;
-- продолжение существующей сессии;
-- продолжение активной сессии без явного `session_id`;
-- сохранение истории сообщений;
-- чтение сессии через `GET /sessions/{session_id}`;
-- чтение сообщений через `GET /sessions/{session_id}/messages`;
-- изоляцию разных anonymous users;
-- различие пользователей с одинаковым `anonymous_id` в разных каналах;
-- валидацию некорректного `anonymous_id`;
-- валидацию невалидного payload.
-
 Тестовая база по умолчанию:
 
 ```text
@@ -559,24 +553,25 @@ TEST_DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/db_name uv r
 
 ## Текущий статус
 
-| Слой | Статус |
-|---|---|
-| Product-level `POST /message` | Реализовано |
-| Анонимный пользователь | Реализовано |
-| Сессии диалога | Реализовано |
-| История сообщений | Реализовано |
-| Read-routes для памяти | Реализовано |
-| PostgreSQL ORM-модели | Реализовано |
-| Alembic-миграции | Реализовано |
-| Keyword intent detection | Реализовано |
-| OpenRouter client | Реализовано |
-| Stub LLM client | Реализовано |
-| Lead table | Заготовка |
-| Полноценная state machine | Планируется |
-| RAG / база знаний | Планируется |
-| CRM / Telegram / webhook delivery | Планируется |
-| Очередь фоновых задач | Планируется |
-| Multi-tenancy | Планируется |
+| Слой | Статус                |
+|---|-----------------------|
+| Product-level `POST /message` | Реализовано           |
+| Анонимный пользователь | Реализовано           |
+| Сессии диалога | Реализовано           |
+| История сообщений | Реализовано           |
+| Read-routes для памяти | Реализовано           |
+| PostgreSQL ORM-модели | Реализовано           |
+| Alembic-миграции | Реализовано           |
+| Keyword intent detection | Реализовано           |
+| OpenRouter client | Реализовано           |
+| Stub LLM client | Реализовано           |
+| Lead table | Реализовано           |
+| Полноценная state machine | Реализовано           |
+| AG2AgentClient + FakeAg2  | Реализовано           |
+| RAG / база знаний              | Планируется (Phase 7) |
+| Redis очередь доставки         | Планируется (Phase 5) |
+| CRM delivery (AmoCRM/Битрикс)  | Планируется (Phase 5) |
+| Web widget                     | Планируется (Phase 8) |
 
 ---
 
@@ -653,14 +648,3 @@ app/client/openrouter_client.py
 - `docs/diagrams/DataBase.puml` — текущая схема PostgreSQL.
 
 ---
-
-## Что дальше
-
-Ближайшие логичные шаги:
-
-1. Реализовать полноценную state machine.
-2. Начать lead capture flow.
-3. Использовать таблицу `leads` в реальном сценарии.
-4. Добавить RAG-слой и базу знаний.
-5. Добавить очередь доставки лида в CRM / Telegram / webhook.
-6. Подготовить multi-tenancy через `tenant_id`.

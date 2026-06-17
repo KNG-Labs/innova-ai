@@ -3,6 +3,7 @@ import pytest
 from app.service.business_service import DialogPolicy
 from app.service.intent_detector.base_intent_detector import Intent
 
+pytestmark = pytest.mark.unit
 
 @pytest.mark.unit
 @pytest.mark.parametrize(
