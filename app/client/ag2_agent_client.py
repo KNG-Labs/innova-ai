@@ -2,6 +2,7 @@ import json
 
 from autogen import ConversableAgent, LLMConfig
 from pydantic import ValidationError
+from typing import Protocol, runtime_checkable
 
 from app.schemas.agent_schema import DialogState, AgentDecision
 
@@ -37,7 +38,18 @@ _SYSTEM_PROMPT = """\
 """
 
 
-class Ag2AgentClient:
+@runtime_checkable
+class LLMClient(Protocol):
+    async def decide(
+        self,
+        user_message: str,
+        history: list[dict],
+        current_state: str,
+        qualification_data: dict,
+    ) -> AgentDecision: ...
+
+
+class Ag2AgentClient(LLMClient):
     """Adapter для AG2 ConversableAgent.
 
     Не вызывается из router напрямую — только из AgentService.
@@ -105,14 +117,20 @@ def _parse_reply(reply: str | dict | None) -> AgentDecision:
         return _FALLBACK_DECISION
 
 
-class FakeAg2AgentClient:
+class FakeAg2AgentClient(LLMClient):
     """Заглушка для тестов без LLM key."""
 
     def __init__(self, responses: list[AgentDecision] | None = None) -> None:
         self._responses = responses or []
         self._call_count = 0
 
-    async def decide(self, **kwargs) -> AgentDecision:
+    async def decide(
+        self,
+        user_message: str,
+        history: list[dict],
+        current_state: str,
+        qualification_data: dict,
+    ) -> AgentDecision:
         if self._responses and self._call_count < len(self._responses):
             result = self._responses[self._call_count]
         else:

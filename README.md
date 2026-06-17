@@ -45,9 +45,7 @@ INNOVA_AI/
 ├── app
 │   ├── client
 │   │   ├── __init__.py
-│   │   ├── ag2_agent_client.py
-│   │   ├── llm_client.py
-│   │   └── openrouter_client.py
+│   │   └── ag2_agent_client.py
 │   ├── db
 │   │   ├── __init__.py
 │   │   ├── base.py
@@ -71,14 +69,8 @@ INNOVA_AI/
 │   ├── schemas
 │   │   ├── __init__.py
 │   │   ├── agent_schema.py
-│   │   ├── openai_schema.py
 │   │   └── session_schema.py
 │   ├── service
-│   │   ├── intent_detector
-│   │   │   ├── __init__.py
-│   │   │   ├── base_intent_detector.py
-│   │   │   ├── keyword_intent_detector.py
-│   │   │   └── llm_intent_detector.py
 │   │   ├── __init__.py
 │   │   ├── agent_service.py
 │   │   ├── business_service.py
@@ -91,8 +83,7 @@ INNOVA_AI/
 │   ├── diagrams
 │   │   ├── Components.puml
 │   │   ├── DataBase.puml
-│   │   ├── Sequence.puml
-│   │   └── current_sequenes.puml
+│   │   └── Sequence.puml
 │   ├── MVP_ROADMAP.md
 │   ├── PRD.md
 │   └── System_Design.md
@@ -112,10 +103,7 @@ INNOVA_AI/
 │   │   └── test_sessions_session_id.py
 │   ├── unit
 │   │   ├── __init__.py
-│   │   ├── test_ag2_flow.py
-│   │   ├── test_business_service.py
-│   │   ├── test_openrouter_client.py
-│   │   └── test_schemas_openai.py
+│   │   └── test_ag2_flow.py
 │   ├── __init__.py
 │   └── conftest.py
 ├── README.md
@@ -293,9 +281,9 @@ telegram + demo-user-1
 
 ## Состояние диалога
 
-В `dialog_sessions` уже есть поле `state`. Пока это заготовка под будущую state machine.
+Машина состояний реализована в `app/service/state_machine.py`. Переходы между состояниями детерминированы кодом, не LLM.
 
-Возможные значения:
+Значения:
 
 ```text
 GREETING
@@ -305,8 +293,6 @@ CONTACT_CAPTURE
 LEAD_READY
 CLOSED
 ```
-
-Машина состояний реализована в `app/service/state_machine.py`. Переходы между состояниями детерминированы кодом, не LLM.
 
 ---
 
@@ -364,17 +350,7 @@ uv run alembic current
 
 ---
 
-## OpenAI-compatible схемы
-
-Публичный API продукта больше не является OpenAI-compatible endpoint.
-
-Файл:
-
-```text
-app/schemas/openai_schema.py
-```
-
-используется как внутренний контракт для общения с LLM-провайдером через `LLMClient`.
+## API схемы
 
 Внешний API продукта использует:
 
@@ -551,6 +527,43 @@ TEST_DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/db_name uv r
 
 ---
 
+### Создание тестовой базы
+
+```bash
+createdb -U innova innova_ai_test
+# или через psql:
+psql -U innova -c "CREATE DATABASE innova_ai_test;"
+```
+
+### Команды по типам тестов
+
+```bash
+# Без БД — всегда зелёные:
+uv run pytest tests/unit -q
+
+# Integration — нужна test DB:
+uv run pytest -m integration -q
+
+# Redis-зависимые (Phase 5):
+uv run pytest -m integration_redis -q
+
+# CRM fake adapter (Phase 5):
+uv run pytest -m integration_crm_fake -q
+
+# Smoke с реальным LLM:
+LLM_PROVIDER=ag2 OPENROUTER_API_KEY=sk-... uv run pytest -m manual_smoke -q
+```
+
+### mypy
+
+mypy не является обязательным CI gate в текущей фазе. Запуск:
+
+```bash
+uv run mypy app/ --ignore-missing-imports
+```
+
+---
+
 ## Текущий статус
 
 | Слой | Статус                |
@@ -633,14 +646,14 @@ app/models/lead_model.py
 Файлы:
 
 ```text
-app/client/llm_client.py
-app/client/openrouter_client.py
+app/client/ag2_agent_client.py
 ```
 
 ---
 
 ## Документация
 
+- `docs/MVP_ROADMAP.md` — Scope и план реализации (сейчас это главный ориентир)
 - `docs/PRD.md` — продуктовые требования, ICP, use cases, метрики.
 - `docs/System_Design.md` — целевая архитектура, state machine, RAG, очередь лидов, multi-tenancy.
 - `docs/diagrams/Components.puml` — компонентная диаграмма.

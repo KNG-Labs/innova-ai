@@ -30,5 +30,8 @@ markers = [
     "unit: fast, no external dependencies",
     "integration: requires running app",
     "e2e: end-to-end tests, requires PostgreSQL",
+    "integration_redis: requires Redis",
+    "integration_crm_fake: uses fake CRM adapter, no real tokens",
+    "manual_smoke: requires real LLM_PROVIDER=ag2",
 ]
 asyncio_mode = "auto"

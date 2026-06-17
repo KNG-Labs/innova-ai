@@ -5,6 +5,7 @@ import httpx
 from fastapi import FastAPI, Request, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.client.ag2_agent_client import LLMClient
 from app.db.session import create_engine as create_db_engine
 from app.db.session import create_session_maker
 from app.service.agent_service import AgentService
@@ -33,6 +34,7 @@ async def init_app_state(app: FastAPI) -> None:
     app.state.normalizer = normalizer
 
     llm_provider = os.getenv("LLM_PROVIDER", "stub").strip().lower()
+    llm_client: LLMClient
 
     if llm_provider == "ag2":
         api_key = os.getenv("OPENROUTER_API_KEY", "").strip()
@@ -43,6 +45,7 @@ async def init_app_state(app: FastAPI) -> None:
         from app.client.ag2_agent_client import Ag2AgentClient
 
         llm_client = Ag2AgentClient(model=model, api_key=api_key, base_url=base_url)
+
     elif llm_provider == "stub":
         from app.client.ag2_agent_client import FakeAg2AgentClient
 
