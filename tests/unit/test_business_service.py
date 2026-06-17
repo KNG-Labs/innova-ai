@@ -5,6 +5,7 @@ from app.service.intent_detector.base_intent_detector import Intent
 
 pytestmark = pytest.mark.unit
 
+
 @pytest.mark.unit
 @pytest.mark.parametrize(
     ("intent", "expected_next_step"),

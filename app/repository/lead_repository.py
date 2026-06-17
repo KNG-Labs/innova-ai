@@ -96,14 +96,13 @@ class LeadRepository:
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
 
-
     async def upsert_draft(
         self,
         user_id: UUID,
         session_id: UUID,
         qualification: dict,
         contact: dict | None,
-        summary: str | None
+        summary: str | None,
     ) -> Lead:
         lead = await self.get_by_session_id(session_id)
         if lead is None:
@@ -121,8 +120,10 @@ class LeadRepository:
             if contact:  # непустой dict
                 merged_contact = {**(lead.contact or {}), **contact}
                 # убрать None-значения
-                lead.contact = {k: v for k, v in merged_contact.items() if v is not None}
+                lead.contact = {
+                    k: v for k, v in merged_contact.items() if v is not None
+                }
             if summary:
                 lead.summary = summary
 
-        return Lead
+        return lead

@@ -100,7 +100,6 @@ class AgentService:
         # None если пустой dict (нет данных)
         final_contact = merged_contact if merged_contact else None
 
-
         # Сохранение ответа ассистента
         assistant_message = await self._messages.create(
             session_id=session.id,
@@ -125,8 +124,6 @@ class AgentService:
         ):
             await self._leads.update(lead, status="ready")
 
-
-
         await self._db_session.commit()
 
         return AgentMessageResponse(
@@ -139,29 +136,3 @@ class AgentService:
             intent=decision.intent,
             next_step=next_state.value,
         )
-
-    @staticmethod
-    def _build_llm_request(history) -> ChatCompletionRequest:
-        messages = []
-
-        for message in history:
-            if message.role == "user":
-                messages.append(UserMessage(content=message.content))
-            elif message.role == "assistant":
-                messages.append(AssistantMessage(content=message.content))
-
-        return ChatCompletionRequest(
-            messages=messages,
-        )
-
-    @staticmethod
-    def _extract_answer(llm_response) -> str:
-        if not llm_response.choices:
-            return "Извините, сейчас не удалось сформировать ответ."
-
-        content = llm_response.choices[0].message.content
-
-        if not content:
-            return "Извините, сейчас не удалось сформировать ответ."
-
-        return content

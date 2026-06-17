@@ -6,6 +6,7 @@ from main import app
 
 pytestmark = pytest.mark.e2e
 
+
 @pytest.mark.asyncio
 async def test_full_lead_flow_reaches_lead_ready(client) -> None:
     """E2E: три хода fake client доводят диалог до LEAD_READY.

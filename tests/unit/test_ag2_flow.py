@@ -10,6 +10,7 @@ from app.service.state_machine import resolve_next_state, is_lead_ready
 
 pytestmark = pytest.mark.unit
 
+
 def test_parse_reply_valid_json():
     raw = '{"answer":"Привет","intent":"pricing","next_state":"FAQ","qualification_data":{},"missing_fields":["service"],"lead_ready":false}'
     result = _parse_reply(raw)
@@ -64,16 +65,9 @@ def test_state_machine_blocks_lead_ready_without_contact():
 
 
 def test_is_lead_ready_true():
-    data = {
-        "service": "SEO",
-        "deadline": "2 недели",
-        "budget": "50k"
-    }
-    contact = {
-        "phone": "+77777"
-    }
+    data = {"service": "SEO", "deadline": "2 недели", "budget": "50k"}
+    contact = {"phone": "+77777"}
     assert is_lead_ready(data, contact) is True
-
 
 
 def test_is_lead_ready_false_missing_qual():
