@@ -11,11 +11,6 @@ from app.schemas.agent_schema import (
     DialogState,
     AgentDecision,
 )
-from app.schemas.openai_schema import (
-    AssistantMessage,
-    ChatCompletionRequest,
-    UserMessage,
-)
 from app.service.business_service import MessageNormalizer
 from app.service.state_machine import resolve_next_state, is_lead_ready
 

@@ -5,7 +5,6 @@ import httpx
 from fastapi import FastAPI, Request, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.client.llm_client import LLMClient
 from app.db.session import create_engine as create_db_engine
 from app.db.session import create_session_maker
 from app.service.agent_service import AgentService
@@ -69,14 +68,6 @@ async def get_db_session(request: Request) -> AsyncGenerator[AsyncSession, None]
 
     async with session_maker() as session:
         yield session
-
-
-async def get_llm_client(request: Request) -> LLMClient:
-    return request.app.state.llm_client
-
-
-async def get_normalizer(request: Request) -> MessageNormalizer:
-    return request.app.state.normalizer
 
 
 async def get_agent_service(
