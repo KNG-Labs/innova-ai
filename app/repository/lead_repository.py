@@ -71,6 +71,7 @@ class LeadRepository:
         qualification: dict | None = None,
         summary: str | None = None,
     ) -> Lead:
+
         if status is not None:
             lead.status = status
 
@@ -95,26 +96,33 @@ class LeadRepository:
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
 
-    async def get_by_session(self, session_id: UUID) -> Lead | None:
-        stmt = select(Lead).where(Lead.session_id == session_id)
-        result = await self._session.execute(stmt)
-        return result.scalar_one_or_none()
 
     async def upsert_draft(
-        self, user_id: UUID, session_id: UUID, qualification: dict, summary: str | None
+        self,
+        user_id: UUID,
+        session_id: UUID,
+        qualification: dict,
+        contact: dict | None,
+        summary: str | None
     ) -> Lead:
-        lead = await self.get_by_session(session_id)
+        lead = await self.get_by_session_id(session_id)
         if lead is None:
             lead = Lead(
                 user_id=user_id,
                 session_id=session_id,
                 status="draft",
                 qualification=qualification,
+                contact=contact,
                 summary=summary,
             )
             self._session.add(lead)
         else:
             lead.qualification = qualification
+            if contact:  # непустой dict
+                merged_contact = {**(lead.contact or {}), **contact}
+                # убрать None-значения
+                lead.contact = {k: v for k, v in merged_contact.items() if v is not None}
             if summary:
                 lead.summary = summary
-        return lead
+
+        return Lead

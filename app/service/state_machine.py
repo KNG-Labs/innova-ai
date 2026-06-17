@@ -23,7 +23,7 @@ _ALLOWED_TRANSITIONS: dict[DialogState, set[DialogState]] = {
     DialogState.CLOSED: set(),
 }
 
-_REQUIRED_FIELDS = {"service", "deadline", "budget", "contact"}
+_REQUIRED_FIELDS = {"service", "deadline", "budget"}
 
 
 def resolve_next_state(
@@ -39,7 +39,7 @@ def resolve_next_state(
 
     # Если LLM хочет перейти в LEAD_READY, проверяем, что контакт реально есть
     if suggested == DialogState.LEAD_READY:
-        if not decision.lead_ready or not decision.qualification_data.get("contact"):
+        if not decision.lead_ready or not decision.extracted_contact:
             suggested = DialogState.CONTACT_CAPTURE
 
     # Если переход допустим — принимаем
@@ -50,6 +50,12 @@ def resolve_next_state(
     return current
 
 
-def is_lead_ready(qualification_data: dict) -> bool:
-    """Все обязательные поля собраны."""
-    return all(qualification_data.get(field) for field in _REQUIRED_FIELDS)
+def is_lead_ready(qualification_data: dict, contact: dict | None) -> bool:
+    """Все обязательные поля собраны.
+
+    qualification_data должен содержать service, deadline, budget.
+    contact должен быть непустым dict с хотя бы одним непустым значением.
+    """
+    qual_ok = all(qualification_data.get(field) for field in _REQUIRED_FIELDS)
+    contact_ok = bool(contact and any(contact.values()))
+    return qual_ok and contact_ok

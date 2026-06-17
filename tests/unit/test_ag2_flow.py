@@ -53,8 +53,9 @@ def test_state_machine_blocks_lead_ready_without_contact():
         answer="ok",
         intent="lead_request",
         next_state=DialogState.LEAD_READY,
-        qualification_data={"service": "SEO"},  # нет contact
-        missing_fields=["contact"],
+        qualification_data={"service": "SEO"},
+        extracted_contact=None,
+        missing_fields=[],
         lead_ready=True,
     )
     result = resolve_next_state(DialogState.QUALIFICATION, decision)
@@ -65,15 +66,29 @@ def test_is_lead_ready_true():
     data = {
         "service": "SEO",
         "deadline": "2 недели",
-        "budget": "50k",
-        "contact": "+7999",
+        "budget": "50k"
     }
-    assert is_lead_ready(data) is True
+    contact = {
+        "phone": "+77777"
+    }
+    assert is_lead_ready(data, contact) is True
 
 
-def test_is_lead_ready_false():
-    data = {"service": "SEO", "deadline": None, "budget": None, "contact": None}
-    assert is_lead_ready(data) is False
+
+def test_is_lead_ready_false_missing_qual():
+    qual = {"service": "SEO", "deadline": None, "budget": None}
+    contact = {"phone": "+7999"}
+    assert is_lead_ready(qual, contact) is False
+
+
+def test_is_lead_ready_false_no_contact():
+    qual = {"service": "SEO", "deadline": "2 недели", "budget": "50k"}
+    assert is_lead_ready(qual, None) is False
+
+
+def test_is_lead_ready_false_empty_contact():
+    qual = {"service": "SEO", "deadline": "2 недели", "budget": "50k"}
+    assert is_lead_ready(qual, {"phone": None}) is False
 
 
 # --- Unit: FakeAg2AgentClient ---

@@ -86,3 +86,16 @@ class AgentMessageResponse(BaseModel):
     state: DialogState
     intent: str
     next_step: str | None = None
+
+
+class AgentDecision(BaseModel):
+    """Структурированный ответ агента после обработки сообщения."""
+
+    answer: str
+    intent: str
+    next_state: DialogState
+    qualification_data: dict[str, str | None]
+    missing_fields: list[str]
+    lead_ready: bool
+    extracted_contact: dict[str, str | None] | None = None
+    lead_summary: str | None = None

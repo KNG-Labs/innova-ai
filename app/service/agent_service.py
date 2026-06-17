@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.client.ag2_agent_client import Ag2AgentClient, AgentDecision
+from app.client.ag2_agent_client import Ag2AgentClient
 from app.repository import LeadRepository
 from app.repository.dialog_session_repository import DialogSessionRepository
 from app.repository.message_repository import MessageRepository
@@ -9,6 +9,7 @@ from app.schemas.agent_schema import (
     AgentMessageRequest,
     AgentMessageResponse,
     DialogState,
+    AgentDecision,
 )
 from app.schemas.openai_schema import (
     AssistantMessage,
@@ -16,7 +17,7 @@ from app.schemas.openai_schema import (
     UserMessage,
 )
 from app.service.business_service import MessageNormalizer
-from app.service.state_machine import resolve_next_state
+from app.service.state_machine import resolve_next_state, is_lead_ready
 
 
 class AgentService:
@@ -58,6 +59,7 @@ class AgentService:
         # Загрузить текущий draft лида для контекста
         lead = await self._leads.get_by_session_id(session.id)
         qualification_data = lead.qualification if lead and lead.qualification else {}
+        current_contact = lead.contact if lead and lead.contact else {}
 
         # История для AG2 (последние 20 сообщений)
         history_rows = await self._messages.list_recent_messages(session.id, limit=20)
@@ -91,6 +93,14 @@ class AgentService:
             k: v for k, v in merged_qualification_data.items() if v is not None
         }
 
+        # Merge contact (не перезаписывать None поверх реальных данных)
+        extracted_contact = decision.extracted_contact or {}
+        merged_contact = {**current_contact, **extracted_contact}
+        merged_contact = {k: v for k, v in merged_contact.items() if v is not None}
+        # None если пустой dict (нет данных)
+        final_contact = merged_contact if merged_contact else None
+
+
         # Сохранение ответа ассистента
         assistant_message = await self._messages.create(
             session_id=session.id,
@@ -106,8 +116,16 @@ class AgentService:
             user_id=user.id,
             session_id=session.id,
             qualification=merged_qual,
+            contact=final_contact,
             summary=decision.lead_summary,
         )
+
+        if next_state == DialogState.LEAD_READY and is_lead_ready(
+            merged_qual, final_contact
+        ):
+            await self._leads.update(lead, status="ready")
+
+
 
         await self._db_session.commit()
 

@@ -3,19 +3,10 @@ import json
 from autogen import ConversableAgent, LLMConfig
 from pydantic import BaseModel, ValidationError
 
-from app.schemas.agent_schema import DialogState
+from app.schemas.agent_schema import DialogState, AgentDecision
 
 
-class AgentDecision(BaseModel):
-    """Структурированный ответ агента после обработки сообщения."""
 
-    answer: str
-    intent: str
-    next_state: DialogState
-    qualification_data: dict[str, str | None]
-    missing_fields: list[str]
-    lead_ready: bool
-    lead_summary: str | None = None
 
 
 _FALLBACK_DECISION = AgentDecision(
