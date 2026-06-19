@@ -12,8 +12,14 @@ from app.schemas.agent_schema import (
     AgentDecision,
 )
 from app.service.business_service import MessageNormalizer
-from app.service.state_machine import resolve_next_state, is_lead_ready
-
+from app.service.state_machine import (
+    resolve_next_state,
+    is_lead_ready,
+    is_contact_valid,
+    merge_qualification_data,
+    merge_contact,
+    should_close_after_contact_attempts,
+)
 
 class AgentService:
     def __init__(
@@ -75,25 +81,28 @@ class AgentService:
             qualification_data=qualification_data,
         )
 
-        # Детерминированный переход состояния
-        next_state = resolve_next_state(current_state, decision)
-
-        # Обновить qualification_data
-        merged_qualification_data = {
-            **qualification_data,
-            **decision.qualification_data,
-        }
-        # Убрать None-значения которые перезаписали бы реальные данные
-        merged_qual = {
-            k: v for k, v in merged_qualification_data.items() if v is not None
-        }
-
-        # Merge contact (не перезаписывать None поверх реальных данных)
-        extracted_contact = decision.extracted_contact or {}
-        merged_contact = {**current_contact, **extracted_contact}
-        merged_contact = {k: v for k, v in merged_contact.items() if v is not None}
-        # None если пустой dict (нет данных)
+        # Слить данные ДО решения о переходе (backend - источник истины)
+        merged_qual = merge_qualification_data(qualification_data, decision.qualification_data)
+        merged_contact = merge_contact(current_contact, decision.extracted_contact)
         final_contact = merged_contact if merged_contact else None
+
+        # Детерминированный переход по merged data
+        next_state = resolve_next_state(
+            current_state,
+            decision,
+            merged_qual,
+            final_contact,
+        )
+
+        contact_attempts = session.contact_attempts
+        if current_state == DialogState.CONTACT_CAPTURE and not is_contact_valid(final_contact):
+            contact_attempts += 1
+
+        if should_close_after_contact_attempts(
+            current_state, final_contact, contact_attempts
+        ):
+            next_state = DialogState.CLOSED
+
 
         # Сохранение ответа ассистента
         assistant_message = await self._messages.create(
@@ -103,7 +112,11 @@ class AgentService:
         )
 
         # Обновить состояние сессии
-        await self._sessions.update_state(session.id, next_state.value)
+        await self._sessions.update_state(
+            session.id,
+            next_state.value,
+            contact_attempts=contact_attempts,
+        )
 
         # Создать или обновить draft лида
         lead = await self._leads.upsert_draft(

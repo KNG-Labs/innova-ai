@@ -46,7 +46,7 @@ def test_state_machine_allows_valid_transition():
         missing_fields=[],
         lead_ready=False,
     )
-    result = resolve_next_state(DialogState.GREETING, decision)
+    result = resolve_next_state(DialogState.GREETING, decision, {}, None)
     assert result == DialogState.FAQ
 
 
@@ -60,8 +60,78 @@ def test_state_machine_blocks_lead_ready_without_contact():
         missing_fields=[],
         lead_ready=True,
     )
-    result = resolve_next_state(DialogState.QUALIFICATION, decision)
+    merged_qual = {"service": "SEO", "deadline": "2 недели", "budget": "50k"}
+    result = resolve_next_state(DialogState.QUALIFICATION, decision, merged_qual, None)
     assert result == DialogState.CONTACT_CAPTURE
+
+
+def test_false_lead_ready_incomplete_qual_stays_qualification():
+    # LLM врёт: lead_ready=true, но deadline/budget нет
+    decision = AgentDecision(
+        answer="ok",
+        intent="lead_request",
+        next_state=DialogState.LEAD_READY,
+        qualification_data={},
+        extracted_contact={"phone": "+79991234567"},
+        missing_fields=[],
+        lead_ready=True,
+    )
+    result = resolve_next_state(
+        DialogState.QUALIFICATION, decision, {"service": "SEO"}, {"phone": "+79991234567"}
+    )
+    assert result == DialogState.QUALIFICATION
+
+
+def test_false_lead_ready_full_qual_no_contact_goes_contact_capture():
+    decision = AgentDecision(
+        answer="ok",
+        intent="lead_request",
+        next_state=DialogState.LEAD_READY,
+        qualification_data={},
+        extracted_contact=None,
+        missing_fields=[],
+        lead_ready=True,
+    )
+    merged_qual = {"service": "SEO", "deadline": "2 недели", "budget": "50k"}
+    result = resolve_next_state(
+        DialogState.CONTACT_CAPTURE, decision, merged_qual, None
+    )
+    assert result == DialogState.CONTACT_CAPTURE
+
+
+def test_lead_ready_allowed_when_merged_complete():
+    decision = AgentDecision(
+        answer="ok",
+        intent="lead_request",
+        next_state=DialogState.LEAD_READY,
+        qualification_data={},
+        extracted_contact=None,
+        missing_fields=[],
+        lead_ready=True,
+    )
+    merged_qual = {"service": "SEO", "deadline": "2 недели", "budget": "50k"}
+    result = resolve_next_state(
+        DialogState.CONTACT_CAPTURE, decision, merged_qual, {"phone": "+79991234567"}
+    )
+    assert result == DialogState.LEAD_READY
+
+
+def test_merge_qual_none_does_not_overwrite():
+    from app.service.state_machine import merge_qualification_data
+
+    existing = {"service": "SEO", "budget": "50k"}
+    extracted = {"service": None, "deadline": "2 недели"}
+    merged = merge_qualification_data(existing, extracted)
+    assert merged["service"] == "SEO"
+    assert merged["deadline"] == "2 недели"
+
+
+def test_compute_missing_fields_lists_gaps():
+    from app.service.state_machine import compute_missing_fields
+
+    missing = compute_missing_fields({"service": "SEO"}, None)
+    assert set(missing) == {"deadline", "budget", "contact"}
+
 
 
 def test_is_lead_ready_true():
@@ -133,3 +203,29 @@ async def test_fake_client_returns_scripted_sequence():
 
     assert r1.next_state == DialogState.FAQ
     assert r2.qualification_data["service"] == "SEO"
+
+
+# Contant attempts
+
+def test_close_after_two_contact_attempts():
+    from app.service.state_machine import should_close_after_contact_attempts
+
+    assert should_close_after_contact_attempts(
+        DialogState.CONTACT_CAPTURE, None, 2
+    ) is True
+
+
+def test_no_close_on_first_attempt():
+    from app.service.state_machine import should_close_after_contact_attempts
+
+    assert should_close_after_contact_attempts(
+        DialogState.CONTACT_CAPTURE, None, 1
+    ) is False
+
+
+def test_no_close_if_contact_valid():
+    from app.service.state_machine import should_close_after_contact_attempts
+
+    assert should_close_after_contact_attempts(
+        DialogState.CONTACT_CAPTURE, {"phone": "+79991234567"}, 5
+    ) is False

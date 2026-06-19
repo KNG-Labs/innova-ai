@@ -79,10 +79,18 @@ class DialogSessionRepository:
 
         return await self.create(user_id=user_id)
 
-    async def update_state(self, session_id: UUID, state: str) -> None:
+    async def update_state(
+            self,
+            session_id: UUID,
+            state: str,
+            contact_attempts: int | None = None
+    ) -> None:
+        values: dict = {"state": state}
+        if contact_attempts is not None:
+            values["contact_attempts"] = contact_attempts
         stmt = (
             update(DialogSession)
             .where(DialogSession.id == session_id)
-            .values(state=state)
+            .values(**values)
         )
         await self._session.execute(stmt)
