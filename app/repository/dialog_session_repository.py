@@ -19,7 +19,10 @@ class DialogSessionRepository:
         self._session = session
 
     async def get_by_id(self, session_id: UUID) -> DialogSession | None:
-        stmt = select(DialogSession).where(DialogSession.id == session_id)
+        stmt = select(DialogSession).where(
+            DialogSession.id == session_id,
+            DialogSession.deleted_at.is_(None),
+        )
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -27,7 +30,7 @@ class DialogSessionRepository:
         stmt = (
             select(DialogSession)
             .options(selectinload(DialogSession.user))
-            .where(DialogSession.id == session_id)
+            .where(DialogSession.id == session_id, DialogSession.deleted_at.is_(None))
         )
 
         result = await self._session.execute(stmt)
@@ -39,6 +42,7 @@ class DialogSessionRepository:
             .where(
                 DialogSession.user_id == user_id,
                 DialogSession.closed_at.is_(None),
+                DialogSession.deleted_at.is_(None),
             )
             .order_by(DialogSession.created_at.desc())
             .limit(1)
@@ -95,3 +99,7 @@ class DialogSessionRepository:
             update(DialogSession).where(DialogSession.id == session_id).values(**values)
         )
         await self._session.execute(stmt)
+
+    async def soft_delete(self, dialog_session: DialogSession) -> None:
+        dialog_session.deleted_at = func.now()
+        await self._session.flush()

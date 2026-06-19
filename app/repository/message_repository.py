@@ -45,7 +45,7 @@ class MessageRepository:
 
         stmt = (
             select(Message)
-            .where(Message.session_id == session_id)
+            .where(Message.session_id == session_id, Message.deleted_at.is_(None))
             .order_by(Message.created_at.asc())
         )
 
@@ -67,7 +67,7 @@ class MessageRepository:
 
         stmt = (
             select(Message)
-            .where(Message.session_id == session_id)
+            .where(Message.session_id == session_id, Message.deleted_at.is_(None))
             .order_by(Message.created_at.desc())
             .limit(limit)
         )
