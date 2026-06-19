@@ -3,6 +3,8 @@ import pytest
 from app.client.ag2_agent_client import FakeAg2AgentClient, AgentDecision
 from app.schemas import DialogState
 from main import app
+from uuid import UUID, uuid4
+from app.models import DialogSession
 
 pytestmark = pytest.mark.integration
 
@@ -404,7 +406,6 @@ async def test_post_message_rejects_nonexistent_session_id(client) -> None:
     Тест: если передан несуществующий session_id,
     система не падает, а создаёт новую сессию (graceful fallback).
     """
-    from uuid import uuid4
 
     fake_session_id = str(uuid4())
 
@@ -422,3 +423,78 @@ async def test_post_message_rejects_nonexistent_session_id(client) -> None:
     data = response.json()
     # Создаётся новая сессия, а не используется фейковая
     assert data["session_id"] != fake_session_id
+
+
+@pytest.mark.asyncio
+async def test_closed_session_sets_closed_at_and_next_message_starts_new_session(
+    client,
+) -> None:
+    """CLOSED проставляет closed_at; закрытая сессия не переиспользуется."""
+
+    app.state.llm_client = FakeAg2AgentClient(
+        responses=[
+            AgentDecision(
+                answer="Расскажите, что нужно?",
+                intent="general",
+                next_state=DialogState.QUALIFICATION,
+                qualification_data={},
+                missing_fields=["service", "deadline", "budget", "contact"],
+                lead_ready=False,
+            ),
+            AgentDecision(
+                answer="Хорошо, закрываю обращение.",
+                intent="general",
+                next_state=DialogState.CLOSED,
+                qualification_data={},
+                missing_fields=["service", "deadline", "budget", "contact"],
+                lead_ready=False,
+            ),
+        ]
+    )
+
+    # Ход 1: GREETING -> QUALIFICATION
+    first = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "close-user-1",
+            "channel": "website",
+            "content": "Привет",
+        },
+    )
+    assert first.status_code == 200
+    first_data = first.json()
+    session_id = first_data["session_id"]
+
+    # Ход 2: QUALIFICATION -> CLOSED (тот же session_id)
+    second = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "close-user-1",
+            "channel": "website",
+            "session_id": session_id,
+            "content": "Больше не нужно",
+        },
+    )
+    assert second.status_code == 200
+    assert second.json()["state"] == "CLOSED"
+
+    # closed_at проставлен в БД
+    session_maker = app.state.db_session_maker
+    async with session_maker() as db:
+        row = await db.get(DialogSession, UUID(session_id))
+        assert row is not None
+        assert row.closed_at is not None
+
+    # Ход 3: без session_id -> закрытая не подхватывается -> создаётся новая сессия
+    third = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "close-user-1",
+            "channel": "website",
+            "content": "Здравствуйте снова",
+        },
+    )
+    assert third.status_code == 200
+    third_data = third.json()
+    assert third_data["user_id"] == first_data["user_id"]
+    assert third_data["session_id"] != session_id

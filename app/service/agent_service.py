@@ -111,11 +111,17 @@ class AgentService:
             content=decision.answer,
         )
 
+        # Определить, что сессия закрывается
+        is_closing = (
+            next_state == DialogState.CLOSED
+            and current_state != DialogState.CLOSED
+        )
         # Обновить состояние сессии
         await self._sessions.update_state(
-            session.id,
-            next_state.value,
+            session_id=session.id,
+            state=next_state.value,
             contact_attempts=contact_attempts,
+            close=is_closing,
         )
 
         # Создать или обновить draft лида

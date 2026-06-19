@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select, update
+from sqlalchemy import select, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -83,11 +83,14 @@ class DialogSessionRepository:
             self,
             session_id: UUID,
             state: str,
-            contact_attempts: int | None = None
+            contact_attempts: int | None = None,
+            close: bool = False,
     ) -> None:
         values: dict = {"state": state}
         if contact_attempts is not None:
             values["contact_attempts"] = contact_attempts
+        if close:
+            values["closed_at"] = func.now()
         stmt = (
             update(DialogSession)
             .where(DialogSession.id == session_id)
