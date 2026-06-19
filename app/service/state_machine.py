@@ -34,8 +34,8 @@ _ALLOWED_TRANSITIONS: dict[DialogState, set[DialogState]] = {
 
 
 def merge_qualification_data(
-        existing: dict[str, str | None],
-        extracted: dict[str, str | None],
+    existing: dict[str, str | None],
+    extracted: dict[str, str | None],
 ) -> dict[str, str]:
     """Слить старые и новые данные.
     None из LLM не затирает реальные значения."""
@@ -47,8 +47,8 @@ def merge_qualification_data(
 
 
 def merge_contact(
-        existing: dict[str, str | None] | None,
-        extracted: dict[str, str | None] | None,
+    existing: dict[str, str | None] | None,
+    extracted: dict[str, str | None] | None,
 ) -> dict[str, str]:
     """Слить контакт. Та же логика: None не затирает значение."""
     merged = {k: v for k, v in (existing or {}).items() if v is not None}
@@ -56,6 +56,7 @@ def merge_contact(
         if value is not None:
             merged[key] = value
     return merged
+
 
 def is_contact_valid(contact: dict | None) -> bool:
     """
@@ -70,8 +71,8 @@ def is_contact_valid(contact: dict | None) -> bool:
 
 
 def compute_missing_fields(
-        qualification_data: dict[str, str | None],
-        contact: dict[str, str | None],
+    qualification_data: dict[str, str | None],
+    contact: dict[str, str | None],
 ) -> list[str]:
     """Backend сам считает, чего не хватает. LLM не доверяем."""
     missing = [f for f in _REQUIRED_QUAL if not qualification_data.get(f)]
@@ -86,10 +87,10 @@ def is_lead_ready(qualification_data: dict, contact: dict | None) -> bool:
 
 
 def resolve_next_state(
-        current: DialogState,
-        decision: AgentDecision,
-        merged_qualification: dict,
-        merged_contact: dict,
+    current: DialogState,
+    decision: AgentDecision,
+    merged_qualification: dict,
+    merged_contact: dict,
 ) -> DialogState:
     """Детерминированно определяет следующее состояние.
 
@@ -104,7 +105,9 @@ def resolve_next_state(
         merged_qualification, merged_contact
     ):
         qual_missing = [f for f in _REQUIRED_QUAL if not merged_qualification.get(f)]
-        suggested = DialogState.QUALIFICATION if qual_missing else DialogState.CONTACT_CAPTURE
+        suggested = (
+            DialogState.QUALIFICATION if qual_missing else DialogState.CONTACT_CAPTURE
+        )
 
     # Если переход допустим — принимаем
     if suggested in _ALLOWED_TRANSITIONS.get(current, set()):
@@ -113,12 +116,14 @@ def resolve_next_state(
     # Если нет — остаёмся на месте (не падаем)
     return current
 
+
 _MAX_CONTACT_ATTEMPTS = 2
 
+
 def should_close_after_contact_attempts(
-        current: DialogState,
-        merged_contact: dict | None,
-        contact_attempts:int,
+    current: DialogState,
+    merged_contact: dict | None,
+    contact_attempts: int,
 ) -> bool:
     """True, если в CONTACT_CAPTURE контакт не получен за лимит попыток → закрываем."""
     return (

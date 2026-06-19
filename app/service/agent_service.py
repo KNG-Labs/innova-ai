@@ -21,6 +21,7 @@ from app.service.state_machine import (
     should_close_after_contact_attempts,
 )
 
+
 class AgentService:
     def __init__(
         self,
@@ -82,7 +83,9 @@ class AgentService:
         )
 
         # Слить данные ДО решения о переходе (backend - источник истины)
-        merged_qual = merge_qualification_data(qualification_data, decision.qualification_data)
+        merged_qual = merge_qualification_data(
+            qualification_data, decision.qualification_data
+        )
         merged_contact = merge_contact(current_contact, decision.extracted_contact)
         final_contact = merged_contact if merged_contact else None
 
@@ -95,14 +98,15 @@ class AgentService:
         )
 
         contact_attempts = session.contact_attempts
-        if current_state == DialogState.CONTACT_CAPTURE and not is_contact_valid(final_contact):
+        if current_state == DialogState.CONTACT_CAPTURE and not is_contact_valid(
+            final_contact
+        ):
             contact_attempts += 1
 
         if should_close_after_contact_attempts(
             current_state, final_contact, contact_attempts
         ):
             next_state = DialogState.CLOSED
-
 
         # Сохранение ответа ассистента
         assistant_message = await self._messages.create(
@@ -113,8 +117,7 @@ class AgentService:
 
         # Определить, что сессия закрывается
         is_closing = (
-            next_state == DialogState.CLOSED
-            and current_state != DialogState.CLOSED
+            next_state == DialogState.CLOSED and current_state != DialogState.CLOSED
         )
         # Обновить состояние сессии
         await self._sessions.update_state(

@@ -77,7 +77,10 @@ def test_false_lead_ready_incomplete_qual_stays_qualification():
         lead_ready=True,
     )
     result = resolve_next_state(
-        DialogState.QUALIFICATION, decision, {"service": "SEO"}, {"phone": "+79991234567"}
+        DialogState.QUALIFICATION,
+        decision,
+        {"service": "SEO"},
+        {"phone": "+79991234567"},
     )
     assert result == DialogState.QUALIFICATION
 
@@ -131,7 +134,6 @@ def test_compute_missing_fields_lists_gaps():
 
     missing = compute_missing_fields({"service": "SEO"}, None)
     assert set(missing) == {"deadline", "budget", "contact"}
-
 
 
 def test_is_lead_ready_true():
@@ -207,25 +209,31 @@ async def test_fake_client_returns_scripted_sequence():
 
 # Contant attempts
 
+
 def test_close_after_two_contact_attempts():
     from app.service.state_machine import should_close_after_contact_attempts
 
-    assert should_close_after_contact_attempts(
-        DialogState.CONTACT_CAPTURE, None, 2
-    ) is True
+    assert (
+        should_close_after_contact_attempts(DialogState.CONTACT_CAPTURE, None, 2)
+        is True
+    )
 
 
 def test_no_close_on_first_attempt():
     from app.service.state_machine import should_close_after_contact_attempts
 
-    assert should_close_after_contact_attempts(
-        DialogState.CONTACT_CAPTURE, None, 1
-    ) is False
+    assert (
+        should_close_after_contact_attempts(DialogState.CONTACT_CAPTURE, None, 1)
+        is False
+    )
 
 
 def test_no_close_if_contact_valid():
     from app.service.state_machine import should_close_after_contact_attempts
 
-    assert should_close_after_contact_attempts(
-        DialogState.CONTACT_CAPTURE, {"phone": "+79991234567"}, 5
-    ) is False
+    assert (
+        should_close_after_contact_attempts(
+            DialogState.CONTACT_CAPTURE, {"phone": "+79991234567"}, 5
+        )
+        is False
+    )

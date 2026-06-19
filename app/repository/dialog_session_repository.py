@@ -80,11 +80,11 @@ class DialogSessionRepository:
         return await self.create(user_id=user_id)
 
     async def update_state(
-            self,
-            session_id: UUID,
-            state: str,
-            contact_attempts: int | None = None,
-            close: bool = False,
+        self,
+        session_id: UUID,
+        state: str,
+        contact_attempts: int | None = None,
+        close: bool = False,
     ) -> None:
         values: dict = {"state": state}
         if contact_attempts is not None:
@@ -92,8 +92,6 @@ class DialogSessionRepository:
         if close:
             values["closed_at"] = func.now()
         stmt = (
-            update(DialogSession)
-            .where(DialogSession.id == session_id)
-            .values(**values)
+            update(DialogSession).where(DialogSession.id == session_id).values(**values)
         )
         await self._session.execute(stmt)
