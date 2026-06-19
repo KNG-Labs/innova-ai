@@ -45,7 +45,10 @@ INNOVA_AI/
 ├── app
 │   ├── client
 │   │   ├── __init__.py
-│   │   └── ag2_agent_client.py
+│   │   ├── ag2_agent_client.py
+│   │   ├── crm_client.py
+│   │   ├── queue_client.py
+│   │   └── vector_client.py
 │   ├── db
 │   │   ├── __init__.py
 │   │   ├── base.py
@@ -89,7 +92,10 @@ INNOVA_AI/
 │   └── System_Design.md
 ├── migrations
 │   ├── versions
-│   │   └── 8cd1e0d95b7a_create_tables.py
+│   │   ├── 8cd1e0d95b7a_create_tables.py
+│   │   ├── 21a80ea32600_fk_ondelete_restrict.py
+│   │   ├── 412db7507c59_add_contact_attempts_to_dialog_sessions.py
+│   │   └── ee6e74045934_soft_delete_deleted_at_partial_unique_.py
 │   ├── README
 │   ├── env.py
 │   └── script.py.mako
@@ -194,9 +200,9 @@ GET /sessions/{session_id}/messages
   "user_message_id": "57c7b362-4b4c-4ebf-a6f5-a6c9bfc19f1a",
   "assistant_message_id": "bb9ffb5f-d98c-4cc2-bf7e-c6e5dfde4b63",
   "answer": "Здравствуйте! Чем могу помочь?",
-  "state": "GREETING",
+  "state": "FAQ",
   "intent": "pricing",
-  "next_step": "send_pricing_summary"
+  "next_step": "FAQ"
 }
 ```
 
@@ -307,7 +313,13 @@ CLOSED
 | `users` | Анонимные пользователи. Уникальность по `channel + anonymous_id` |
 | `dialog_sessions` | Сессии диалога пользователя с агентом |
 | `messages` | История сообщений `user` / `assistant` |
-| `leads` | Черновая заготовка будущей карточки лида |
+| `leads` | Карточка лида: draft -> ready по backend-проверке обязательных полей |
+
+### Удаление записей
+
+Удаление мягкое (soft delete): строки помечаются `deleted_at`, физически не стираются. Все читающие запросы фильтруют `deleted_at IS NULL`. Уникальность `users` по `channel + anonymous_id` — частичная, только среди не-удалённых строк. Внешние ключи стоят на `ON DELETE RESTRICT` — случайный физический каскад невозможен.
+
+В MVP пользовательского удаления нет: это только механизм на уровне БД и репозиториев.
 
 ### Упрощённая схема
 
