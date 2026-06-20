@@ -18,6 +18,7 @@ from app.service.state_machine import (
     is_contact_valid,
     merge_qualification_data,
     merge_contact,
+    compute_missing_fields,
     should_close_after_contact_attempts,
 )
 
@@ -141,6 +142,12 @@ class AgentService:
         ):
             await self._leads.update(lead, status="ready")
 
+        # у нового lead проставится id
+        await self._db_session.flush()
+        lead_id = lead.id
+
+        missing_fields = compute_missing_fields(merged_qual, final_contact)
+
         await self._db_session.commit()
 
         return AgentMessageResponse(
@@ -152,4 +159,6 @@ class AgentService:
             state=next_state,
             intent=decision.intent,
             next_step=next_state.value,
+            missing_fields=missing_fields,
+            lead_id=lead_id,
         )

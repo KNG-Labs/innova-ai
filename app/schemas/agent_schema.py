@@ -86,6 +86,8 @@ class AgentMessageResponse(BaseModel):
     state: DialogState
     intent: str
     next_step: str | None = None
+    missing_fields: list[str] = Field(default_factory=list)
+    lead_id: UUID | None = None
 
 
 class AgentDecision(BaseModel):

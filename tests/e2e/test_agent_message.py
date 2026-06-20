@@ -1,3 +1,5 @@
+from uuid import UUID
+
 import pytest
 
 from app.client.ag2_agent_client import FakeAg2AgentClient
@@ -68,6 +70,8 @@ async def test_full_lead_flow_reaches_lead_ready(client) -> None:
     d1 = r1.json()
     assert d1["state"] == "QUALIFICATION"
     session_id = d1["session_id"]
+    assert d1["lead_id"] is not None
+    assert "missing_fields" in d1
 
     # Ход 2
     r2 = await client.post(
@@ -102,3 +106,11 @@ async def test_full_lead_flow_reaches_lead_ready(client) -> None:
     msgs = await client.get(f"/sessions/{session_id}/messages")
     assert msgs.status_code == 200
     assert len(msgs.json()) == 6  # 3 user + 3 assistant
+
+    from uuid import UUID
+    from app.models import Lead
+
+    assert d3["missing_fields"] == []
+    async with app.state.db_session_maker() as db:
+        lead = await db.get(Lead, UUID(d3["lead_id"]))
+        assert lead.status == "ready"
