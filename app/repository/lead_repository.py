@@ -108,7 +108,7 @@ class LeadRepository:
 
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
-    
+
     async def upsert_draft(
         self,
         user_id: UUID,

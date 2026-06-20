@@ -149,7 +149,7 @@ def test_is_lead_ready_false_missing_qual():
 
 
 def test_is_lead_ready_false_no_contact():
-    qual = {"car_model":"BMW","budget":"50k","purchase_type":"кредит"}
+    qual = {"car_model": "BMW", "budget": "50k", "purchase_type": "кредит"}
     assert is_lead_ready(qual, None) is False
 
 
@@ -162,15 +162,21 @@ def test_is_lead_ready_false_empty_contact():
 
 
 def test_agent_decision_coerces_numeric_values_to_str():
-    d = AgentDecision.model_validate({
-        "answer": "ok",
-        "intent": "lead_request",
-        "next_state": "QUALIFICATION",
-        "qualification_data": {"car_model": "Mercedes", "budget": 500000, "purchase_type": None},
-        "extracted_contact": {"phone": 79991234567, "name": None},
-        "missing_fields": ["purchase_type"],
-        "lead_ready": False,
-    })
+    d = AgentDecision.model_validate(
+        {
+            "answer": "ok",
+            "intent": "lead_request",
+            "next_state": "QUALIFICATION",
+            "qualification_data": {
+                "car_model": "Mercedes",
+                "budget": 500000,
+                "purchase_type": None,
+            },
+            "extracted_contact": {"phone": 79991234567, "name": None},
+            "missing_fields": ["purchase_type"],
+            "lead_ready": False,
+        }
+    )
     assert d.qualification_data["budget"] == "500000"
     assert d.qualification_data["purchase_type"] is None
     assert d.extracted_contact["phone"] == "79991234567"
@@ -215,7 +221,10 @@ async def test_fake_client_returns_scripted_sequence():
         qualification_data={},
     )
     r2 = await client.decide(
-        user_message="Хочу в кредит", history=[], current_state="FAQ", qualification_data={}
+        user_message="Хочу в кредит",
+        history=[],
+        current_state="FAQ",
+        qualification_data={},
     )
 
     assert r1.next_state == DialogState.FAQ

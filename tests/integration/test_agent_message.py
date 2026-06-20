@@ -66,7 +66,9 @@ async def test_post_message_creates_anonymous_user_session_and_messages(client) 
     assert messages[0]["content"] == "Сколько стоит Camry?"
 
     assert messages[1]["role"] == "assistant"
-    assert messages[1]["content"] == "Toyota Camry — от 2 500 000 ₽. Что ещё подсказать?"
+    assert (
+        messages[1]["content"] == "Toyota Camry — от 2 500 000 ₽. Что ещё подсказать?"
+    )
 
 
 @pytest.mark.asyncio
