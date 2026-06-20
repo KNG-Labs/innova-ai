@@ -100,6 +100,15 @@ class LeadRepository:
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
 
+    async def list_all(self, status: str | None = None) -> list[Lead]:
+        stmt = select(Lead).where(Lead.deleted_at.is_(None))
+        if status is not None:
+            stmt = stmt.where(Lead.status == status)
+        stmt = stmt.order_by(Lead.created_at.desc())
+
+        result = await self._session.execute(stmt)
+        return list(result.scalars().all())
+    
     async def upsert_draft(
         self,
         user_id: UUID,

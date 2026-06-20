@@ -11,6 +11,7 @@ from app.db.session import create_session_maker
 from app.service.agent_service import AgentService
 from app.service.business_service import MessageNormalizer
 from app.service.session_service import SessionService
+from app.service.lead_service import LeadService
 
 
 async def init_app_state(app: FastAPI) -> None:
@@ -88,3 +89,9 @@ async def get_session_service(
     db_session: AsyncSession = Depends(get_db_session),
 ) -> SessionService:
     return SessionService(db_session=db_session)
+
+
+async def get_lead_service(
+    db_session: AsyncSession = Depends(get_db_session),
+) -> LeadService:
+    return LeadService(db_session=db_session)
