@@ -55,18 +55,18 @@ def test_state_machine_blocks_lead_ready_without_contact():
         answer="ok",
         intent="lead_request",
         next_state=DialogState.LEAD_READY,
-        qualification_data={"service": "SEO"},
+        qualification_data={"purchase_type": "кредит"},
         extracted_contact=None,
         missing_fields=[],
         lead_ready=True,
     )
-    merged_qual = {"service": "SEO", "deadline": "2 недели", "budget": "50k"}
+    merged_qual = {"purchase_type": "кредит", "car_model": "BMW", "budget": "50k"}
     result = resolve_next_state(DialogState.QUALIFICATION, decision, merged_qual, None)
     assert result == DialogState.CONTACT_CAPTURE
 
 
 def test_false_lead_ready_incomplete_qual_stays_qualification():
-    # LLM врёт: lead_ready=true, но deadline/budget нет
+    # LLM врёт: lead_ready=true, но car_model/budget нет
     decision = AgentDecision(
         answer="ok",
         intent="lead_request",
@@ -79,7 +79,7 @@ def test_false_lead_ready_incomplete_qual_stays_qualification():
     result = resolve_next_state(
         DialogState.QUALIFICATION,
         decision,
-        {"service": "SEO"},
+        {"purchase_type": "кредит"},
         {"phone": "+79991234567"},
     )
     assert result == DialogState.QUALIFICATION
@@ -95,7 +95,7 @@ def test_false_lead_ready_full_qual_no_contact_goes_contact_capture():
         missing_fields=[],
         lead_ready=True,
     )
-    merged_qual = {"service": "SEO", "deadline": "2 недели", "budget": "50k"}
+    merged_qual = {"purchase_type": "кредит", "car_model": "BMW", "budget": "50k"}
     result = resolve_next_state(
         DialogState.CONTACT_CAPTURE, decision, merged_qual, None
     )
@@ -112,7 +112,7 @@ def test_lead_ready_allowed_when_merged_complete():
         missing_fields=[],
         lead_ready=True,
     )
-    merged_qual = {"service": "SEO", "deadline": "2 недели", "budget": "50k"}
+    merged_qual = {"purchase_type": "кредит", "car_model": "BMW", "budget": "50k"}
     result = resolve_next_state(
         DialogState.CONTACT_CAPTURE, decision, merged_qual, {"phone": "+79991234567"}
     )
@@ -122,43 +122,58 @@ def test_lead_ready_allowed_when_merged_complete():
 def test_merge_qual_none_does_not_overwrite():
     from app.service.state_machine import merge_qualification_data
 
-    existing = {"service": "SEO", "budget": "50k"}
-    extracted = {"service": None, "deadline": "2 недели"}
+    existing = {"purchase_type": "кредит", "budget": "50k"}
+    extracted = {"purchase_type": None, "car_model": "BMW"}
     merged = merge_qualification_data(existing, extracted)
-    assert merged["service"] == "SEO"
-    assert merged["deadline"] == "2 недели"
+    assert merged["purchase_type"] == "кредит"
+    assert merged["car_model"] == "BMW"
 
 
 def test_compute_missing_fields_lists_gaps():
     from app.service.state_machine import compute_missing_fields
 
-    missing = compute_missing_fields({"service": "SEO"}, None)
-    assert set(missing) == {"deadline", "budget", "contact"}
+    missing = compute_missing_fields({"purchase_type": "кредит"}, None)
+    assert set(missing) == {"car_model", "budget", "contact"}
 
 
 def test_is_lead_ready_true():
-    data = {"service": "SEO", "deadline": "2 недели", "budget": "50k"}
+    data = {"purchase_type": "кредит", "car_model": "BMW", "budget": "50k"}
     contact = {"phone": "+77777"}
     assert is_lead_ready(data, contact) is True
 
 
 def test_is_lead_ready_false_missing_qual():
-    qual = {"service": "SEO", "deadline": None, "budget": None}
+    qual = {"purchase_type": "кредит", "car_model": None, "budget": None}
     contact = {"phone": "+7999"}
     assert is_lead_ready(qual, contact) is False
 
 
 def test_is_lead_ready_false_no_contact():
-    qual = {"service": "SEO", "deadline": "2 недели", "budget": "50k"}
+    qual = {"car_model":"BMW","budget":"50k","purchase_type":"кредит"}
     assert is_lead_ready(qual, None) is False
 
 
 def test_is_lead_ready_false_empty_contact():
-    qual = {"service": "SEO", "deadline": "2 недели", "budget": "50k"}
+    qual = {"purchase_type": "кредит", "car_model": "BMW", "budget": "50k"}
     assert is_lead_ready(qual, {"phone": None}) is False
 
 
 # --- Unit: FakeAg2AgentClient ---
+
+
+def test_agent_decision_coerces_numeric_values_to_str():
+    d = AgentDecision.model_validate({
+        "answer": "ok",
+        "intent": "lead_request",
+        "next_state": "QUALIFICATION",
+        "qualification_data": {"car_model": "Mercedes", "budget": 500000, "purchase_type": None},
+        "extracted_contact": {"phone": 79991234567, "name": None},
+        "missing_fields": ["purchase_type"],
+        "lead_ready": False,
+    })
+    assert d.qualification_data["budget"] == "500000"
+    assert d.qualification_data["purchase_type"] is None
+    assert d.extracted_contact["phone"] == "79991234567"
 
 
 @pytest.mark.asyncio
@@ -186,7 +201,7 @@ async def test_fake_client_returns_scripted_sequence():
             answer="Хорошо, уточните бюджет",
             intent="pricing",
             next_state=DialogState.QUALIFICATION,
-            qualification_data={"service": "SEO"},
+            qualification_data={"purchase_type": "кредит"},
             missing_fields=["budget", "contact"],
             lead_ready=False,
         ),
@@ -200,14 +215,14 @@ async def test_fake_client_returns_scripted_sequence():
         qualification_data={},
     )
     r2 = await client.decide(
-        user_message="Хочу SEO", history=[], current_state="FAQ", qualification_data={}
+        user_message="Хочу в кредит", history=[], current_state="FAQ", qualification_data={}
     )
 
     assert r1.next_state == DialogState.FAQ
-    assert r2.qualification_data["service"] == "SEO"
+    assert r2.qualification_data["purchase_type"] == "кредит"
 
 
-# Contant attempts
+# Contact attempts
 
 
 def test_close_after_two_contact_attempts():

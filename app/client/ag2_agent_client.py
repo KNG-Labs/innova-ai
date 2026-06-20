@@ -1,39 +1,52 @@
 import json
+import logging
 
 from autogen import ConversableAgent, LLMConfig
 from pydantic import ValidationError
 from typing import Protocol, runtime_checkable
 
 from app.schemas.agent_schema import DialogState, AgentDecision
+from app.domain import QUALIFICATION_FIELDS, MISSING_ALL
 
+logger = logging.getLogger(__name__)
 
 _FALLBACK_DECISION = AgentDecision(
     answer="Извините, не удалось обработать запрос. Попробуйте ещё раз.",
     intent="unknown",
     next_state=DialogState.GREETING,
     qualification_data={},
-    missing_fields=["service", "deadline", "budget", "contact"],
+    missing_fields=MISSING_ALL,
     lead_ready=False,
     lead_summary=None,
 )
 
-_SYSTEM_PROMPT = """\
-Ты — AI-ассистент по лидогенерации компании Innova AI.
-Твоя задача — вести пользователя по сценарию: сначала ответь на вопрос,
-затем квалифицируй потребность (услуга, дедлайн, бюджет), затем собери контакт.
+_fields_desc = "\n".join(f"- {k}: {v}" for k, v in QUALIFICATION_FIELDS.items())
+_qual_json = ", ".join(f'"{k}": null' for k in QUALIFICATION_FIELDS)
 
-Текущий статус диалога и уже собранные данные передаются в каждом сообщении.
+_SYSTEM_PROMPT = f"""\
+Ты — AI-ассистент по лидогенерации.
+Сначала ответь на вопрос, затем квалифицируй потребность по полям:
+{_fields_desc}
+затем собери контакт.
+
+Текущий статус и собранные данные передаются в каждом сообщении.
 
 ВСЕГДА отвечай строго в JSON по схеме:
-{
+{{
   "answer": "текст ответа пользователю",
   "intent": "pricing | support | lead_request | general | unknown",
   "next_state": "GREETING | FAQ | QUALIFICATION | CONTACT_CAPTURE | LEAD_READY | CLOSED",
-  "qualification_data": {"service": null, "deadline": null, "budget": null, "contact": null},
-  "missing_fields": ["список полей которых не хватает"],
+  "qualification_data": {{{_qual_json}}},
+  "extracted_contact": {{"phone": null, "email": null, "telegram": null, "name": null}},
+  "missing_fields": [],
   "lead_ready": false,
   "lead_summary": null
-}
+}}
+
+В qualification_data клади извлечённые значения полей или null, если поля ещё нет.
+В missing_fields перечисли поля, которых не хватает.
+Контакт (телефон/email/telegram/имя) клади ТОЛЬКО в extracted_contact.
+Не благодари и не обещай, что менеджер свяжется, пока контакт не собран.
 Никакого текста вне JSON. Только валидный JSON.
 """
 
@@ -61,6 +74,7 @@ class Ag2AgentClient(LLMClient):
                 "model": model,
                 "api_key": api_key,
                 "base_url": base_url,
+                "price": [0, 0],
             }
         )
         self._agent = ConversableAgent(
@@ -102,6 +116,7 @@ def _parse_reply(reply: str | dict | None) -> AgentDecision:
         return _FALLBACK_DECISION
 
     text = reply if isinstance(reply, str) else reply.get("content", "")
+    raw = text  # сохранить сырое для лога
 
     text = text.strip()
     if text.startswith("```"):
@@ -113,7 +128,8 @@ def _parse_reply(reply: str | dict | None) -> AgentDecision:
     try:
         data = json.loads(text)
         return AgentDecision.model_validate(data)
-    except (json.JSONDecodeError, ValidationError):
+    except (json.JSONDecodeError, ValidationError) as e:
+        logger.warning("AG2 parse failed: %s | raw=%r", e, raw)
         return _FALLBACK_DECISION
 
 
@@ -139,7 +155,7 @@ class FakeAg2AgentClient(LLMClient):
                 intent="general",
                 next_state=DialogState.QUALIFICATION,
                 qualification_data={},
-                missing_fields=["service", "deadline", "budget", "contact"],
+                missing_fields=MISSING_ALL,
                 lead_ready=False,
             )
         self._call_count += 1

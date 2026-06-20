@@ -25,7 +25,11 @@ async def test_get_leads_lists_lead_and_detail_shows_qualification(client) -> No
 
     msg = await client.post(
         "/message",
-        json={"anonymous_id": "lead-read-user", "channel": "website", "content": "Нужно SEO"},
+        json={
+            "anonymous_id": "lead-read-user",
+            "channel": "website",
+            "content": "Нужно SEO",
+        },
     )
     assert msg.status_code == 200
     lead_id = msg.json()["lead_id"]

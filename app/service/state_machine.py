@@ -1,9 +1,6 @@
 from app.schemas.agent_schema import DialogState
 from app.client.ag2_agent_client import AgentDecision
-
-
-# Обязательные поля квалификации
-_REQUIRED_QUAL: tuple[str, ...] = ("service", "deadline", "budget")
+from app.domain import REQUIRED_QUAL
 
 
 # Допустимые переходы
@@ -75,7 +72,7 @@ def compute_missing_fields(
     contact: dict[str, str | None] | None,
 ) -> list[str]:
     """Backend сам считает, чего не хватает. LLM не доверяем."""
-    missing = [f for f in _REQUIRED_QUAL if not qualification_data.get(f)]
+    missing = [f for f in REQUIRED_QUAL if not qualification_data.get(f)]
     if not is_contact_valid(contact):
         missing.append("contact")
     return missing
@@ -104,7 +101,7 @@ def resolve_next_state(
     if suggested == DialogState.LEAD_READY and not is_lead_ready(
         merged_qualification, merged_contact
     ):
-        qual_missing = [f for f in _REQUIRED_QUAL if not merged_qualification.get(f)]
+        qual_missing = [f for f in REQUIRED_QUAL if not merged_qualification.get(f)]
         suggested = (
             DialogState.QUALIFICATION if qual_missing else DialogState.CONTACT_CAPTURE
         )

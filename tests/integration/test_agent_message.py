@@ -1,6 +1,7 @@
 import pytest
 
 from app.client.ag2_agent_client import FakeAg2AgentClient, AgentDecision
+from app.domain import MISSING_ALL
 from app.schemas import DialogState
 from main import app
 from uuid import UUID, uuid4
@@ -21,11 +22,11 @@ async def test_post_message_creates_anonymous_user_session_and_messages(client) 
     app.state.llm_client = FakeAg2AgentClient(
         responses=[
             AgentDecision(
-                answer="Внедрение — от 150 000 ₽. Что ещё подсказать?",
+                answer="Toyota Camry — от 2 500 000 ₽. Что ещё подсказать?",
                 intent="pricing",
                 next_state=DialogState.FAQ,
                 qualification_data={},
-                missing_fields=["service", "deadline", "budget", "contact"],
+                missing_fields=MISSING_ALL,
                 lead_ready=False,
             ),
         ]
@@ -34,7 +35,7 @@ async def test_post_message_creates_anonymous_user_session_and_messages(client) 
     payload = {
         "anonymous_id": "test-user-1",
         "channel": "website",
-        "content": " Сколько   стоит внедрение? ",
+        "content": " Сколько   стоит Camry? ",
     }
 
     response = await client.post("/message", json=payload)
@@ -46,7 +47,7 @@ async def test_post_message_creates_anonymous_user_session_and_messages(client) 
     assert data["session_id"]
     assert data["user_message_id"]
     assert data["assistant_message_id"]
-    assert data["answer"] == "Внедрение — от 150 000 ₽. Что ещё подсказать?"
+    assert data["answer"] == "Toyota Camry — от 2 500 000 ₽. Что ещё подсказать?"
     assert data["intent"] == "pricing"
     # GREETING -> FAQ — допустимый переход в state_machine,
     # next_step в новом контракте — это имя следующего состояния.
@@ -62,10 +63,10 @@ async def test_post_message_creates_anonymous_user_session_and_messages(client) 
 
     assert messages[0]["role"] == "user"
     # content нормализуется: лишние пробелы схлопываются.
-    assert messages[0]["content"] == "Сколько стоит внедрение?"
+    assert messages[0]["content"] == "Сколько стоит Camry?"
 
     assert messages[1]["role"] == "assistant"
-    assert messages[1]["content"] == "Внедрение — от 150 000 ₽. Что ещё подсказать?"
+    assert messages[1]["content"] == "Toyota Camry — от 2 500 000 ₽. Что ещё подсказать?"
 
 
 @pytest.mark.asyncio
@@ -79,19 +80,19 @@ async def test_post_message_continues_existing_dialog_session(client) -> None:
     app.state.llm_client = FakeAg2AgentClient(
         responses=[
             AgentDecision(
-                answer="Здравствуйте! Расскажите, что нужно?",
+                answer="Здравствуйте! Какая модель вас интересует?",
                 intent="general",
                 next_state=DialogState.QUALIFICATION,
                 qualification_data={},
-                missing_fields=["service", "deadline", "budget", "contact"],
+                missing_fields=MISSING_ALL,
                 lead_ready=False,
             ),
             AgentDecision(
                 answer="Отлично! Оставьте контакт, и мы свяжемся.",
                 intent="lead_request",
                 next_state=DialogState.CONTACT_CAPTURE,
-                qualification_data={"service": "внедрение"},
-                missing_fields=["deadline", "budget", "contact"],
+                qualification_data={"car_model": "Toyota Camry"},
+                missing_fields=["budget", "purchase_type", "contact"],
                 lead_ready=False,
             ),
         ]
@@ -438,7 +439,7 @@ async def test_closed_session_sets_closed_at_and_next_message_starts_new_session
                 intent="general",
                 next_state=DialogState.QUALIFICATION,
                 qualification_data={},
-                missing_fields=["service", "deadline", "budget", "contact"],
+                missing_fields=MISSING_ALL,
                 lead_ready=False,
             ),
             AgentDecision(
@@ -446,7 +447,7 @@ async def test_closed_session_sets_closed_at_and_next_message_starts_new_session
                 intent="general",
                 next_state=DialogState.CLOSED,
                 qualification_data={},
-                missing_fields=["service", "deadline", "budget", "contact"],
+                missing_fields=MISSING_ALL,
                 lead_ready=False,
             ),
         ]

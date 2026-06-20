@@ -101,3 +101,12 @@ class AgentDecision(BaseModel):
     lead_ready: bool
     extracted_contact: dict[str, str | None] | None = None
     lead_summary: str | None = None
+
+    @field_validator("qualification_data", "extracted_contact", mode="before")
+    @classmethod
+    def _stringify_values(cls, v: object) -> object:
+        """LLM иногда шлёт числа (budget: 500000, phone: 7999...).
+        Приводим значения dict к строке до проверки типа."""
+        if isinstance(v, dict):
+            return {k: (None if val is None else str(val)) for k, val in v.items()}
+        return v
