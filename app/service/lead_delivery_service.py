@@ -5,13 +5,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.client.crm_client import CrmClient, build_crm_payload
 from app.models.lead_model import Lead
 from app.repository.lead_repository import LeadRepository
+from app.service.lead_service import LeadNotFoundError
 
 _DELIVERABLE_STATUSES = {"ready", "delivery_failed"}
 _ERROR_MAX_LEN = 1000
-
-
-class LeadNotFoundError(Exception):
-    """Лид не найден."""
 
 
 class LeadNotDeliverableError(Exception):
@@ -47,8 +44,9 @@ class LeadDeliveryService:
             lead.last_delivery_error = None
         except Exception as exc:  # noqa: BLE001 - ошибка доставки = бизнес-исход, не 500
             lead.status = "delivery_failed"
-            lead.last_delivery_error = str(exc)[:_ERROR_MAX_LEN]
+            lead.last_delivery_error = repr(exc)[:_ERROR_MAX_LEN]
 
         await self._db_session.flush()
         await self._db_session.commit()
+        await self._db_session.refresh(lead)
         return lead

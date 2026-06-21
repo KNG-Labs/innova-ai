@@ -1,5 +1,6 @@
 from typing import Any, Protocol
 from uuid import UUID
+import httpx
 
 
 class CrmPayload:
@@ -72,3 +73,71 @@ class FakeCrmClient:
         if self._fail:
             raise RuntimeError("fake CRM rejected the lead")
         self.delivered.append(payload)
+
+
+class WebhookLeadDeliveryClient:
+    """Backup/debug destination: один POST с плоским payload."""
+
+    def __init__(self, *, http_client: httpx.AsyncClient, url: str) -> None:
+        self._http = http_client
+        self._url = url
+
+    async def deliver_lead(self, payload: CrmPayload) -> None:
+        resp = await self._http.post(self._url, json=_payload_to_dict(payload))
+        if resp.status_code >= 300:
+            raise RuntimeError(f"webhook {resp.status_code}: {resp.text[:500]}")
+
+
+class AmoCrmLeadDeliveryClient:
+    """Создаёт сделку+контакт одним вызовом /api/v4/leads/complex.
+    Долгоживущий токен в Bearer — без OAuth-flow."""
+
+    def __init__(
+        self, *, http_client: httpx.AsyncClient, base_url: str, access_token: str
+    ) -> None:
+        self._http = http_client
+        self._base_url = base_url.rstrip("/")
+        self._token = access_token
+
+    async def deliver_lead(self, payload: CrmPayload) -> None:
+        resp = await self._http.post(
+            f"{self._base_url}/api/v4/leads/complex",
+            headers={"Authorization": f"Bearer {self._token}"},
+            json=self._to_complex_body(payload),
+        )
+        if resp.status_code >= 300:
+            raise RuntimeError(f"amoCRM {resp.status_code}: {resp.text[:500]}")
+
+    @staticmethod
+    def _to_complex_body(payload: CrmPayload) -> list[dict[str, Any]]:
+        cf: list[dict[str, Any]] = []
+        if payload.contact_phone:
+            cf.append(
+                {"field_code": "PHONE", "values": [{"value": payload.contact_phone}]}
+            )
+        if payload.contact_email:
+            cf.append(
+                {"field_code": "EMAIL", "values": [{"value": payload.contact_email}]}
+            )
+
+        contact: dict[str, Any] = {"name": payload.contact_name or "Аноним"}
+        if cf:
+            contact["custom_fields_values"] = cf
+
+        lead_name = f"Innova лид — {payload.car_model or 'авто'}"
+        return [{"name": lead_name, "_embedded": {"contacts": [contact]}}]
+
+
+def _payload_to_dict(payload: CrmPayload) -> dict[str, Any]:
+    return {
+        "lead_id": str(payload.lead_id),
+        "source": payload.source,
+        "contact_name": payload.contact_name,
+        "contact_phone": payload.contact_phone,
+        "contact_email": payload.contact_email,
+        "car_model": payload.car_model,
+        "budget": payload.budget,
+        "purchase_type": payload.purchase_type,
+        "summary": payload.summary,
+        "session_id": str(payload.session_id),
+    }

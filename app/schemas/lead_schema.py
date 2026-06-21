@@ -29,5 +29,6 @@ class LeadResponse(BaseModel):
     qualification: dict | None
     contact: dict | None
     summary: str | None
+    last_delivery_error: str | None = None
     created_at: datetime
     updated_at: datetime

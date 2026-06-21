@@ -68,8 +68,8 @@ def is_contact_valid(contact: dict | None) -> bool:
 
 
 def compute_missing_fields(
-    qualification_data: dict[str, str | None],
-    contact: dict[str, str | None] | None,
+    qualification_data: dict[str, str],
+    contact: dict[str, str] | None,
 ) -> list[str]:
     """Backend сам считает, чего не хватает. LLM не доверяем."""
     missing = [f for f in REQUIRED_QUAL if not qualification_data.get(f)]

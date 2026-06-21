@@ -2,7 +2,7 @@ from typing import Protocol
 
 
 class VectorSearchResult:
-    def __init__(self, content: str, score: float) -> int:
+    def __init__(self, content: str, score: float) -> None:
         self.content = content
         self.score = score
 

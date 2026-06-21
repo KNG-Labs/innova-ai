@@ -6,16 +6,22 @@ from fastapi import FastAPI, Request, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.client.ag2_agent_client import LLMClient
+from app.client.delivery_factory import (
+    get_delivery_provider,
+    build_queue_client,
+    build_crm_client,
+)
 from app.db.session import create_engine as create_db_engine
 from app.db.session import create_session_maker
 from app.service.agent_service import AgentService
 from app.service.business_service import MessageNormalizer
+from app.service.lead_delivery_service import LeadDeliveryService
 from app.service.session_service import SessionService
 from app.service.lead_service import LeadService
 
 
 async def init_app_state(app: FastAPI) -> None:
-    http_client = httpx.AsyncClient()
+    http_client = httpx.AsyncClient(timeout=30.0)
 
     app.state.http_client = http_client
 
@@ -56,11 +62,22 @@ async def init_app_state(app: FastAPI) -> None:
 
     app.state.llm_client = llm_client
 
+    app.state.delivery_provider = get_delivery_provider()
+    app.state.crm_client = build_crm_client(http_client)
+
+    queue_client, redis_conn = await build_queue_client()
+    app.state.queue_client = queue_client
+    app.state.redis_conn = redis_conn
+
 
 async def close_app_state(app: FastAPI) -> None:
     http_client = getattr(app.state, "http_client", None)
     if http_client is not None:
         await http_client.aclose()
+
+    redis_conn = getattr(app.state, "redis_conn", None)
+    if redis_conn is not None:
+        await redis_conn.aclose()
 
     db_engine = getattr(app.state, "db_engine", None)
     if db_engine is not None:
@@ -82,6 +99,8 @@ async def get_agent_service(
         db_session=db_session,
         llm_client=request.app.state.llm_client,
         normalizer=request.app.state.normalizer,
+        queue_client=request.app.state.queue_client,
+        delivery_provider=request.app.state.delivery_provider,
     )
 
 
@@ -95,3 +114,13 @@ async def get_lead_service(
     db_session: AsyncSession = Depends(get_db_session),
 ) -> LeadService:
     return LeadService(db_session=db_session)
+
+
+async def get_lead_delivery_service(
+    request: Request,
+    db_session: AsyncSession = Depends(get_db_session),
+) -> LeadDeliveryService:
+    return LeadDeliveryService(
+        db_session=db_session,
+        crm_client=request.app.state.crm_client,
+    )

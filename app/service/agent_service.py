@@ -1,6 +1,9 @@
+import logging
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.client.ag2_agent_client import Ag2AgentClient
+from app.client.queue_client import QueueClient
 from app.repository import LeadRepository
 from app.repository.dialog_session_repository import DialogSessionRepository
 from app.repository.message_repository import MessageRepository
@@ -22,6 +25,8 @@ from app.service.state_machine import (
     should_close_after_contact_attempts,
 )
 
+_logger = logging.getLogger(__name__)
+
 
 class AgentService:
     def __init__(
@@ -30,11 +35,15 @@ class AgentService:
         db_session: AsyncSession,
         llm_client: Ag2AgentClient,
         normalizer: MessageNormalizer,
+        queue_client: QueueClient,
+        delivery_provider: str,
     ) -> None:
 
         self._db_session = db_session
         self._llm_client = llm_client
         self._normalizer = normalizer
+        self._queue = queue_client
+        self._delivery_provider = delivery_provider
 
         self._users = UserRepository(db_session)
         self._sessions = DialogSessionRepository(db_session)
@@ -137,10 +146,14 @@ class AgentService:
             summary=decision.lead_summary,
         )
 
+        became_ready = False
         if next_state == DialogState.LEAD_READY and is_lead_ready(
             merged_qual, final_contact
         ):
-            await self._leads.update(lead, status="ready")
+            if lead.status == "draft":
+                await self._leads.update(lead, status="ready")
+                became_ready = True
+            # уже ready/delivered/failed — статус не трогаем
 
         # у нового lead проставится id
         await self._db_session.flush()
@@ -149,6 +162,18 @@ class AgentService:
         missing_fields = compute_missing_fields(merged_qual, final_contact)
 
         await self._db_session.commit()
+
+        if became_ready and self._delivery_provider != "disabled":
+            try:
+                await self._queue.enqueue_lead_delivery(
+                    lead_id, self._delivery_provider
+                )
+            except Exception:
+                _logger.warning(
+                    "enqueue failed for lead %s; оставлен в 'ready', чинить ручным /deliver",
+                    lead_id,
+                    exc_info=True,
+                )
 
         return AgentMessageResponse(
             user_id=user.id,

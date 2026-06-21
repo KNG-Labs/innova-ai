@@ -41,6 +41,7 @@ class LeadService:
             qualification=lead.qualification,
             contact=lead.contact,
             summary=lead.summary,
+            last_delivery_error=lead.last_delivery_error,
             created_at=lead.created_at,
             updated_at=lead.updated_at,
         )
