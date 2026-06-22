@@ -52,8 +52,8 @@ INNOVA_AI/
 │   │   ├── ag2_agent_client.py
 │   │   ├── crm_client.py
 │   │   ├── delivery_factory.py
-│   │   ├── queue_client.py
-│   │   └── vector_client.py
+│   │   ├── embedding_client.py
+│   │   └── queue_client.py
 │   ├── db
 │   │   ├── __init__.py
 │   │   ├── base.py
@@ -61,23 +61,27 @@ INNOVA_AI/
 │   ├── models
 │   │   ├── __init__.py
 │   │   ├── dialog_session_model.py
+│   │   ├── knowledge_model.py
 │   │   ├── lead_model.py
 │   │   ├── message_model.py
 │   │   └── user_model.py
 │   ├── repository
 │   │   ├── __init__.py
 │   │   ├── dialog_session_repository.py
+│   │   ├── knowledge_repository.py
 │   │   ├── lead_repository.py
 │   │   ├── message_repository.py
 │   │   └── user_repository.py
 │   ├── router
 │   │   ├── __init__.py
+│   │   ├── knowledge_router.py
 │   │   ├── lead_router.py
 │   │   ├── message_router.py
 │   │   └── session_router.py
 │   ├── schemas
 │   │   ├── __init__.py
 │   │   ├── agent_schema.py
+│   │   ├── knowledge_schema.py
 │   │   ├── lead_delivery_schema.py
 │   │   ├── lead_schema.py
 │   │   └── session_schema.py
@@ -85,6 +89,8 @@ INNOVA_AI/
 │   │   ├── __init__.py
 │   │   ├── agent_service.py
 │   │   ├── business_service.py
+│   │   ├── knowledge_ingestion_service.py
+│   │   ├── knowledge_retrieval_service.py
 │   │   ├── lead_delivery_service.py
 │   │   ├── lead_service.py
 │   │   ├── session_service.py
@@ -99,7 +105,7 @@ INNOVA_AI/
 ├── docs
 │   ├── diagrams
 │   │   ├── Components.puml
-│   │   ├── DataBase.puml
+│   │   ├── ER.plantuml
 │   │   └── Sequence.puml
 │   ├── MVP_ROADMAP.md
 │   ├── PRD.md
@@ -108,6 +114,7 @@ INNOVA_AI/
 │   ├── versions
 │   │   ├── 8cd1e0d95b7a_create_tables.py
 │   │   ├── 21a80ea32600_fk_ondelete_restrict.py
+│   │   ├── 65bce8c2411d_create_knowledge_tables.py
 │   │   ├── 412db7507c59_add_contact_attempts_to_dialog_sessions.py
 │   │   ├── a8ffd1220905_add_last_delivery_error_to_leads.py
 │   │   └── ee6e74045934_soft_delete_deleted_at_partial_unique_.py
@@ -121,6 +128,7 @@ INNOVA_AI/
 │   ├── integration
 │   │   ├── __init__.py
 │   │   ├── test_agent_message.py
+│   │   ├── test_knowledge.py
 │   │   ├── test_lead_delivery_fake.py
 │   │   ├── test_leads.py
 │   │   ├── test_message_enqueue.py
@@ -128,13 +136,15 @@ INNOVA_AI/
 │   ├── unit
 │   │   ├── __init__.py
 │   │   ├── test_ag2_flow.py
-│   │   └── test_crm_payload_mapping.py
+│   │   ├── test_crm_payload_mapping.py
+│   │   └── test_knowledge_chunking.py
 │   ├── __init__.py
 │   └── conftest.py
 ├── README.md
 ├── alembic.ini
 ├── main.py
-└── pyproject.toml
+├── pyproject.toml
+└── repomix-output.xml
 ```
 
 
@@ -200,6 +210,9 @@ GET  /sessions/{session_id}/messages
 GET  /leads
 GET  /leads/{lead_id}
 POST /leads/{lead_id}/deliver
+GET  /knowledge/documents
+POST  /knowledge/documents
+POST  /knowledge/reindex
 ```
 
 ---
@@ -734,24 +747,24 @@ uv run mypy app/ --ignore-missing-imports
 
 ## Текущий статус
 
-| Слой | Статус |
-|---|---|
-| Product-level `POST /message` | Реализовано |
-| Анонимный пользователь | Реализовано |
-| Сессии диалога | Реализовано |
-| История сообщений | Реализовано |
-| Read-routes для памяти | Реализовано |
-| Lead read API (`GET /leads`) | Реализовано |
-| PostgreSQL ORM-модели | Реализовано |
-| Alembic-миграции | Реализовано |
-| Stub LLM client | Реализовано |
-| AG2AgentClient + FakeAg2 | Реализовано |
-| AG2 fallback + startup validation | Реализовано |
-| Полноценная state machine | Реализовано |
-| Lead table (`draft → ready → delivered`) | Реализовано |
-| Redis очередь доставки | Реализовано |
-| CRM delivery (AmoCRM) | Реализовано |
-| RAG / база знаний | Планируется (Phase 7) |
+| Слой | Статус                |
+|---|-----------------------|
+| Product-level `POST /message` | Реализовано           |
+| Анонимный пользователь | Реализовано           |
+| Сессии диалога | Реализовано           |
+| История сообщений | Реализовано           |
+| Read-routes для памяти | Реализовано           |
+| Lead read API (`GET /leads`) | Реализовано           |
+| PostgreSQL ORM-модели | Реализовано           |
+| Alembic-миграции | Реализовано           |
+| Stub LLM client | Реализовано           |
+| AG2AgentClient + FakeAg2 | Реализовано           |
+| AG2 fallback + startup validation | Реализовано           |
+| Полноценная state machine | Реализовано           |
+| Lead table (`draft → ready → delivered`) | Реализовано           |
+| Redis очередь доставки | Реализовано           |
+| CRM delivery (AmoCRM) | Реализовано           |
+| RAG / база знаний | Реализовано           |
 | Web widget | Планируется (Phase 8) |
 
 ---
@@ -821,6 +834,34 @@ app/client/delivery_factory.py
 ```text
 app/worker/lead_delivery.py
 ```
+
+---
+## База знаний (RAG)
+
+Бот отвечает на FAQ только из загруженной базы. Нет ответа — предлагает оставить контакт, цифры не выдумывает.
+
+### Эндпоинты
+- `POST /knowledge/documents` — загрузка, тело = список: `[{"title": "...", "content": "..."}]`
+- `GET /knowledge/documents` — список загруженного
+- `POST /knowledge/reindex` — пересборка чанков и эмбеддингов всех документов
+
+### Конфиг (.env)
+- `EMBEDDING_PROVIDER=fake|openrouter` (по умолчанию `fake`)
+- `EMBEDDING_MODEL` — для `openrouter`, по умолчанию `openai/text-embedding-3-small` (dim 1536)
+- real-режим переиспользует `OPENROUTER_API_KEY` и `OPENROUTER_BASE_URL` (те же, что у AG2)
+- размерность фиксирована: `EMBEDDING_DIM=1536` в `app/domain.py`
+
+### Правило: смена эмбеддера → reindex
+Эмбеддинги разных моделей несравнимы. Сменил `EMBEDDING_PROVIDER` или `EMBEDDING_MODEL` — обязательно `POST /knowledge/reindex`. Иначе retrieval молча вернёт мусор. Один эмбеддер на инсталляцию.
+
+### pgvector
+Нужно расширение `vector` в PostgreSQL. Создаётся один раз суперюзером:
+`psql -U postgres -d <db> -c 'CREATE EXTENSION IF NOT EXISTS vector;'`
+Тест-БД из `TEST_DATABASE_URL` — то же самое (иначе integration-тесты падают на правах).
+
+### Тесты
+- `uv run pytest tests/unit/test_knowledge_chunking.py -q` — нарезка, без БД
+- `uv run pytest tests/integration/test_knowledge.py -q` — ingestion + retrieval на fake-эмбеддингах
 
 ---
 
