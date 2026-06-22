@@ -21,6 +21,13 @@ from app.service.lead_service import LeadService
 
 
 async def init_app_state(app: FastAPI) -> None:
+    # fail fast: ag2 без ключа смысла не имеет (Phase 6)
+    if (
+        os.getenv("LLM_PROVIDER", "stub").strip().lower() == "ag2"
+        and not os.getenv("OPENROUTER_API_KEY", "").strip()
+    ):
+        raise RuntimeError("LLM_PROVIDER=ag2 требует OPENROUTER_API_KEY")
+    
     http_client = httpx.AsyncClient(timeout=30.0)
 
     app.state.http_client = http_client

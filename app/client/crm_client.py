@@ -1,7 +1,9 @@
+import logging
 from typing import Any, Protocol
 from uuid import UUID
 import httpx
 
+_logger = logging.getLogger(__name__)
 
 class CrmPayload:
     def __init__(
@@ -100,13 +102,47 @@ class AmoCrmLeadDeliveryClient:
         self._token = access_token
 
     async def deliver_lead(self, payload: CrmPayload) -> None:
+        headers = {"Authorization": f"Bearer {self._token}"}
         resp = await self._http.post(
             f"{self._base_url}/api/v4/leads/complex",
-            headers={"Authorization": f"Bearer {self._token}"},
+            headers=headers,
             json=self._to_complex_body(payload),
         )
         if resp.status_code >= 300:
             raise RuntimeError(f"amoCRM {resp.status_code}: {resp.text[:500]}")
+
+        note = self._note_text(payload)
+        if not note:
+            return
+
+        # id сделки из ответа complex
+        try:
+            lead_amo_id = resp.json()[0]["id"]
+        except (ValueError, KeyError, IndexError, TypeError):
+            _logger.warning("amoCRM: не прочитал id сделки, примечание пропущено")
+            return
+
+        # note best-effort: сделка уже создана, доставку из-за note не валим
+        note_resp = await self._http.post(
+            f"{self._base_url}/api/v4/leads/{lead_amo_id}/notes",
+            headers=headers,
+            json=[{"note_type": "common", "params": {"text": note}}],
+        )
+        if note_resp.status_code >= 300:
+            _logger.warning(
+                "amoCRM note %s: %s", note_resp.status_code, note_resp.text[:300]
+            )
+
+    @staticmethod
+    def _note_text(payload: CrmPayload) -> str:
+        lines: list[str] = []
+        if payload.summary:
+            lines.append(f"Резюме: {payload.summary}")
+        if payload.budget:
+            lines.append(f"Бюджет: {payload.budget}")
+        if payload.purchase_type:
+            lines.append(f"Способ покупки: {payload.purchase_type}")
+        return "\n".join(lines)
 
     @staticmethod
     def _to_complex_body(payload: CrmPayload) -> list[dict[str, Any]]:

@@ -1,5 +1,6 @@
 import json
 import logging
+import asyncio
 
 from autogen import ConversableAgent, LLMConfig
 from pydantic import ValidationError
@@ -9,6 +10,8 @@ from app.schemas.agent_schema import DialogState, AgentDecision
 from app.domain import QUALIFICATION_FIELDS, MISSING_ALL
 
 logger = logging.getLogger(__name__)
+
+_AG2_TIMEOUT_S = 60  # free-модели OpenRouter медленные; жёсткий потолок
 
 _FALLBACK_DECISION = AgentDecision(
     answer="Извините, не удалось обработать запрос. Попробуйте ещё раз.",
@@ -87,19 +90,29 @@ class Ag2AgentClient(LLMClient):
     async def decide(
         self,
         user_message: str,
-        history: list[dict],  # [{"role": "user"|"assistant", "content": str}]
+        history: list[dict],
         current_state: str,
         qualification_data: dict,
     ) -> AgentDecision:
-        """Вызвать агента и вернуть структурированное решение."""
+        """Вызвать агента и вернуть структурированное решение.
 
+        Любой сбой провайдера (timeout/exception) -> безопасный fallback.
+        Состояние при этом НЕ теряется: _FALLBACK_DECISION.next_state=GREETING
+        не пройдёт проверку переходов и state machine оставит текущее состояние.
+        """
         context = _build_context_message(current_state, qualification_data)
         full_message = f"{context}\n\nСообщение пользователя: {user_message}"
-
-        # AG2 принимает историю как список messages
         messages = history + [{"role": "user", "content": full_message}]
 
-        reply = await self._agent.a_generate_reply(messages=messages)
+        try:
+            reply = await asyncio.wait_for(
+                self._agent.a_generate_reply(messages=messages),
+                timeout=_AG2_TIMEOUT_S,
+            )
+        except Exception as exc:  # noqa: BLE001 — любой сбой провайдера = fallback, не 500
+            logger.warning("AG2 call failed (%s): %r", type(exc).__name__, exc)
+            return _FALLBACK_DECISION
+
         return _parse_reply(reply)
 
 
