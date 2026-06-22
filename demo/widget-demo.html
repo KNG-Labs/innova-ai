@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- title намеренно осмысленный: виджет шлёт его как page_title,
+         агент использует как подсказку (см. _SYSTEM_PROMPT) -->
+    <title>Toyota Camry 2024 — купить в кредит | Innova Demo</title>
+    <style>
+      body { font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; color: #1a1a1a; }
+      header { background: #1a355a; color: #fff; padding: 18px 24px; font-size: 20px; font-weight: 600; }
+      main { max-width: 760px; margin: 0 auto; padding: 32px 24px 120px; }
+      h1 { font-size: 26px; }
+      .price { color: #1a73e8; font-size: 22px; font-weight: 700; margin: 8px 0 20px; }
+      .spec { border-top: 1px solid #e3e6ea; padding: 10px 0; display: flex; justify-content: space-between; }
+      .hint { margin-top: 28px; padding: 14px 16px; background: #f0f4ff; border-radius: 10px; font-size: 14px; color: #33415c; }
+    </style>
+  </head>
+  <body>
+    <header>Innova Auto — демо-витрина</header>
+    <main>
+      <h1>Toyota Camry 2024</h1>
+      <div class="price">от 2 500 000 ₽</div>
+      <p>
+        Бизнес-седан в наличии. Доступен в кредит и лизинг. Открой чат справа снизу
+        и спроси «расскажите про эту модель» — заголовок страницы уйдёт агенту как
+        контекст, и он поймёт, о какой машине речь.
+      </p>
+      <div class="spec"><span>Двигатель</span><span>2.5 л, 200 л.с.</span></div>
+      <div class="spec"><span>Коробка</span><span>автомат</span></div>
+      <div class="spec"><span>Привод</span><span>передний</span></div>
+
+      <div class="hint">
+        Это demo-страница Phase 8. Виджет внизу справа подключён одним тегом
+        <code>&lt;script&gt;</code>. anonymous_id и session_id хранятся в
+        localStorage и переживают refresh — диалог продолжится после перезагрузки.
+      </div>
+    </main>
+
+    <!-- Запусти backend: uv run uvicorn main:app --reload
+         Затем открой этот файл в браузере (file://) ИЛИ отдай его тем же сервером. -->
+    <script
+      src="http://localhost:8000/static/widget.js"
+      data-api-base="http://localhost:8000"
+    ></script>
+  </body>
+</html>

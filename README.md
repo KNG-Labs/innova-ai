@@ -864,6 +864,21 @@ app/worker/lead_delivery.py
 - `uv run pytest tests/integration/test_knowledge.py -q` — ingestion + retrieval на fake-эмбеддингах
 
 ---
+## Виджет
+
+Подключение на любой странице сайта одним тегом:
+
+```html
+<script src="http://localhost:8000/static/widget.js"
+        data-api-base="http://localhost:8000"></script>
+```
+
+Локальная демонстрация: запусти backend и открой `demo/widget-demo.html`.
+Виджет шлёт `anonymous_id`, `session_id`, `content`, `channel=website` и
+`page_title` (заголовок страницы — context-подсказка агенту). CORS
+настраивается через `CORS_ALLOW_ORIGINS` (см. `.env.example`).
+Ручной чек-лист: `docs/WIDGET_CHECKLIST.md`.
+---
 
 ## Документация
 
