@@ -27,7 +27,7 @@ async def init_app_state(app: FastAPI) -> None:
         and not os.getenv("OPENROUTER_API_KEY", "").strip()
     ):
         raise RuntimeError("LLM_PROVIDER=ag2 требует OPENROUTER_API_KEY")
-    
+
     http_client = httpx.AsyncClient(timeout=30.0)
 
     app.state.http_client = http_client
