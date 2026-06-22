@@ -501,3 +501,41 @@ async def test_closed_session_sets_closed_at_and_next_message_starts_new_session
     third_data = third.json()
     assert third_data["user_id"] == first_data["user_id"]
     assert third_data["session_id"] != session_id
+
+
+@pytest.mark.asyncio
+async def test_post_message_threads_page_title_to_llm(client) -> None:
+    """page_title из запроса доходит до llm_client.decide нормализованным."""
+
+    captured: dict = {}
+
+    class _CapturingClient(FakeAg2AgentClient):
+        async def decide(self, *args, page_title=None, **kwargs):
+            captured["page_title"] = page_title
+            return await super().decide(*args, page_title=page_title, **kwargs)
+
+    app.state.llm_client = _CapturingClient(
+        responses=[
+            AgentDecision(
+                answer="Подскажу по Camry.",
+                intent="general",
+                next_state=DialogState.QUALIFICATION,
+                qualification_data={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+            ),
+        ]
+    )
+
+    response = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "test-user-pt",
+            "channel": "website",
+            "content": "расскажите про эту модель",
+            "page_title": "  Toyota   Camry 2024  ",
+        },
+    )
+
+    assert response.status_code == 200
+    assert captured["page_title"] == "Toyota Camry 2024"

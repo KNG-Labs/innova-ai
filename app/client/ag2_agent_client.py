@@ -55,6 +55,8 @@ _SYSTEM_PROMPT = f"""\
 о чём нибудь ещё в конце сообщения.
 Если он пуст или ответа там нет — честно скажи, что не знаешь точно, и предложи оставить контакт менеджеру.
 Не выдумывай цены, суммы и сроки.
+Если в контексте есть строка [Страница сайта: ...], считай её подсказкой о том, какая модель или тема интересует пользователя. Но не записывай модель в qualification_data, пока пользователь сам её не подтвердит.
+Никакого текста вне JSON. Только валидный JSON.
 Никакого текста вне JSON. Только валидный JSON.
 """
 
@@ -68,6 +70,7 @@ class LLMClient(Protocol):
         current_state: str,
         qualification_data: dict,
         retrieved_context: str = "",
+        page_title: str | None = None,
     ) -> AgentDecision: ...
 
 
@@ -100,6 +103,7 @@ class Ag2AgentClient(LLMClient):
         current_state: str,
         qualification_data: dict,
         retrieved_context: str = "",
+        page_title: str | None = None,
     ) -> AgentDecision:
         """Вызвать агента и вернуть структурированное решение.
 
@@ -108,7 +112,10 @@ class Ag2AgentClient(LLMClient):
         не пройдёт проверку переходов и state machine оставит текущее состояние.
         """
         context = _build_context_message(
-            current_state, qualification_data, retrieved_context
+            current_state,
+            qualification_data,
+            retrieved_context,
+            page_title,
         )
         full_message = f"{context}\n\nСообщение пользователя: {user_message}"
         messages = history + [{"role": "user", "content": full_message}]
@@ -126,14 +133,20 @@ class Ag2AgentClient(LLMClient):
 
 
 def _build_context_message(
-    state: str, qualification_data: dict, retrieved_context: str
+    state: str,
+    qualification_data: dict,
+    retrieved_context: str,
+    page_title: str | None = None,
 ) -> str:
     kb = retrieved_context.strip() or "ничего релевантного не найдено"
-    return (
-        f"[Текущее состояние: {state}]\n"
-        f"[Собранные данные: {json.dumps(qualification_data, ensure_ascii=False)}]\n"
-        f"[База знаний:\n{kb}\n]"
-    )
+    lines = [
+        f"[Текущее состояние: {state}]",
+        f"[Собранные данные: {json.dumps(qualification_data, ensure_ascii=False)}]",
+    ]
+    if page_title:
+        lines.append(f"[Страница сайта: {page_title}]")
+    lines.append(f"[База знаний:\n{kb}\n]")
+    return "\n".join(lines)
 
 
 def _parse_reply(reply: str | dict | None) -> AgentDecision:
@@ -173,6 +186,7 @@ class FakeAg2AgentClient(LLMClient):
         current_state: str,
         qualification_data: dict,
         retrieved_context: str = "",
+        page_title: str | None = None,
     ) -> AgentDecision:
         if self._responses and self._call_count < len(self._responses):
             result = self._responses[self._call_count]

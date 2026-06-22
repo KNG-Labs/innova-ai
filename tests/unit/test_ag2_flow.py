@@ -261,3 +261,18 @@ def test_no_close_if_contact_valid():
         )
         is False
     )
+
+
+def test_context_message_includes_page_title():
+    from app.client.ag2_agent_client import _build_context_message
+
+    ctx = _build_context_message("FAQ", {}, "", page_title="Toyota Camry 2024")
+    assert "[Страница сайта: Toyota Camry 2024]" in ctx
+    assert ctx.index("Страница сайта") < ctx.index("База знаний")
+
+
+def test_context_message_omits_page_title_when_none():
+    from app.client.ag2_agent_client import _build_context_message
+
+    ctx = _build_context_message("FAQ", {}, "", page_title=None)
+    assert "Страница сайта" not in ctx

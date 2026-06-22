@@ -101,6 +101,7 @@ class AgentService:
             current_state=current_state.value,
             qualification_data=qualification_data,
             retrieved_context=retrieved_context,
+            page_title=request.page_title,
         )
 
         # Слить данные ДО решения о переходе (backend - источник истины)
