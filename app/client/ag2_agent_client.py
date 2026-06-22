@@ -50,6 +50,11 @@ _SYSTEM_PROMPT = f"""\
 В missing_fields перечисли поля, которых не хватает.
 Контакт (телефон/email/telegram/имя) клади ТОЛЬКО в extracted_contact.
 Не благодари и не обещай, что менеджер свяжется, пока контакт не собран.
+Отвечай на вопросы о ценах, услугах и условиях ТОЛЬКО на основе блока [База знаний].
+Но не сваливай сразу всю информацию на человека, делай это постепенно, с предложением рассказать 
+о чём нибудь ещё в конце сообщения.
+Если он пуст или ответа там нет — честно скажи, что не знаешь точно, и предложи оставить контакт менеджеру.
+Не выдумывай цены, суммы и сроки.
 Никакого текста вне JSON. Только валидный JSON.
 """
 
@@ -62,6 +67,7 @@ class LLMClient(Protocol):
         history: list[dict],
         current_state: str,
         qualification_data: dict,
+        retrieved_context: str = "",
     ) -> AgentDecision: ...
 
 
@@ -93,6 +99,7 @@ class Ag2AgentClient(LLMClient):
         history: list[dict],
         current_state: str,
         qualification_data: dict,
+        retrieved_context: str = "",
     ) -> AgentDecision:
         """Вызвать агента и вернуть структурированное решение.
 
@@ -100,7 +107,9 @@ class Ag2AgentClient(LLMClient):
         Состояние при этом НЕ теряется: _FALLBACK_DECISION.next_state=GREETING
         не пройдёт проверку переходов и state machine оставит текущее состояние.
         """
-        context = _build_context_message(current_state, qualification_data)
+        context = _build_context_message(
+            current_state, qualification_data, retrieved_context
+        )
         full_message = f"{context}\n\nСообщение пользователя: {user_message}"
         messages = history + [{"role": "user", "content": full_message}]
 
@@ -116,10 +125,14 @@ class Ag2AgentClient(LLMClient):
         return _parse_reply(reply)
 
 
-def _build_context_message(state: str, qualification_data: dict) -> str:
+def _build_context_message(
+    state: str, qualification_data: dict, retrieved_context: str
+) -> str:
+    kb = retrieved_context.strip() or "ничего релевантного не найдено"
     return (
         f"[Текущее состояние: {state}]\n"
-        f"[Собранные данные: {json.dumps(qualification_data, ensure_ascii=False)}]"
+        f"[Собранные данные: {json.dumps(qualification_data, ensure_ascii=False)}]\n"
+        f"[База знаний:\n{kb}\n]"
     )
 
 
@@ -159,6 +172,7 @@ class FakeAg2AgentClient(LLMClient):
         history: list[dict],
         current_state: str,
         qualification_data: dict,
+        retrieved_context: str = "",
     ) -> AgentDecision:
         if self._responses and self._call_count < len(self._responses):
             result = self._responses[self._call_count]

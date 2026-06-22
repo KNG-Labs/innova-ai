@@ -15,6 +15,10 @@ from app.schemas.agent_schema import (
     AgentDecision,
 )
 from app.service.business_service import MessageNormalizer
+from app.service.knowledge_retrieval_service import (
+    KnowledgeRetrievalService,
+    format_chunks_for_prompt,
+)
 from app.service.state_machine import (
     resolve_next_state,
     is_lead_ready,
@@ -37,6 +41,7 @@ class AgentService:
         normalizer: MessageNormalizer,
         queue_client: QueueClient,
         delivery_provider: str,
+        retrieval: KnowledgeRetrievalService,
     ) -> None:
 
         self._db_session = db_session
@@ -44,6 +49,7 @@ class AgentService:
         self._normalizer = normalizer
         self._queue = queue_client
         self._delivery_provider = delivery_provider
+        self._retrieval = retrieval
 
         self._users = UserRepository(db_session)
         self._sessions = DialogSessionRepository(db_session)
@@ -85,11 +91,16 @@ class AgentService:
         )
 
         # Вызов AG2
+        # RAG: retrieved context перед LLM
+        retrieved = await self._retrieval.retrieve(content)
+        retrieved_context = format_chunks_for_prompt(retrieved)
+
         decision: AgentDecision = await self._llm_client.decide(
             user_message=content,
             history=history,
             current_state=current_state.value,
             qualification_data=qualification_data,
+            retrieved_context=retrieved_context,
         )
 
         # Слить данные ДО решения о переходе (backend - источник истины)

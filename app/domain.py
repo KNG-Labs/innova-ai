@@ -6,3 +6,4 @@ QUALIFICATION_FIELDS: dict[str, str] = {
 
 REQUIRED_QUAL: tuple[str, ...] = tuple(QUALIFICATION_FIELDS)
 MISSING_ALL: list[str] = [*REQUIRED_QUAL, "contact"]
+EMBEDDING_DIM = 1536  # единый источник размерности для pgvector

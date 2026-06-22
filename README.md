@@ -693,6 +693,7 @@ postgresql+asyncpg://innova:innova@localhost:5432/innova_ai_test
 ```bash
 TEST_DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/db_name uv run pytest
 ```
+Требование: роль тест-БД должна иметь право CREATE EXTENSION
 
 ### Создание тестовой базы
 

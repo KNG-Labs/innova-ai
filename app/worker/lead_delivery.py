@@ -46,6 +46,8 @@ async def main() -> None:
                     # ретрай бессмысленен — снимаем job
                     _logger.warning("skip lead %s: not deliverable", job.lead_id)
                     await queue_client.ack(job)
+    except KeyboardInterrupt:
+        pass
     finally:
         await http_client.aclose()
         if redis_conn is not None:

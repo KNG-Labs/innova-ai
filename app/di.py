@@ -5,6 +5,9 @@ import httpx
 from fastapi import FastAPI, Request, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.client.embedding_client import build_embedding_client
+from app.service.knowledge_ingestion_service import KnowledgeIngestionService
+from app.service.knowledge_retrieval_service import KnowledgeRetrievalService
 from app.client.ag2_agent_client import LLMClient
 from app.client.delivery_factory import (
     get_delivery_provider,
@@ -46,6 +49,7 @@ async def init_app_state(app: FastAPI) -> None:
     normalizer = MessageNormalizer()
 
     app.state.normalizer = normalizer
+    app.state.embedding_client = build_embedding_client()
 
     llm_provider = os.getenv("LLM_PROVIDER", "stub").strip().lower()
     llm_client: LLMClient
@@ -102,12 +106,27 @@ async def get_agent_service(
     request: Request,
     db_session: AsyncSession = Depends(get_db_session),
 ) -> AgentService:
+    retrieval = KnowledgeRetrievalService(
+        db_session=db_session,
+        embedding_client=request.app.state.embedding_client,
+    )
     return AgentService(
         db_session=db_session,
         llm_client=request.app.state.llm_client,
         normalizer=request.app.state.normalizer,
         queue_client=request.app.state.queue_client,
         delivery_provider=request.app.state.delivery_provider,
+        retrieval=retrieval,
+    )
+
+
+async def get_knowledge_ingestion_service(
+    request: Request,
+    db_session: AsyncSession = Depends(get_db_session),
+) -> KnowledgeIngestionService:
+    return KnowledgeIngestionService(
+        db_session=db_session,
+        embedding_client=request.app.state.embedding_client,
     )
 
 
