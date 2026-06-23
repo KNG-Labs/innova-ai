@@ -49,7 +49,7 @@ class FakeQueueClient:
 
 
 class RedisQueueClient:
-    """LPUSH/BRPOP, FIFO. Без DLQ/reliability-листа - MVP"""
+    """LPUSH/BRPOP, FIFO."""
 
     def __init__(self, client: aioredis.Redis) -> None:
         self._client = client
@@ -70,7 +70,7 @@ class RedisQueueClient:
         return LeadDeliveryJob.model_validate_json(raw)
 
     async def ack(self, job: LeadDeliveryJob) -> None:
-        return None  # no-op: lead.status - источник истины
+        return None
 
     async def fail(self, job: LeadDeliveryJob) -> None:
         return None

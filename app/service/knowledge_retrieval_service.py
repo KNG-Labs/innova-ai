@@ -40,7 +40,7 @@ class KnowledgeRetrievalService:
 
 
 def format_chunks_for_prompt(chunks: list[RetrievedChunk]) -> str:
-    """Блок для AG2. Пусто -> '' (guardrail сработает в промпте)."""
+    """Блок для AG2. Пусто -> ''."""
     if not chunks:
         return ""
     return "\n\n".join(f"[score={c.score:.2f}] {c.content}" for c in chunks)

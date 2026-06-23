@@ -3,42 +3,385 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- title намеренно осмысленный: виджет шлёт его как page_title,
-         агент использует как подсказку (см. _SYSTEM_PROMPT) -->
-    <title>Toyota Camry 2024 — купить в кредит | Innova Demo</title>
+    <title>Toyota Camry 2024 — купить в кредит</title>
     <style>
-      body { font-family: -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; color: #1a1a1a; }
-      header { background: #1a355a; color: #fff; padding: 18px 24px; font-size: 20px; font-weight: 600; }
-      main { max-width: 760px; margin: 0 auto; padding: 32px 24px 120px; }
-      h1 { font-size: 26px; }
-      .price { color: #1a73e8; font-size: 22px; font-weight: 700; margin: 8px 0 20px; }
-      .spec { border-top: 1px solid #e3e6ea; padding: 10px 0; display: flex; justify-content: space-between; }
-      .hint { margin-top: 28px; padding: 14px 16px; background: #f0f4ff; border-radius: 10px; font-size: 14px; color: #33415c; }
+      :root {
+        --bg: #eef1f5;
+        --ink: #15181d;
+        --ink-soft: #2a2f37;
+        --text: #1a1a1a;
+        --muted: #6b7280;
+        --line: #e3e6ea;
+        --blue: #1a73e8;
+        --blue-bright: #4f8ff7;
+        --blue-dark: #1457b3;
+        --green: #1aa260;
+        --green-dark: #138a51;
+        --orange: #f4732a;
+        --card-radius: 18px;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+        margin: 0;
+        color: var(--text);
+        background: var(--bg);
+      }
+
+      /* ---------- header ---------- */
+      header.topbar {
+        background: var(--ink);
+        color: #fff;
+      }
+      .topbar-inner {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 18px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+      .brand {
+        font-size: 19px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+        white-space: nowrap;
+      }
+      .brand span { color: var(--blue-bright); font-weight: 800; }
+
+      nav.nav {
+        display: flex;
+        gap: 28px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+      }
+      nav.nav a {
+        color: #e7e9ee;
+        text-decoration: none;
+        opacity: 0.9;
+      }
+      nav.nav a:hover { opacity: 1; color: var(--blue-bright); }
+
+      .topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+      .phone {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .phone svg { flex-shrink: 0; }
+
+      .pill {
+        border: none;
+        cursor: pointer;
+        border-radius: 999px;
+        padding: 10px 18px;
+        font-size: 13px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+      }
+      .pill-blue { background: var(--blue); color: #fff; }
+      .pill-blue:hover { background: var(--blue-dark); }
+
+      /* ---------- layout ---------- */
+      main {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: 28px 24px 80px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .card {
+        background: #fff;
+        border-radius: var(--card-radius);
+        box-shadow: 0 1px 2px rgba(20, 24, 30, 0.05);
+      }
+
+      /* ---------- hero card ---------- */
+      .hero-card { padding: 28px 32px 32px; }
+
+      .hero-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 24px;
+        flex-wrap: wrap;
+      }
+      .badge {
+        display: inline-block;
+        background: #eaf3ff;
+        color: var(--blue-dark);
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.3px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        margin-bottom: 10px;
+      }
+      .hero-top h1 {
+        margin: 0;
+        font-size: 32px;
+        line-height: 1.15;
+      }
+      .hero-top h1 .muted {
+        font-size: 17px;
+        font-weight: 400;
+        color: var(--muted);
+        margin-left: 10px;
+      }
+
+      .price-block { text-align: right; }
+      .price {
+        font-size: 34px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+      .price-sub {
+        margin-top: 6px;
+        color: var(--blue);
+        font-weight: 700;
+        font-size: 15px;
+      }
+
+      /* ---------- promo banner ---------- */
+      .promo {
+        margin-top: 22px;
+        background: #f6f7f9;
+        border-radius: 14px;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .promo-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: #fde9dd;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .promo-text { flex: 1; }
+      .promo-text strong { display: block; font-size: 15px; }
+      .promo-text span { font-size: 13px; color: var(--muted); }
+      .promo-arrow { color: var(--muted); font-size: 20px; }
+
+      /* ---------- action row ---------- */
+      .actions {
+        margin-top: 22px;
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+        justify-content: space-between;
+      }
+      .actions-left, .actions-right { display: flex; gap: 14px; flex-wrap: wrap; }
+
+      .btn {
+        border: none;
+        cursor: pointer;
+        border-radius: 12px;
+        padding: 13px 22px;
+        font-size: 14px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+      }
+      .btn-outline {
+        background: #fff;
+        border: 1.5px solid var(--line);
+        color: var(--text);
+      }
+      .btn-outline:hover { border-color: #c7cdd6; }
+      .btn-green { background: var(--green); color: #fff; }
+      .btn-green:hover { background: var(--green-dark); }
+      .btn-blue { background: var(--blue); color: #fff; }
+      .btn-blue:hover { background: var(--blue-dark); }
+
+      /* ---------- gallery ---------- */
+      .gallery-card { padding: 18px; }
+      .gallery {
+        display: grid;
+        grid-template-columns: 2.1fr 1fr;
+        gap: 14px;
+      }
+      .placeholder {
+        background: repeating-linear-gradient(
+          135deg,
+          #e7e9ed,
+          #e7e9ed 10px,
+          #eef0f3 10px,
+          #eef0f3 20px
+        );
+        border: 1px dashed #c7cdd6;
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: #9aa3af;
+        text-align: center;
+      }
+      .placeholder span {
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
+      }
+      .main-photo { aspect-ratio: 4 / 3; }
+      .thumbs {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .thumb { flex: 1; aspect-ratio: 4 / 3; }
+
+      /* когда внутри .main-photo / .thumb лежит реальный <img>,
+         он растягивается на весь блок и срезает лишнее по краям */
+      .main-photo img,
+      .thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 12px;
+        display: block;
+      }
+
+      /* ---------- specs ---------- */
+      .specs-card { padding: 28px 32px; }
+      .specs-card h2 {
+        margin: 0 0 6px;
+        font-size: 18px;
+      }
+      .spec {
+        border-top: 1px solid var(--line);
+        padding: 12px 0;
+        display: flex;
+        justify-content: space-between;
+        font-size: 15px;
+      }
+      .spec span:first-child { color: var(--muted); }
+      .spec span:last-child { font-weight: 600; }
+
+      /* ---------- hint ---------- */
+      .hint {
+        padding: 16px 20px;
+        background: #f0f4ff;
+        border-radius: 14px;
+        font-size: 13.5px;
+        color: #33415c;
+        line-height: 1.5;
+      }
+      .hint strong { color: var(--blue-dark); }
+
+      @media (max-width: 720px) {
+        nav.nav { display: none; }
+        .hero-top { flex-direction: column; }
+        .price-block { text-align: left; }
+        .gallery { grid-template-columns: 1fr; }
+        .thumbs { flex-direction: row; }
+        .actions { flex-direction: column; }
+      }
     </style>
   </head>
   <body>
-    <header>Innova Auto — демо-витрина</header>
-    <main>
-      <h1>Toyota Camry 2024</h1>
-      <div class="price">от 2 500 000 ₽</div>
-      <p>
-        Бизнес-седан в наличии. Доступен в кредит и лизинг. Открой чат справа снизу
-        и спроси «расскажите про эту модель» — заголовок страницы уйдёт агенту как
-        контекст, и он поймёт, о какой машине речь.
-      </p>
-      <div class="spec"><span>Двигатель</span><span>2.5 л, 200 л.с.</span></div>
-      <div class="spec"><span>Коробка</span><span>автомат</span></div>
-      <div class="spec"><span>Привод</span><span>передний</span></div>
-
-      <div class="hint">
-        Это demo-страница Phase 8. Виджет внизу справа подключён одним тегом
-        <code>&lt;script&gt;</code>. anonymous_id и session_id хранятся в
-        localStorage и переживают refresh — диалог продолжится после перезагрузки.
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">АВТОСАЛОН</div>
+        <nav class="nav">
+          <a href="#">КАТАЛОГ</a>
+          <a href="#">КОНТАКТЫ</a>
+          <a href="#">КРЕДИТ И ЛИЗИНГ</a>
+        </nav>
+        <div class="topbar-actions">
+          <div class="phone">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            +7 (918) 123-45-67
+          </div>
+          <button class="pill pill-blue">ЗАКАЗАТЬ ЗВОНОК</button>
+        </div>
       </div>
-    </main>
+    </header>
 
-    <!-- Запусти backend: uv run uvicorn main:app --reload
-         Затем открой этот файл в браузере (file://) ИЛИ отдай его тем же сервером. -->
+    <main>
+      <section class="card hero-card">
+        <div class="hero-top">
+          <div>
+            <div class="badge">В наличии</div>
+            <h1>Toyota Camry 2024 <span class="muted">бизнес-седан</span></h1>
+          </div>
+          <div class="price-block">
+            <div class="price">от 2 500 000 ₽</div>
+            <div class="price-sub">Доступны кредит и лизинг</div>
+          </div>
+        </div>
+
+        <div class="promo">
+          <div class="promo-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>
+          </div>
+          <div class="promo-text">
+            <strong>Рассчитать кредит или лизинг</strong>
+            <span>Подберите удобный ежемесячный платёж</span>
+          </div>
+          <div class="promo-arrow">›</div>
+        </div>
+
+        <div class="actions">
+          <div class="actions-left">
+            <button class="btn btn-outline">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              Обратный звонок
+            </button>
+          </div>
+          <div class="actions-right">
+            <button class="btn btn-green">Показать номер</button>
+            <button class="btn btn-blue">Взять в кредит</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card gallery-card">
+        <div class="gallery">
+          <div class="main-photo">
+            <img src="images/IMG_6251.webp" alt="Toyota Camry 2024, вид спереди">
+          </div>
+          <div class="thumbs">
+            <div class="thumb"><img src="images/IMG_6252.webp" alt="Toyota Camry 2024, вид спереди сбоку"></div>
+            <div class="thumb"><img src="images/IMG_6253.webp" alt="Toyota Camry 2024, вид спереди сбоку"></div>
+            <div class="thumb"><img src="images/IMG_6254.webp" alt="Toyota Camry 2024, вид сзади"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card specs-card">
+        <h2>Характеристики</h2>
+        <div class="spec"><span>Двигатель</span><span>2.5 л, 200 л.с.</span></div>
+        <div class="spec"><span>Коробка</span><span>автомат</span></div>
+        <div class="spec"><span>Привод</span><span>передний</span></div>
+      </section>
+    </main>
     <script
       src="http://localhost:8000/static/widget.js"
       data-api-base="http://localhost:8000"

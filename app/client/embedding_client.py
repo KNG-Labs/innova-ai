@@ -13,9 +13,7 @@ class EmbeddingClient(Protocol):
 
 
 class FakeEmbeddingClient(EmbeddingClient):
-    """Детерминированные embeddings без внешнего API.
-    Хеш токенов в фикс. размерность + L2-норма.
-    Общие токены -> положительный cosine, непересекающиеся -> ~0."""
+    """Детерминированные embeddings без внешнего API."""
 
     def __init__(self, dim: int = EMBEDDING_DIM) -> None:
         self._dim = dim
