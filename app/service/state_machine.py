@@ -55,16 +55,18 @@ def merge_contact(
     return merged
 
 
-def is_contact_valid(contact: dict | None) -> bool:
-    """
-    Валиден, если есть хотя бы одно непустое строковое значение.
+_CONTACT_FIELDS = ("phone", "email", "telegram")
 
-    Свободный fallback намеренно разрешён: строгая регекс-валидация
-    не должна блокировать реальный лид
-    """
+
+def is_contact_valid(contact: dict | None) -> bool:
+    """Контакт валиден, если указан хотя бы один поддерживаемый способ связи."""
     if not contact:
         return False
-    return any(isinstance(v, str) and v.strip() for v in contact.values())
+
+    return any(
+        isinstance(contact.get(field), str) and bool(contact[field].strip())
+        for field in _CONTACT_FIELDS
+    )
 
 
 def compute_missing_fields(

@@ -6,7 +6,11 @@ from app.client.ag2_agent_client import (
     _FALLBACK_DECISION,
 )
 from app.schemas.agent_schema import DialogState
-from app.service.state_machine import resolve_next_state, is_lead_ready
+from app.service.state_machine import (
+    is_contact_valid,
+    is_lead_ready,
+    resolve_next_state,
+)
 
 pytestmark = pytest.mark.unit
 
@@ -156,6 +160,43 @@ def test_is_lead_ready_false_no_contact():
 def test_is_lead_ready_false_empty_contact():
     qual = {"purchase_type": "кредит", "car_model": "BMW", "budget": "50k"}
     assert is_lead_ready(qual, {"phone": None}) is False
+
+
+@pytest.mark.parametrize(
+    "contact",
+    [
+        {"phone": "+79991234567"},
+        {"email": "user@example.com"},
+        {"telegram": "@ivan"},
+    ],
+)
+def test_supported_contact_method_is_valid(contact):
+    assert is_contact_valid(contact) is True
+
+
+@pytest.mark.parametrize(
+    "contact",
+    [
+        None,
+        {},
+        {"name": "Иван"},
+        {"phone": ""},
+        {"phone": "   "},
+        {"whatsapp": "+79991234567"},
+    ],
+)
+def test_missing_supported_contact_method_is_invalid(contact):
+    assert is_contact_valid(contact) is False
+
+
+def test_name_only_does_not_make_lead_ready():
+    qualification = {
+        "car_model": "Toyota Camry",
+        "budget": "3000000",
+        "purchase_type": "кредит",
+    }
+
+    assert is_lead_ready(qualification, {"name": "Иван"}) is False
 
 
 # --- Unit: FakeAg2AgentClient ---
