@@ -4,7 +4,7 @@ import pytest
 
 from app.client.ag2_agent_client import FakeAg2AgentClient
 from app.schemas.agent_schema import AgentDecision, DialogState
-from app.models import Lead
+from app.models import DialogSession, Lead
 from main import app
 
 pytestmark = pytest.mark.e2e
@@ -115,3 +115,23 @@ async def test_full_lead_flow_reaches_lead_ready(client) -> None:
         assert lead.qualification["budget"] == "2500000"
         assert lead.qualification["purchase_type"] == "кредит"
         assert lead.contact["phone"] == "+79991234567"
+        session = await db.get(DialogSession, UUID(session_id))
+        assert session is not None
+        assert session.closed_at is not None
+
+    # Даже если виджет повторно прислал старый session_id,
+    # backend должен начать новый диалог.
+    r4 = await client.post(
+        "/message",
+        json={
+            "anonymous_id": anon_id,
+            "channel": "website",
+            "session_id": session_id,
+            "content": "Хочу подобрать ещё один автомобиль",
+        },
+    )
+
+    assert r4.status_code == 200
+    d4 = r4.json()
+    assert d4["session_id"] != session_id
+    assert d4["lead_id"] != d3["lead_id"]

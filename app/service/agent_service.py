@@ -139,7 +139,8 @@ class AgentService:
 
         # Определить, что сессия закрывается
         is_closing = (
-            next_state == DialogState.CLOSED and current_state != DialogState.CLOSED
+            next_state in {DialogState.LEAD_READY, DialogState.CLOSED}
+            and session.closed_at is None
         )
         # Обновить состояние сессии
         await self._sessions.update_state(

@@ -488,12 +488,14 @@ async def test_closed_session_sets_closed_at_and_next_message_starts_new_session
         assert row is not None
         assert row.closed_at is not None
 
-    # Ход 3: без session_id -> закрытая не подхватывается -> создаётся новая сессия
+    # Ход 3: клиент повторно прислал сохранённый ID закрытой сессии.
+    # Backend должен проигнорировать его и создать новую.
     third = await client.post(
         "/message",
         json={
             "anonymous_id": "close-user-1",
             "channel": "website",
+            "session_id": session_id,
             "content": "Здравствуйте снова",
         },
     )

@@ -133,7 +133,13 @@
       if (!res.ok) throw new Error("HTTP " + res.status);
 
       var data = await res.json();
-      if (data.session_id) localStorage.setItem(SESSION_KEY, data.session_id);
+
+      if (data.state === "LEAD_READY" || data.state === "CLOSED") {
+        localStorage.removeItem(SESSION_KEY);
+      } else if (data.session_id) {
+        localStorage.setItem(SESSION_KEY, data.session_id);
+      }
+
       typing.remove();
       addBubble(data.answer || "(пустой ответ)", "bot");
     } catch (e) {

@@ -42,6 +42,7 @@ class DialogSessionRepository:
             .where(
                 DialogSession.user_id == user_id,
                 DialogSession.closed_at.is_(None),
+                DialogSession.state.not_in(("CLOSED", "LEAD_READY")),
                 DialogSession.deleted_at.is_(None),
             )
             .order_by(DialogSession.created_at.desc())
@@ -74,7 +75,11 @@ class DialogSessionRepository:
                         session_id=session_id,
                         user_id=user_id,
                     )
-                return existing_session
+                if (
+                    existing_session.closed_at is None
+                    and existing_session.state not in {"LEAD_READY", "CLOSED"}
+                ):
+                    return existing_session
 
         active_session = await self.get_active_by_user_id(user_id)
 
