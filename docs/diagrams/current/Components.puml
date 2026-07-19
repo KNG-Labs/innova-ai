@@ -1,0 +1,79 @@
+@startuml Current_Components
+
+left to right direction
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+title Innova AI - Current Components
+
+note as CurrentNote
+  CURRENT STATE
+  Соответствует реализованному коду
+  текущей версии репозитория.
+end note
+
+actor "Посетитель сайта" as User
+
+package "Входной канал" {
+  component "Web widget\nstatic/widget.js" as Widget
+  component "FastAPI\nmain.py + routers" as API
+}
+
+package "Диалог и лиды" {
+  component "AgentService" as AgentService
+  component "SessionService" as SessionService
+  component "LeadService" as LeadService
+  component "State Machine" as StateMachine
+}
+
+package "AI и база знаний" {
+  component "AG2 / Fake AG2\nAgent Client" as AgentClient
+  component "KnowledgeIngestionService" as Ingestion
+  component "KnowledgeRetrievalService" as Retrieval
+  component "Embedding Client\nfake / OpenRouter" as Embeddings
+}
+
+package "Асинхронная доставка" {
+  queue "Redis\nlead_delivery queue" as Redis
+  component "Lead Delivery Worker" as Worker
+  component "LeadDeliveryService" as DeliveryService
+  component "CRM Client\nAmoCRM / webhook / fake" as CrmClient
+}
+
+database "PostgreSQL 17 + pgvector\nusers, sessions, messages, leads, knowledge" as PostgreSQL
+cloud "OpenRouter" as OpenRouter
+cloud "AmoCRM" as AmoCRM
+cloud "Webhook endpoint" as Webhook
+
+User --> Widget
+Widget --> API : POST /message
+
+API --> AgentService : message route
+API --> SessionService : session routes
+API --> LeadService : lead read routes
+API --> Ingestion : knowledge routes
+API --> DeliveryService : manual /deliver
+
+AgentService --> StateMachine : validate transition
+AgentService --> AgentClient : decide(history, context)
+AgentService --> Retrieval : retrieve(message)
+AgentService --> PostgreSQL : users, sessions, messages, leads
+
+SessionService --> PostgreSQL
+LeadService --> PostgreSQL
+Ingestion --> Embeddings
+Ingestion --> PostgreSQL : documents and chunks
+Retrieval --> Embeddings
+Retrieval --> PostgreSQL : pgvector search
+AgentClient ..> OpenRouter : LLM_PROVIDER=ag2
+Embeddings ..> OpenRouter : EMBEDDING_PROVIDER=openrouter
+
+AgentService --> Redis : enqueue ready lead
+Redis --> Worker : BRPOP
+Worker --> DeliveryService
+DeliveryService --> PostgreSQL : lead and delivery status
+DeliveryService --> CrmClient
+CrmClient --> AmoCRM : provider=amocrm
+CrmClient --> Webhook : provider=webhook
+
+@enduml

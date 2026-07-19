@@ -1,0 +1,93 @@
+@startuml Current_Lead_Flow
+
+skinparam shadowing false
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceParticipantBackgroundColor #FAFAFA
+skinparam noteBackgroundColor #E8F5E9
+skinparam noteBorderColor #4F7F52
+
+title Innova AI - Current Message and Lead Delivery Flow
+
+actor "Пользователь" as User
+participant "Widget / API client" as Client
+participant "FastAPI router" as Router
+participant "AgentService" as Agent
+database "PostgreSQL + pgvector" as PG
+participant "KnowledgeRetrievalService" as Retrieval
+participant "Embedding Client" as Embedding
+participant "AG2 / Fake AG2" as LLM
+participant "State Machine" as SM
+queue "Redis Queue" as Redis
+participant "Lead Delivery Worker" as Worker
+participant "LeadDeliveryService" as Delivery
+participant "AmoCRM / Webhook / Fake" as CRM
+
+note over User, CRM
+  CURRENT STATE
+  Соответствует реализованному коду
+  текущей версии репозитория.
+end note
+
+== Обработка сообщения ==
+
+User -> Client : Сообщение
+Client -> Router : POST /message\nanonymous_id, session_id, content, page_title
+Router -> Agent : handle_message(request)
+
+Agent -> PG : get_or_create user and active session
+PG --> Agent : user, session
+Agent -> PG : load current lead and recent history
+PG --> Agent : lead, last 20 messages
+Agent -> PG : INSERT user message
+
+Agent -> Retrieval : retrieve(content)
+Retrieval -> Embedding : embed(query)
+Embedding --> Retrieval : query vector
+Retrieval -> PG : pgvector top-k search
+PG --> Retrieval : relevant chunks with scores
+Retrieval --> Agent : prompt context
+
+Agent -> LLM : decide(history, state, qualification, context, page_title)
+LLM --> Agent : AgentDecision
+Agent -> SM : merge data and resolve transition
+SM --> Agent : validated next state and missing fields
+
+Agent -> PG : INSERT assistant message
+Agent -> PG : UPDATE session state and closed_at
+Agent -> PG : UPSERT lead draft
+
+alt Backend confirms LEAD_READY
+  Agent -> PG : UPDATE lead status = ready
+end
+
+Agent -> PG : COMMIT
+
+opt Lead became ready and delivery is enabled
+  Agent -> Redis : LPUSH LeadDeliveryJob
+end
+
+Agent --> Router : AgentMessageResponse
+Router --> Client : 200 response
+Client --> User : Ответ ассистента
+
+== Асинхронная доставка ==
+
+Worker -> Redis : BRPOP lead_delivery
+Redis --> Worker : LeadDeliveryJob(lead_id, destination)
+Worker -> Delivery : deliver(lead_id)
+Delivery -> PG : SELECT lead
+PG --> Delivery : ready lead
+Delivery -> CRM : deliver_lead(payload)
+
+alt CRM delivery succeeded
+  CRM --> Delivery : success
+  Delivery -> PG : status = delivered\nlast_delivery_error = null
+else CRM delivery failed
+  CRM --> Delivery : exception
+  Delivery -> PG : status = delivery_failed\nlast_delivery_error = error
+end
+
+Delivery -> PG : COMMIT
+Delivery --> Worker : updated lead
+
+@enduml
