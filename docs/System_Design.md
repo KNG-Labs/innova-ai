@@ -1,10 +1,3 @@
----
-Дата создания: 2026-04-13T23:00:00
-tags:
-  - mentoring
-  - roadmap
----
-
 # System Design — Innova AI
 
 ## 1. Назначение системы

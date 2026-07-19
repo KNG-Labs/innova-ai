@@ -1,890 +1,361 @@
 # Innova AI
 
-AI-ассистент для лидогенерации и клиентской коммуникации в digital-каналах. Проект развивается из простого LLM endpoint в backend агентного диалога с памятью, сессиями, историей сообщений, lead-flow и асинхронной доставкой лида в CRM.
+Innova AI — диалоговый сервис лидогенерации для автодилеров. Посетитель сайта может задать вопрос, получить ответ на основе базы знаний дилера, указать интересующий автомобиль и условия покупки, оставить контакт и создать лид, который будет асинхронно доставлен в CRM.
 
-> Scope и план реализации: [docs/MVP_ROADMAP.md](docs/MVP_ROADMAP.md)
+Текущая реализация рассчитана на установку для одного дилера и канал website. Backend хранит историю и бизнес-состояние диалога в PostgreSQL, использует AG2/OpenRouter или детерминированный stub для обработки сообщений, получает релевантный контекст через pgvector и передаёт готовые лиды отдельному Redis-worker.
 
----
+## Возможности
 
-## Что это
+- multi-turn диалог через `POST /message`;
+- анонимные пользователи и активные диалоговые сессии;
+- сохранение сообщений пользователя и ассистента;
+- управляемая backend-кодом машина состояний;
+- квалификация по `car_model`, `budget` и `purchase_type`;
+- сбор контакта через `phone`, `email` или `telegram`;
+- статусы лида `draft`, `ready`, `delivered` и `delivery_failed`;
+- ручная загрузка базы знаний и семантический поиск;
+- AG2 через OpenRouter с безопасным fallback;
+- асинхронная доставка лидов через Redis и отдельный worker;
+- режимы доставки AmoCRM, webhook, fake и disabled;
+- API для чтения сессий, сообщений, лидов и базы знаний;
+- встраиваемый JavaScript-виджет и демонстрационная страница.
 
-Innova AI — backend-слой conversational AI продукта. Сервис принимает сообщение пользователя, определяет намерение, создаёт или продолжает диалоговую сессию, сохраняет историю сообщений в PostgreSQL и возвращает ответ агента.
-
-Сейчас проект реализует полный lead conversion loop:
-
-- анонимный пользователь;
-- диалоговая сессия;
-- история сообщений;
-- детерминированная state machine (переходы решает код, не LLM);
-- квалификация по обязательным полям (`car_model` / `budget` / `purchase_type`);
-- сборка карточки лида: `draft → ready`;
-- генерация ответа через AG2/LLM-клиент или stub-клиент;
-- асинхронная доставка `ready`-лида в CRM через Redis-очередь и worker;
-- read-routes для проверки памяти агента и просмотра лидов.
-
-Доставка лида в AmoCRM (создание сделки + контакта) реализована. Telegram/webhook остаются как backup/debug destination.
-
----
-
-## Стек
+## Технологии
 
 - Python 3.13
-- FastAPI
-- Pydantic
-- SQLAlchemy asyncio
-- PostgreSQL
+- FastAPI и Pydantic
+- SQLAlchemy asyncio и asyncpg
+- PostgreSQL 17 с pgvector
 - Alembic
-- Redis (очередь доставки)
-- httpx
+- Redis
 - AG2 (AutoGen) через OpenRouter
-- pytest / pytest-asyncio
+- httpx
+- pytest, Ruff и mypy
 - uv
 
----
-
-## Структура репозитория
+## Обработка сообщения
 
 ```text
-INNOVA_AI/
-├── app
-│   ├── client
-│   │   ├── __init__.py
-│   │   ├── ag2_agent_client.py
-│   │   ├── crm_client.py
-│   │   ├── delivery_factory.py
-│   │   ├── embedding_client.py
-│   │   └── queue_client.py
-│   ├── db
-│   │   ├── __init__.py
-│   │   ├── base.py
-│   │   └── session.py
-│   ├── models
-│   │   ├── __init__.py
-│   │   ├── dialog_session_model.py
-│   │   ├── knowledge_model.py
-│   │   ├── lead_model.py
-│   │   ├── message_model.py
-│   │   └── user_model.py
-│   ├── repository
-│   │   ├── __init__.py
-│   │   ├── dialog_session_repository.py
-│   │   ├── knowledge_repository.py
-│   │   ├── lead_repository.py
-│   │   ├── message_repository.py
-│   │   └── user_repository.py
-│   ├── router
-│   │   ├── __init__.py
-│   │   ├── knowledge_router.py
-│   │   ├── lead_router.py
-│   │   ├── message_router.py
-│   │   └── session_router.py
-│   ├── schemas
-│   │   ├── __init__.py
-│   │   ├── agent_schema.py
-│   │   ├── knowledge_schema.py
-│   │   ├── lead_delivery_schema.py
-│   │   ├── lead_schema.py
-│   │   └── session_schema.py
-│   ├── service
-│   │   ├── __init__.py
-│   │   ├── agent_service.py
-│   │   ├── business_service.py
-│   │   ├── knowledge_ingestion_service.py
-│   │   ├── knowledge_retrieval_service.py
-│   │   ├── lead_delivery_service.py
-│   │   ├── lead_service.py
-│   │   ├── session_service.py
-│   │   └── state_machine.py
-│   ├── worker
-│   │   ├── __init__.py
-│   │   └── lead_delivery.py
-│   ├── __init__.py
-│   ├── di.py
-│   ├── domain.py
-│   └── exceptions.py
-├── docs
-│   ├── diagrams
-│   │   ├── Components.puml
-│   │   ├── ER.plantuml
-│   │   └── Sequence.puml
-│   ├── MVP_ROADMAP.md
-│   ├── PRD.md
-│   └── System_Design.md
-├── migrations
-│   ├── versions
-│   │   ├── 8cd1e0d95b7a_create_tables.py
-│   │   ├── 21a80ea32600_fk_ondelete_restrict.py
-│   │   ├── 65bce8c2411d_create_knowledge_tables.py
-│   │   ├── 412db7507c59_add_contact_attempts_to_dialog_sessions.py
-│   │   ├── a8ffd1220905_add_last_delivery_error_to_leads.py
-│   │   └── ee6e74045934_soft_delete_deleted_at_partial_unique_.py
-│   ├── README
-│   ├── env.py
-│   └── script.py.mako
-├── tests
-│   ├── e2e
-│   │   ├── __init__.py
-│   │   └── test_agent_message.py
-│   ├── integration
-│   │   ├── __init__.py
-│   │   ├── test_agent_message.py
-│   │   ├── test_knowledge.py
-│   │   ├── test_lead_delivery_fake.py
-│   │   ├── test_leads.py
-│   │   ├── test_message_enqueue.py
-│   │   └── test_sessions_session_id.py
-│   ├── unit
-│   │   ├── __init__.py
-│   │   ├── test_ag2_flow.py
-│   │   ├── test_crm_payload_mapping.py
-│   │   └── test_knowledge_chunking.py
-│   ├── __init__.py
-│   └── conftest.py
-├── README.md
-├── alembic.ini
-├── main.py
-├── pyproject.toml
-└── repomix-output.xml
+Виджет / прямой API-вызов
+  -> POST /message
+  -> AgentService
+  -> поиск или создание анонимного пользователя и активной сессии
+  -> загрузка истории сообщений и текущего лида
+  -> поиск релевантных фрагментов базы знаний
+  -> AG2 client или детерминированный stub
+  -> объединение извлечённой квалификации и контакта
+  -> проверка перехода backend-машиной состояний
+  -> сохранение сообщений, сессии и лида
+  -> commit транзакции PostgreSQL
+  -> постановка готового лида в Redis
+  -> ответ пользователю
 ```
 
-
-
-
-## Текущая реализация
-
-Реализован полный agent-flow с памятью в PostgreSQL и доставкой лида.
-
-`POST /message` принимает одно сообщение пользователя, находит или создаёт анонимного пользователя, создаёт или продолжает активную сессию, сохраняет входящее сообщение, строит LLM-запрос на основе истории, мёржит извлечённые qualification-поля и контакт (None из LLM не затирает собранное), вычисляет на backend недостающие поля, детерминированно выбирает следующее состояние, сохраняет ответ ассистента, апсертит draft-лида и — когда обязательные поля собраны — переводит лид в `ready` и ставит задачу доставки в Redis-очередь.
-
-### Основной flow
-
-```text
-HTTP request
-  → AgentService
-  → Ag2AgentClient.decide()        ← AG2 ConversableAgent здесь
-  → AgentDecision (Pydantic)       ← structured output + валидация
-  → merge_qualification / contact  ← None не затирает собранное
-  → compute_missing_fields         ← backend считает, не LLM
-  → state_machine.resolve()        ← переходы состояний кодом, не LLM
-  → DialogSessionRepository.update_state()
-  → LeadRepository.upsert_draft()
-  → (ready) LeadRepository.update(status="ready")
-  → QueueClient.enqueue_lead_delivery()   ← async-доставка, после commit
-  → AgentMessageResponse
-```
-
-### Доставка лида (асинхронная)
+Доставка выполняется независимо от HTTP-запроса:
 
 ```text
 Redis queue
-  → worker (app/worker/lead_delivery.py)
-  → LeadDeliveryService.deliver()
-  → CrmClient.deliver_lead()       ← AmoCRM / webhook / fake
-  → lead.status = delivered | delivery_failed (+ last_delivery_error)
+  -> app.worker.lead_delivery
+  -> LeadDeliveryService
+  -> AmoCRM / webhook / fake adapter
+  -> lead.status = delivered | delivery_failed
 ```
 
-### Read-flow для проверки памяти
+PostgreSQL является источником истины для пользователей, сессий, сообщений, лидов и документов базы знаний. Redis используется только как очередь доставки лидов.
 
-```text
-GET /sessions/{session_id}
-  -> session_router.py
-  -> SessionService
-  -> DialogSessionRepository
-  -> SessionResponse
+## Состояния диалога
 
-GET /sessions/{session_id}/messages
-  -> session_router.py
-  -> SessionService
-  -> MessageRepository
-  -> list[StoredMessageResponse]
-```
+Разрешённые переходы:
 
----
+| Текущее состояние | Следующее состояние |
+|---|---|
+| `GREETING` | `FAQ`, `QUALIFICATION`, `CONTACT_CAPTURE` |
+| `FAQ` | `FAQ`, `QUALIFICATION`, `CONTACT_CAPTURE` |
+| `QUALIFICATION` | `QUALIFICATION`, `CONTACT_CAPTURE`, `CLOSED` |
+| `CONTACT_CAPTURE` | `CONTACT_CAPTURE`, `LEAD_READY`, `CLOSED` |
+| `LEAD_READY` | `CLOSED` |
+| `CLOSED` | нет переходов |
 
-## API routes
+LLM предлагает переход, извлекает данные и формирует ответ. Backend проверяет допустимость перехода и самостоятельно вычисляет недостающие поля. Переход в `LEAD_READY` разрешён только при наличии всех квалификационных полей и хотя бы одного поддерживаемого способа связи.
 
-```text
-POST /message
-GET  /sessions/{session_id}
-GET  /sessions/{session_id}/messages
-GET  /leads
-GET  /leads/{lead_id}
-POST /leads/{lead_id}/deliver
-GET  /knowledge/documents
-POST  /knowledge/documents
-POST  /knowledge/reindex
-```
+`LEAD_READY` и `CLOSED` завершают текущую сессию. Следующее сообщение создаёт новую сессию, даже если клиент повторно передал ID завершённой.
 
----
+## API
 
-## POST /message
+После запуска интерактивная OpenAPI-документация доступна по адресу `http://localhost:8000/docs`.
 
-Основной write-route агентного контура.
+### POST /message
 
-### Request
+Создаёт или продолжает диалог.
 
 ```json
 {
-  "anonymous_id": "demo-user-1",
+  "anonymous_id": "browser-user-1",
   "channel": "website",
   "session_id": null,
-  "content": "Сколько стоит внедрение?"
+  "content": "Ищу Toyota Camry до 3 миллионов",
+  "page_title": "Toyota Camry в наличии"
 }
 ```
 
-Поля:
+| Поле | Обязательное | Описание |
+|---|---:|---|
+| `anonymous_id` | да | Стабильный ID, созданный клиентом; от 3 до 128 символов |
+| `channel` | нет | `website`, `telegram` или `avito`; по умолчанию `website` |
+| `session_id` | нет | UUID существующей активной сессии |
+| `content` | да | Сообщение пользователя; от 1 до 4000 символов |
+| `page_title` | нет | Нормализованный заголовок страницы; не более 200 символов |
 
-| Поле | Тип | Обязательное | Описание |
-|---|---|---:|---|
-| `anonymous_id` | `string` | Да | Стабильный идентификатор анонимного пользователя |
-| `channel` | `website` / `telegram` / `avito` | Нет | Канал входа. По умолчанию `website` |
-| `session_id` | `UUID` / `null` | Нет | ID существующей сессии. Если не передан, backend найдёт активную или создаст новую |
-| `content` | `string` | Да | Текст сообщения пользователя |
+API-схема принимает значения каналов `telegram` и `avito`, но готовых коннекторов для них в репозитории нет. Реализованные точки входа — website-виджет и прямой API-вызов.
 
-### Response
+Пример ответа:
 
 ```json
 {
   "user_id": "0c336b9b-6a7e-4494-8af1-e6302b87956f",
   "session_id": "c75f9b38-b169-4901-a3e1-9335d4d7ff6a",
-  "user_message_id": "57c7b362-4b4c-4ebf-a6f5-a6c9bfc19f1a",
+  "user_message_id": "57c7b362-4b4d-4e5f-8a9b-1c2d3e4f5a6b",
   "assistant_message_id": "bb9ffb5f-d98c-4cc2-bf7e-c6e5dfde4b63",
-  "answer": "Здравствуйте! Чем могу помочь?",
-  "state": "FAQ",
-  "intent": "pricing",
-  "next_step": "FAQ",
-  "missing_fields": ["car_model", "budget", "purchase_type", "contact"],
+  "answer": "Какой способ покупки вы рассматриваете?",
+  "state": "QUALIFICATION",
+  "intent": "lead_request",
+  "next_step": "QUALIFICATION",
+  "missing_fields": ["purchase_type", "contact"],
   "lead_id": "9f1c0c2a-3b4d-4e5f-8a9b-1c2d3e4f5a6b"
 }
 ```
 
-`missing_fields` и `lead_id` считает backend. `missing_fields` — какие обязательные поля ещё не собраны; `lead_id` появляется, как только создан draft.
+### Сессии и сообщения
 
----
-
-## Read-routes
-
-### GET /sessions/{session_id}
-
-Возвращает данные сессии.
-
-```bash
-curl http://localhost:8000/sessions/SESSION_ID
+```text
+GET /sessions/{session_id}
+GET /sessions/{session_id}/messages
 ```
 
-Пример ответа:
+Первый endpoint возвращает состояние и владельца сессии. Второй возвращает сохранённую историю сообщений в порядке создания.
 
-```json
-{
-  "id": "c75f9b38-b169-4901-a3e1-9335d4d7ff6a",
-  "user_id": "0c336b9b-6a7e-4494-8af1-e6302b87956f",
-  "state": "GREETING",
-  "channel": "website",
-  "created_at": "2026-05-18T21:00:00Z",
-  "updated_at": "2026-05-18T21:00:00Z"
-}
+### Лиды
+
+```text
+GET  /leads
+GET  /leads?status=ready
+GET  /leads/{lead_id}
+POST /leads/{lead_id}/deliver
 ```
 
-### GET /sessions/{session_id}/messages
+`GET /leads` возвращает облегчённые элементы списка. `GET /leads/{lead_id}` дополнительно содержит квалификацию, контакт, summary, статус доставки и последнюю ошибку.
 
-Возвращает историю сообщений сессии.
+`POST /leads/{lead_id}/deliver` синхронно повторяет доставку без Redis. Endpoint возвращает `404` для неизвестного лида и `409` для лида в недопустимом статусе, например `draft`.
 
-```bash
-curl http://localhost:8000/sessions/SESSION_ID/messages
+### База знаний
+
+```text
+GET  /knowledge/documents
+POST /knowledge/documents
+POST /knowledge/reindex
 ```
 
-Пример ответа:
+Документы загружаются вручную JSON-массивом:
 
 ```json
 [
   {
-    "id": "57c7b362-4b4c-4ebf-a6f5-a6c9bfc19f1a",
-    "session_id": "c75f9b38-b169-4901-a3e1-9335d4d7ff6a",
-    "role": "user",
-    "content": "Сколько стоит внедрение?",
-    "created_at": "2026-05-18T21:00:00Z"
-  },
-  {
-    "id": "bb9ffb5f-d98c-4cc2-bf7e-c6e5dfde4b63",
-    "session_id": "c75f9b38-b169-4901-a3e1-9335d4d7ff6a",
-    "role": "assistant",
-    "content": "Здравствуйте! Чем могу помочь?",
-    "created_at": "2026-05-18T21:00:01Z"
+    "title": "Toyota Camry",
+    "source": "manual",
+    "content": "Toyota Camry доступна в комплектациях ..."
   }
 ]
 ```
 
----
+Текст делится на пересекающиеся фрагменты, преобразуется в embeddings и сохраняется в PostgreSQL через pgvector. После смены embedding-модели необходимо вызвать `POST /knowledge/reindex`, чтобы пересоздать векторы всех документов.
 
-## Lead routes
+## Конфигурация
 
-### GET /leads
-
-Список лидов, сортировка по `created_at desc`. Опциональный фильтр `?status=`.
-
-```bash
-curl http://localhost:8000/leads
-curl "http://localhost:8000/leads?status=ready"
-```
-
-Возвращает лёгкие элементы списка (`id`, `session_id`, `user_id`, `status`, `summary`, `created_at`).
-
-### GET /leads/{lead_id}
-
-Полная карточка лида: `qualification`, `contact`, `summary`, `status`, `last_delivery_error`.
-
-```bash
-curl http://localhost:8000/leads/LEAD_ID
-```
-
-Невалидный `lead_id` → `404`.
-
-### POST /leads/{lead_id}/deliver
-
-Ручной debug-endpoint: синхронно доставляет лид в CRM (минуя очередь). Основной flow доставляет лид автоматически через очередь после перехода в `ready`.
-
-```bash
-curl -X POST http://localhost:8000/leads/LEAD_ID/deliver
-```
-
-- `404` — лид не найден.
-- `409` — лид в недопустимом для доставки статусе (например `draft`).
-- `200` — вернёт карточку лида со статусом `delivered` или `delivery_failed`.
-
----
-
-## Идентификация анонимного пользователя
-
-Для незарегистрированного пользователя используется `anonymous_id`.
-
-Клиентская часть должна один раз сгенерировать стабильный идентификатор и отправлять его в каждом запросе. Для сайта его можно хранить в cookie или `localStorage`.
-
-Пользователь считается уникальным по паре:
-
-```text
-channel + anonymous_id
-```
-
-Пример:
-
-```text
-website + demo-user-1
-telegram + demo-user-1
-```
-
-Это разные пользователи, потому что они пришли из разных каналов.
-
----
-
-## Состояние диалога
-
-Машина состояний реализована в `app/service/state_machine.py`. Переходы между состояниями детерминированы кодом, не LLM. `LEAD_READY` разрешается только после backend-проверки всех обязательных полей и валидного контакта — даже если LLM прислал `lead_ready=true` раньше.
-
-Значения:
-
-```text
-GREETING
-FAQ
-QUALIFICATION
-CONTACT_CAPTURE
-LEAD_READY
-CLOSED
-```
-
-Обязательные qualification-поля вынесены в `app/domain.py` (`car_model` / `budget` / `purchase_type`) — меняются в одном месте.
-
----
-
-## База данных
-
-История диалогов и лиды хранятся в PostgreSQL.
-
-Основные таблицы:
-
-| Таблица | Назначение |
-|---|---|
-| `users` | Анонимные пользователи. Уникальность по `channel + anonymous_id` |
-| `dialog_sessions` | Сессии диалога пользователя с агентом |
-| `messages` | История сообщений `user` / `assistant` |
-| `leads` | Карточка лида: `draft → ready → delivered \| delivery_failed`. Ошибка доставки пишется в `last_delivery_error` |
-
-### Удаление записей
-
-Удаление мягкое (soft delete): строки помечаются `deleted_at`, физически не стираются. Все читающие запросы фильтруют `deleted_at IS NULL`. Уникальность `users` по `channel + anonymous_id` — частичная, только среди не-удалённых строк. Внешние ключи стоят на `ON DELETE RESTRICT` — случайный физический каскад невозможен.
-
-В MVP пользовательского удаления нет: это только механизм на уровне БД и репозиториев.
-
-### Упрощённая схема
-
-```text
-users 1 -> many dialog_sessions
-dialog_sessions 1 -> many messages
-users 1 -> many leads
-dialog_sessions 1 -> 0..1 leads
-```
-
-PlantUML-диаграмма текущей БД находится здесь:
-
-```text
-docs/diagrams/DataBase.puml
-```
-
----
-
-## Миграции
-
-Миграции управляются через Alembic.
-
-Применить миграции:
-
-```bash
-uv run alembic upgrade head
-```
-
-Создать новую миграцию после изменения ORM-моделей:
-
-```bash
-uv run alembic revision --autogenerate -m "describe changes"
-```
-
-Проверить текущую ревизию:
-
-```bash
-uv run alembic current
-```
-
----
-
-## API схемы
-
-Внешний API продукта использует:
-
-```text
-app/schemas/agent_schema.py
-app/schemas/session_schema.py
-app/schemas/lead_schema.py
-app/schemas/lead_delivery_schema.py
-```
-
-То есть внешний клиент отправляет не `model + messages`, а product-level payload:
-
-```json
-{
-  "anonymous_id": "demo-user-1",
-  "channel": "website",
-  "content": "Привет"
-}
-```
-
----
-
-## Быстрый старт
-
-### 1. Установка зависимостей
-
-```bash
-uv sync
-```
-
-### 2. Настройка окружения
+Создайте локальный конфигурационный файл из шаблона:
 
 ```bash
 cp .env.example .env
 ```
 
-Минимальная конфигурация для локальной разработки:
+Не добавляйте `.env` и реальные API-токены в Git.
 
-```env
-LLM_PROVIDER=stub
-DATABASE_URL=postgresql+asyncpg://innova:innova@localhost:5432/innova_ai
-```
-
-Для работы с реальным LLM (AG2 через OpenRouter):
-
-```env
-LLM_PROVIDER=ag2
-OPENROUTER_API_KEY=sk-or-v1-your-key-here
-OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
-AG2_MODEL=openai/gpt-oss-120b:free
-DATABASE_URL=postgresql+asyncpg://innova:innova@localhost:5432/innova_ai
-```
-
-При `LLM_PROVIDER=ag2` без `OPENROUTER_API_KEY` приложение падает на старте с понятной ошибкой (fail-fast). `AG2_MODEL` — ставь модель, к которой реально есть доступ на OpenRouter.
-
-Для доставки лида в CRM (Phase 5):
-
-```env
-REDIS_URL=redis://localhost:6379/0
-LEAD_DELIVERY_PROVIDER=amocrm
-AMOCRM_BASE_URL=https://ваш-поддомен.amocrm.ru
-AMOCRM_ACCESS_TOKEN=ваш-долгосрочный-токен
-```
-
-`LEAD_DELIVERY_PROVIDER` принимает `disabled | fake | amocrm | webhook`. Токен — только в `.env`, не в git.
-
-### 3. PostgreSQL
-
-Проект ожидает доступную PostgreSQL-базу.
-
-Пример локальной базы:
+### LLM
 
 ```text
-database: innova_ai
-user:     innova
-password: innova
-host:     localhost
-port:     5432
+LLM_PROVIDER=stub|ag2
+OPENROUTER_API_KEY
+OPENROUTER_BASE_URL
+AG2_MODEL
 ```
 
-Проверить подключение можно так:
+`stub` не требует внешнего ключа и используется для детерминированной разработки и автоматических тестов. `ag2` требует `OPENROUTER_API_KEY`; при отсутствии ключа приложение завершается на старте с ошибкой конфигурации.
+
+### Embeddings
+
+```text
+EMBEDDING_PROVIDER=fake|openrouter
+EMBEDDING_MODEL
+```
+
+`fake` создаёт детерминированные token-based векторы для локальной разработки и тестов. `openrouter` использует тот же ключ и base URL, что и AG2. Выбранная модель должна возвращать векторы размерности 1536.
+
+### Доставка лидов
+
+```text
+REDIS_URL
+LEAD_DELIVERY_PROVIDER=disabled|fake|amocrm|webhook
+AMOCRM_BASE_URL
+AMOCRM_ACCESS_TOKEN
+LEAD_WEBHOOK_URL
+```
+
+`disabled` сохраняет готовые лиды без постановки в очередь. `fake` используется в тестах. `amocrm` создаёт сделку со встроенным контактом и добавляет примечание с квалификацией. `webhook` отправляет плоский JSON payload по адресу `LEAD_WEBHOOK_URL`.
+
+### Доступ из браузера
+
+`CORS_ALLOW_ORIGINS` содержит разрешённые origins виджета через запятую. Значение `*` удобно для локальной разработки; в развёрнутой установке следует перечислить только доверенные домены дилера.
+
+## Запуск через Docker Compose
+
+Compose запускает PostgreSQL с pgvector, Redis, миграции, API и worker доставки лидов.
 
 ```bash
-psql "postgresql://innova:innova@localhost:5432/innova_ai"
+cp .env.example .env
+docker compose up --build
 ```
 
-### 4. Применение миграций
+После запуска доступны:
+
+```text
+API:         http://localhost:8000
+OpenAPI:     http://localhost:8000/docs
+Widget demo: http://localhost:8000/static/widget-demo.html
+PostgreSQL:  localhost:5433
+Redis:       localhost:6379
+```
+
+Остановить сервисы:
+
+```bash
+docker compose down
+```
+
+Флаг `-v` следует добавлять только тогда, когда вместе с контейнерами нужно удалить данные PostgreSQL.
+
+## Локальная разработка
+
+Установите зависимости:
+
+```bash
+uv sync
+```
+
+Запустите инфраструктуру:
+
+```bash
+docker compose up -d db redis
+```
+
+Если приложение работает на хосте с PostgreSQL из Compose, используйте порт `5433`:
+
+```text
+DATABASE_URL=postgresql+asyncpg://innova:innova@localhost:5433/innova_ai
+REDIS_URL=redis://localhost:6379/0
+```
+
+Примените миграции и запустите процессы:
 
 ```bash
 uv run alembic upgrade head
-```
-
-### 5. Запуск сервера
-
-```bash
 uv run uvicorn main:app --reload
-```
-
----
-
-## Доставка лида в CRM
-
-Доставка асинхронная: `ready`-лид попадает в Redis-очередь, отдельный worker забирает задачу и создаёт сделку в CRM.
-
-### 1. Redis
-
-```bash
-docker run -d -p 6379:6379 --name innova_redis redis:7-alpine
-```
-
-### 2. Worker
-
-В отдельном терминале (env из `.env`):
-
-```bash
 uv run python -m app.worker.lead_delivery
 ```
 
-### 3. Поведение
+API и worker запускаются отдельными процессами и должны получать одинаковые настройки PostgreSQL, Redis и delivery provider.
 
-- `ready`-лид автоматически ставится в очередь после перехода (внутри `/message`, после commit).
-- Worker доставляет лид в CRM: успех → `delivered`, ошибка → `delivery_failed` + `last_delivery_error`.
-- Если Redis недоступен, лид остаётся в `ready` (не теряется) и доставляется вручную через `POST /leads/{id}/deliver`.
+## Веб-виджет
 
-> Опционально: если в репозитории есть `Makefile` + `Procfile`, всё поднимается одной командой `make dev` (Redis + миграции + сервер + worker через honcho).
+Виджет раздаётся через FastAPI:
 
----
-
-## Manual AG2 smoke (Phase 6)
-
-Проверка работы на реальном провайдере. Env держать в `.env` (`LLM_PROVIDER=ag2`, `OPENROUTER_API_KEY=...`, `AG2_MODEL=...`).
-
-```bash
-uv run uvicorn main:app
-
-# 1) первый контакт
-curl -sX POST localhost:8000/message -H 'Content-Type: application/json' \
-  -d '{"anonymous_id":"smoke-ag2","channel":"website","content":"Привет, ищу машину"}'
-
-# 2) квалификация
-curl -sX POST localhost:8000/message -H 'Content-Type: application/json' \
-  -d '{"anonymous_id":"smoke-ag2","channel":"website","content":"Хочу Toyota Camry, до 3 млн, в кредит"}'
-
-# 3) контакт
-curl -sX POST localhost:8000/message -H 'Content-Type: application/json' \
-  -d '{"anonymous_id":"smoke-ag2","channel":"website","content":"Иван, +79991234567"}'
-
-# 4) лид
-curl -s localhost:8000/leads
+```html
+<script
+  src="http://localhost:8000/static/widget.js"
+  data-api-base="http://localhost:8000">
+</script>
 ```
 
-Free-модели иногда отдают невалидный JSON — тогда сработает безопасный fallback (`_parse_reply` → `_FALLBACK_DECISION`), ответ пользователю не ломается, состояние и собранные данные сохраняются. Timeout и исключения провайдера тоже уходят в fallback, а не в 500.
-
----
-
-## Demo-сценарий
-
-### 1. Первое сообщение
-
-```bash
-curl -X POST http://localhost:8000/message \
-  -H "Content-Type: application/json" \
-  -d '{
-    "anonymous_id": "demo-user-1",
-    "channel": "website",
-    "content": "Здравствуйте, хочу узнать стоимость внедрения"
-  }'
-```
-
-Из ответа нужно скопировать `session_id`.
-
-### 2. Продолжение диалога
-
-```bash
-curl -X POST http://localhost:8000/message \
-  -H "Content-Type: application/json" \
-  -d '{
-    "anonymous_id": "demo-user-1",
-    "channel": "website",
-    "session_id": "SESSION_ID_FROM_FIRST_RESPONSE",
-    "content": "А можно подробнее?"
-  }'
-```
-
-### 3. Проверка сессии
-
-```bash
-curl http://localhost:8000/sessions/SESSION_ID_FROM_FIRST_RESPONSE
-```
-
-### 4. Проверка истории сообщений
-
-```bash
-curl http://localhost:8000/sessions/SESSION_ID_FROM_FIRST_RESPONSE/messages
-```
-
-После двух `POST /message` ожидается 4 сообщения:
+Демонстрационная страница:
 
 ```text
-user
-assistant
-user
-assistant
+http://localhost:8000/static/widget-demo.html
 ```
 
-### 5. Просмотр лидов
+Виджет хранит `anonymous_id` и ID активной сессии в `localStorage`, передаёт `document.title` в `page_title` и удаляет `session_id`, когда backend возвращает `LEAD_READY` или `CLOSED`.
 
-```bash
-curl http://localhost:8000/leads
-```
+## Тестирование
 
----
-
-## Тесты
-
-Запуск всех тестов:
-
-```bash
-uv run pytest
-```
-
-Подробный вывод:
-
-```bash
-uv run pytest -v
-```
-
-Отдельно unit-тесты:
-
-```bash
-uv run pytest -m unit
-```
-
-Отдельно integration-тесты:
-
-```bash
-uv run pytest -m integration
-```
-
-Тестовая база по умолчанию:
+Адрес тестовой базы по умолчанию:
 
 ```text
 postgresql+asyncpg://innova:innova@localhost:5432/innova_ai_test
 ```
 
-Её можно переопределить через переменную окружения:
+Переопределите его через `TEST_DATABASE_URL`, если PostgreSQL работает на другом порту. Для базы из Compose:
 
 ```bash
-TEST_DATABASE_URL=postgresql+asyncpg://user:password@localhost:5432/db_name uv run pytest
-```
-Требование: роль тест-БД должна иметь право CREATE EXTENSION
-
-### Создание тестовой базы
-
-```bash
-createdb -U innova innova_ai_test
-# или через psql:
-psql -U innova -c "CREATE DATABASE innova_ai_test;"
+docker compose exec db createdb -U innova innova_ai_test
+TEST_DATABASE_URL=postgresql+asyncpg://innova:innova@localhost:5433/innova_ai_test \
+  uv run pytest -q
 ```
 
-### Команды по типам тестов
+Отдельные проверки:
 
 ```bash
-# Без БД — всегда зелёные:
 uv run pytest tests/unit -q
-
-# Integration — нужна test DB:
 uv run pytest -m integration -q
-
-# Redis-зависимые:
-uv run pytest -m integration_redis -q
-
-# CRM fake adapter:
 uv run pytest -m integration_crm_fake -q
-
-# Smoke с реальным LLM:
-LLM_PROVIDER=ag2 OPENROUTER_API_KEY=sk-... uv run pytest -m manual_smoke -q
-```
-
-### mypy
-
-mypy не является обязательным CI gate в текущей фазе. Запуск:
-
-```bash
+uv run ruff check .
 uv run mypy app/ --ignore-missing-imports
 ```
 
----
+Автоматические тесты используют fake-адаптеры LLM, embeddings, очереди и CRM там, где внешние сервисы не являются предметом проверки. Полный сценарий widget -> real AG2 -> lead -> Redis worker -> AmoCRM также проверен вручную.
 
-## Текущий статус
+## Известные ограничения
 
-| Слой | Статус                |
-|---|-----------------------|
-| Product-level `POST /message` | Реализовано           |
-| Анонимный пользователь | Реализовано           |
-| Сессии диалога | Реализовано           |
-| История сообщений | Реализовано           |
-| Read-routes для памяти | Реализовано           |
-| Lead read API (`GET /leads`) | Реализовано           |
-| PostgreSQL ORM-модели | Реализовано           |
-| Alembic-миграции | Реализовано           |
-| Stub LLM client | Реализовано           |
-| AG2AgentClient + FakeAg2 | Реализовано           |
-| AG2 fallback + startup validation | Реализовано           |
-| Полноценная state machine | Реализовано           |
-| Lead table (`draft → ready → delivered`) | Реализовано           |
-| Redis очередь доставки | Реализовано           |
-| CRM delivery (AmoCRM) | Реализовано           |
-| RAG / база знаний | Реализовано           |
-| Web widget | Планируется (Phase 8) |
+- Одна установка обслуживает одного дилера; tenant model и tenant isolation отсутствуют.
+- Не реализованы authentication, roles и operator dashboard.
+- Website/API — единственный готовый входной канал; коннекторы Telegram и Avito отсутствуют.
+- Документы базы знаний загружаются вручную; crawler и file upload pipeline отсутствуют.
+- Для контакта требуется непустой phone, email или Telegram, но формат значения не проверяется.
+- Redis-worker не реализует retry, backoff, dead-letter queue и durable acknowledgement.
+- При ошибке постановки в очередь лид остаётся в `ready`; доставку нужно повторить через `POST /leads/{lead_id}/deliver`.
+- Доставка не имеет гарантии exactly-once; повтор неоднозначно завершившегося CRM-запроса может создать дубликат.
+- Доступность LLM, embeddings, CRM и webhook зависит от внешних провайдеров.
+- Не реализованы rate limiting, production monitoring, audit logs и формализованные меры соответствия требованиям к персональным данным.
 
----
-
-## Архитектурные слои
-
-### Router layer
-
-Принимает HTTP-запросы и делегирует работу сервисам.
+## Структура репозитория
 
 ```text
-app/router/message_router.py
-app/router/session_router.py
-app/router/lead_router.py
+app/
+  client/       AG2, embeddings, Redis queue и CRM adapters
+  db/           настройка SQLAlchemy engine и sessions
+  models/       ORM-модели PostgreSQL
+  repository/   операции с хранилищем
+  router/       FastAPI routes
+  schemas/      публичные и внутренние Pydantic contracts
+  service/      логика диалога, базы знаний, лидов и доставки
+  worker/       процесс доставки лидов из Redis
+docs/           целевые продуктовые и архитектурные документы, диаграммы, RAG data
+migrations/     Alembic environment и revisions
+static/         виджет, demo page и изображения дилера
+tests/          unit, integration и end-to-end tests
 ```
-
-### Service layer
-
-Содержит use case логику.
-
-```text
-app/service/agent_service.py
-app/service/session_service.py
-app/service/business_service.py
-app/service/state_machine.py
-app/service/lead_service.py
-app/service/lead_delivery_service.py
-```
-
-### Repository layer
-
-Инкапсулирует работу с PostgreSQL.
-
-```text
-app/repository/user_repository.py
-app/repository/dialog_session_repository.py
-app/repository/message_repository.py
-app/repository/lead_repository.py
-```
-
-### Model layer
-
-SQLAlchemy ORM-модели.
-
-```text
-app/models/user_model.py
-app/models/dialog_session_model.py
-app/models/message_model.py
-app/models/lead_model.py
-```
-
-### Client layer
-
-Изолирует работу с внешними системами: LLM-провайдер, CRM, очередь.
-
-```text
-app/client/ag2_agent_client.py
-app/client/crm_client.py
-app/client/queue_client.py
-app/client/delivery_factory.py
-```
-
-### Worker layer
-
-Фоновая обработка очереди доставки.
-
-```text
-app/worker/lead_delivery.py
-```
-
----
-## База знаний (RAG)
-
-Бот отвечает на FAQ только из загруженной базы. Нет ответа — предлагает оставить контакт, цифры не выдумывает.
-
-### Эндпоинты
-- `POST /knowledge/documents` — загрузка, тело = список: `[{"title": "...", "content": "..."}]`
-- `GET /knowledge/documents` — список загруженного
-- `POST /knowledge/reindex` — пересборка чанков и эмбеддингов всех документов
-
-### Конфиг (.env)
-- `EMBEDDING_PROVIDER=fake|openrouter` (по умолчанию `fake`)
-- `EMBEDDING_MODEL` — для `openrouter`, по умолчанию `openai/text-embedding-3-small` (dim 1536)
-- real-режим переиспользует `OPENROUTER_API_KEY` и `OPENROUTER_BASE_URL` (те же, что у AG2)
-- размерность фиксирована: `EMBEDDING_DIM=1536` в `app/domain.py`
-
-### Правило: смена эмбеддера → reindex
-Эмбеддинги разных моделей несравнимы. Сменил `EMBEDDING_PROVIDER` или `EMBEDDING_MODEL` — обязательно `POST /knowledge/reindex`. Иначе retrieval молча вернёт мусор. Один эмбеддер на инсталляцию.
-
-### pgvector
-Нужно расширение `vector` в PostgreSQL. Создаётся один раз суперюзером:
-`psql -U postgres -d <db> -c 'CREATE EXTENSION IF NOT EXISTS vector;'`
-Тест-БД из `TEST_DATABASE_URL` — то же самое (иначе integration-тесты падают на правах).
-
-### Тесты
-- `uv run pytest tests/unit/test_knowledge_chunking.py -q` — нарезка, без БД
-- `uv run pytest tests/integration/test_knowledge.py -q` — ingestion + retrieval на fake-эмбеддингах
-
----
-## Виджет
-
-Подключение на любой странице сайта одним тегом:
-
-```html
-<script src="http://localhost:8000/static/widget.js"
-        data-api-base="http://localhost:8000"></script>
-```
-
-Локальная демонстрация: запусти backend и открой `demo/widget-demo.html`.
-Виджет шлёт `anonymous_id`, `session_id`, `content`, `channel=website` и
-`page_title` (заголовок страницы — context-подсказка агенту). CORS
-настраивается через `CORS_ALLOW_ORIGINS` (см. `.env.example`).
-Ручной чек-лист: `docs/WIDGET_CHECKLIST.md`.
----
 
 ## Документация
 
-- `docs/MVP_ROADMAP.md` — Scope и план реализации (сейчас это главный ориентир)
-- `docs/PRD.md` — продуктовые требования, ICP, use cases, метрики.
-- `docs/System_Design.md` — целевая архитектура, state machine, RAG, очередь лидов, multi-tenancy.
-- `docs/diagrams/Components.puml` — компонентная диаграмма.
-- `docs/diagrams/Sequence.puml` — happy path от сообщения до лида.
-- `docs/diagrams/DataBase.puml` — текущая схема PostgreSQL.
+- `docs/PRD.md` описывает расширенное продуктовое видение и будущие возможности.
+- `docs/System_Design.md` описывает целевую архитектуру платформы, а не только уже реализованный код.
+- `docs/diagrams/` содержит диаграммы целевого состояния.
+- `docs/RAG/` содержит исходные материалы для загрузки в базу знаний.
+
+Источником истины по реализованному поведению, конфигурации и эксплуатационным ограничениям является этот README.

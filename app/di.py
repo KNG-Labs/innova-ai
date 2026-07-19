@@ -24,7 +24,7 @@ from app.service.lead_service import LeadService
 
 
 async def init_app_state(app: FastAPI) -> None:
-    # fail fast: ag2 без ключа смысла не имеет (Phase 6)
+    # Fail fast: AG2 cannot operate without an API key.
     if (
         os.getenv("LLM_PROVIDER", "stub").strip().lower() == "ag2"
         and not os.getenv("OPENROUTER_API_KEY", "").strip()

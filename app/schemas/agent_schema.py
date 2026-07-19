@@ -28,10 +28,7 @@ class Channel(StrEnum):
 
 
 class DialogState(StrEnum):
-    """Состояние диалога.
-
-    Заготовка под будущий state machine.
-    """
+    """Состояние backend-машины диалога."""
 
     GREETING = "GREETING"
     FAQ = "FAQ"

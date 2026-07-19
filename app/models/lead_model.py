@@ -11,10 +11,7 @@ from app.db.base import Base, SoftDeleteMixin
 
 
 class Lead(SoftDeleteMixin, Base):
-    """
-    Полный lead flow будет позже.
-    Сейчас это только таблица-заготовка под будущую карточку лида.
-    """
+    """Карточка лида с квалификацией, контактом и статусом доставки."""
 
     __tablename__ = "leads"
 

@@ -26,7 +26,7 @@ class LeadDeliveryService:
         if lead is None:
             raise LeadNotFoundError
 
-        # draft не доставляется (acceptance Phase 5)
+        # Draft leads do not contain a complete, backend-validated payload.
         if lead.status not in _DELIVERABLE_STATUSES:
             raise LeadNotDeliverableError
 
