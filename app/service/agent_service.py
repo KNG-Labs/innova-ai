@@ -1,6 +1,9 @@
+import logging
+
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.client.ag2_agent_client import Ag2AgentClient
+from app.client.queue_client import QueueClient
 from app.repository import LeadRepository
 from app.repository.dialog_session_repository import DialogSessionRepository
 from app.repository.message_repository import MessageRepository
@@ -11,13 +14,22 @@ from app.schemas.agent_schema import (
     DialogState,
     AgentDecision,
 )
-from app.schemas.openai_schema import (
-    AssistantMessage,
-    ChatCompletionRequest,
-    UserMessage,
-)
 from app.service.business_service import MessageNormalizer
-from app.service.state_machine import resolve_next_state, is_lead_ready
+from app.service.knowledge_retrieval_service import (
+    KnowledgeRetrievalService,
+    format_chunks_for_prompt,
+)
+from app.service.state_machine import (
+    resolve_next_state,
+    is_lead_ready,
+    is_contact_valid,
+    merge_qualification_data,
+    merge_contact,
+    compute_missing_fields,
+    should_close_after_contact_attempts,
+)
+
+_logger = logging.getLogger(__name__)
 
 
 class AgentService:
@@ -27,11 +39,17 @@ class AgentService:
         db_session: AsyncSession,
         llm_client: Ag2AgentClient,
         normalizer: MessageNormalizer,
+        queue_client: QueueClient,
+        delivery_provider: str,
+        retrieval: KnowledgeRetrievalService,
     ) -> None:
 
         self._db_session = db_session
         self._llm_client = llm_client
         self._normalizer = normalizer
+        self._queue = queue_client
+        self._delivery_provider = delivery_provider
+        self._retrieval = retrieval
 
         self._users = UserRepository(db_session)
         self._sessions = DialogSessionRepository(db_session)
@@ -73,33 +91,44 @@ class AgentService:
         )
 
         # Вызов AG2
+        # RAG: retrieved context перед LLM
+        retrieved = await self._retrieval.retrieve(content)
+        retrieved_context = format_chunks_for_prompt(retrieved)
+
         decision: AgentDecision = await self._llm_client.decide(
             user_message=content,
             history=history,
             current_state=current_state.value,
             qualification_data=qualification_data,
+            retrieved_context=retrieved_context,
+            page_title=request.page_title,
         )
 
-        # Детерминированный переход состояния
-        next_state = resolve_next_state(current_state, decision)
-
-        # Обновить qualification_data
-        merged_qualification_data = {
-            **qualification_data,
-            **decision.qualification_data,
-        }
-        # Убрать None-значения которые перезаписали бы реальные данные
-        merged_qual = {
-            k: v for k, v in merged_qualification_data.items() if v is not None
-        }
-
-        # Merge contact (не перезаписывать None поверх реальных данных)
-        extracted_contact = decision.extracted_contact or {}
-        merged_contact = {**current_contact, **extracted_contact}
-        merged_contact = {k: v for k, v in merged_contact.items() if v is not None}
-        # None если пустой dict (нет данных)
+        # Слить данные ДО решения о переходе (backend - источник истины)
+        merged_qual = merge_qualification_data(
+            qualification_data, decision.qualification_data
+        )
+        merged_contact = merge_contact(current_contact, decision.extracted_contact)
         final_contact = merged_contact if merged_contact else None
 
+        # Детерминированный переход по merged data
+        next_state = resolve_next_state(
+            current_state,
+            decision,
+            merged_qual,
+            final_contact,
+        )
+
+        contact_attempts = session.contact_attempts
+        if current_state == DialogState.CONTACT_CAPTURE and not is_contact_valid(
+            final_contact
+        ):
+            contact_attempts += 1
+
+        if should_close_after_contact_attempts(
+            current_state, final_contact, contact_attempts
+        ):
+            next_state = DialogState.CLOSED
 
         # Сохранение ответа ассистента
         assistant_message = await self._messages.create(
@@ -108,8 +137,18 @@ class AgentService:
             content=decision.answer,
         )
 
+        # Определить, что сессия закрывается
+        is_closing = (
+            next_state in {DialogState.LEAD_READY, DialogState.CLOSED}
+            and session.closed_at is None
+        )
         # Обновить состояние сессии
-        await self._sessions.update_state(session.id, next_state.value)
+        await self._sessions.update_state(
+            session_id=session.id,
+            state=next_state.value,
+            contact_attempts=contact_attempts,
+            close=is_closing,
+        )
 
         # Создать или обновить draft лида
         lead = await self._leads.upsert_draft(
@@ -120,14 +159,34 @@ class AgentService:
             summary=decision.lead_summary,
         )
 
+        became_ready = False
         if next_state == DialogState.LEAD_READY and is_lead_ready(
             merged_qual, final_contact
         ):
-            await self._leads.update(lead, status="ready")
+            if lead.status == "draft":
+                await self._leads.update(lead, status="ready")
+                became_ready = True
+            # уже ready/delivered/failed — статус не трогаем
 
+        # у нового lead проставится id
+        await self._db_session.flush()
+        lead_id = lead.id
 
+        missing_fields = compute_missing_fields(merged_qual, final_contact)
 
         await self._db_session.commit()
+
+        if became_ready and self._delivery_provider != "disabled":
+            try:
+                await self._queue.enqueue_lead_delivery(
+                    lead_id, self._delivery_provider
+                )
+            except Exception:
+                _logger.warning(
+                    "enqueue failed for lead %s; оставлен в 'ready', чинить ручным /deliver",
+                    lead_id,
+                    exc_info=True,
+                )
 
         return AgentMessageResponse(
             user_id=user.id,
@@ -138,30 +197,6 @@ class AgentService:
             state=next_state,
             intent=decision.intent,
             next_step=next_state.value,
+            missing_fields=missing_fields,
+            lead_id=lead_id,
         )
-
-    @staticmethod
-    def _build_llm_request(history) -> ChatCompletionRequest:
-        messages = []
-
-        for message in history:
-            if message.role == "user":
-                messages.append(UserMessage(content=message.content))
-            elif message.role == "assistant":
-                messages.append(AssistantMessage(content=message.content))
-
-        return ChatCompletionRequest(
-            messages=messages,
-        )
-
-    @staticmethod
-    def _extract_answer(llm_response) -> str:
-        if not llm_response.choices:
-            return "Извините, сейчас не удалось сформировать ответ."
-
-        content = llm_response.choices[0].message.content
-
-        if not content:
-            return "Извините, сейчас не удалось сформировать ответ."
-
-        return content

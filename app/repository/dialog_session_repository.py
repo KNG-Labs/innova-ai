@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select, update
+from sqlalchemy import select, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -19,7 +19,10 @@ class DialogSessionRepository:
         self._session = session
 
     async def get_by_id(self, session_id: UUID) -> DialogSession | None:
-        stmt = select(DialogSession).where(DialogSession.id == session_id)
+        stmt = select(DialogSession).where(
+            DialogSession.id == session_id,
+            DialogSession.deleted_at.is_(None),
+        )
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -27,7 +30,7 @@ class DialogSessionRepository:
         stmt = (
             select(DialogSession)
             .options(selectinload(DialogSession.user))
-            .where(DialogSession.id == session_id)
+            .where(DialogSession.id == session_id, DialogSession.deleted_at.is_(None))
         )
 
         result = await self._session.execute(stmt)
@@ -39,6 +42,8 @@ class DialogSessionRepository:
             .where(
                 DialogSession.user_id == user_id,
                 DialogSession.closed_at.is_(None),
+                DialogSession.state.not_in(("CLOSED", "LEAD_READY")),
+                DialogSession.deleted_at.is_(None),
             )
             .order_by(DialogSession.created_at.desc())
             .limit(1)
@@ -70,7 +75,11 @@ class DialogSessionRepository:
                         session_id=session_id,
                         user_id=user_id,
                     )
-                return existing_session
+                if (
+                    existing_session.closed_at is None
+                    and existing_session.state not in {"LEAD_READY", "CLOSED"}
+                ):
+                    return existing_session
 
         active_session = await self.get_active_by_user_id(user_id)
 
@@ -79,10 +88,23 @@ class DialogSessionRepository:
 
         return await self.create(user_id=user_id)
 
-    async def update_state(self, session_id: UUID, state: str) -> None:
+    async def update_state(
+        self,
+        session_id: UUID,
+        state: str,
+        contact_attempts: int | None = None,
+        close: bool = False,
+    ) -> None:
+        values: dict = {"state": state}
+        if contact_attempts is not None:
+            values["contact_attempts"] = contact_attempts
+        if close:
+            values["closed_at"] = func.now()
         stmt = (
-            update(DialogSession)
-            .where(DialogSession.id == session_id)
-            .values(state=state)
+            update(DialogSession).where(DialogSession.id == session_id).values(**values)
         )
         await self._session.execute(stmt)
+
+    async def soft_delete(self, dialog_session: DialogSession) -> None:
+        dialog_session.deleted_at = func.now()
+        await self._session.flush()

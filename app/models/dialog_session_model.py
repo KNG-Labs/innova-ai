@@ -4,17 +4,17 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
-from sqlalchemy import ForeignKey, String, func, DateTime
+from sqlalchemy import ForeignKey, String, func, DateTime, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base
+from app.db.base import Base, SoftDeleteMixin
 
 if TYPE_CHECKING:
     from app.models.message_model import Message
     from app.models.user_model import User
 
 
-class DialogSession(Base):
+class DialogSession(SoftDeleteMixin, Base):
     """Сессия диалога между Юзером и INNOVA AI агентом."""
 
     __tablename__ = "dialog_sessions"
@@ -24,7 +24,7 @@ class DialogSession(Base):
         default=uuid4,
     )
     user_id: Mapped[UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"),
+        ForeignKey("users.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
     )
@@ -33,6 +33,12 @@ class DialogSession(Base):
         String(32),
         nullable=False,
         default="GREETING",
+    )
+    contact_attempts: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=0,
+        server_default="0",
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -55,6 +61,5 @@ class DialogSession(Base):
     )
     messages: Mapped[list[Message]] = relationship(
         back_populates="session",
-        cascade="all, delete-orphan",
         order_by="Message.created_at",
     )

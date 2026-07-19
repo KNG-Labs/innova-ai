@@ -1,9 +1,16 @@
 @startuml Component_Diagram
 
 skinparam componentStyle rectangle
+title Innova AI - Target State Components
 
-' ── Каналы входа ──
-package "«subsystem» Каналы входа" {
+note as TargetNote
+  TARGET STATE
+  Диаграмма описывает целевую архитектуру,
+  а не текущую реализацию репозитория.
+end note
+
+' Input channels
+package "Каналы входа" {
     [Telegram Bot] <<component>>
     [Сайт] <<component>>
     [Авито] <<component>>
@@ -14,14 +21,14 @@ interface "IMessage" as IMessage
 [Сайт] --> IMessage
 [Авито] --> IMessage
 
-' ── Движок диалога ──
-package "«subsystem» Движок диалога" {
+' Dialogue engine
+package "Движок диалога" {
     [Middleware] <<component>>
     [State Machine] <<component>>
     [Lead Builder] <<component>>
 
-    [Middleware] ..> [State Machine] : «use»
-    [State Machine] ..> [Lead Builder] : «use»
+    [Middleware] ..> [State Machine] : use
+    [State Machine] ..> [Lead Builder] : use
 }
 
 IMessage --> [Middleware]
@@ -29,27 +36,27 @@ IMessage --> [Middleware]
 interface "ILeadReady" as ILeadReady
 [Lead Builder] --> ILeadReady
 
-' ── AI-слой ──
-package "«subsystem» AI-слой" {
+' AI layer
+package "AI-слой" {
     [LLM Engine] <<component>>
     [Knowledge Base] <<component>>
 
-    [LLM Engine] ..> [Knowledge Base] : «use»
+    [LLM Engine] ..> [Knowledge Base] : use
 }
 
-[State Machine] ..> [LLM Engine] : «use»
+[State Machine] ..> [LLM Engine] : use
 
 interface "IAnswer" as IAnswer
 [LLM Engine] --> IAnswer
 
-' ── Очередь ──
+' Queue
 [Message Queue] <<queue>>
 
 ILeadReady --> [Message Queue]
 IAnswer --> [State Machine]
 
-' ── Внешние системы ──
-package "«subsystem» Внешние системы" {
+' External systems
+package "Внешние системы" {
     [CRM] <<component>>
     [TG Manager] <<component>>
     [Webhook] <<component>>
@@ -63,23 +70,23 @@ package "«subsystem» Внешние системы" {
 [Message Queue] --> [Analytics]
 [Message Queue] --> [Calendar]
 
-' ── Хранилища ──
+' Storage
 database "PostgreSQL" as PostgreSQL
 database "Redis" as Redis
 database "Qdrant" as Qdrant
 database "S3" as S3
 
-[Middleware] ..> Redis : «use»\nсессия, rate limit
-[Middleware] ..> PostgreSQL : «use»\nнастройки tenant
-[State Machine] ..> PostgreSQL : «use»\nсостояние диалога
-[Lead Builder] ..> PostgreSQL : «use»\nкарточка лида
-[Knowledge Base] ..> Qdrant : «use»\nвекторный поиск
-[Message Queue] ..> Redis : «use»\nочередь задач
-[Knowledge Base] ..> S3 : «use»\nпросканированные страницы
+[Middleware] ..> Redis : use\nсессия, rate limit
+[Middleware] ..> PostgreSQL : use\nнастройки tenant
+[State Machine] ..> PostgreSQL : use\nсостояние диалога
+[Lead Builder] ..> PostgreSQL : use\nкарточка лида
+[Knowledge Base] ..> Qdrant : use\nвекторный поиск
+[Message Queue] ..> Redis : use\nочередь задач
+[Knowledge Base] ..> S3 : use\nпросканированные страницы
 [Middleware] -[hidden]left-> PostgreSQL
 
 
-' ── Interface блоки ──
+' Interfaces
 note right of IMessage
   + getText(): String
   + getSender(): String

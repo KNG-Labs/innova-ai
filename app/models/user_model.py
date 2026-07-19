@@ -4,16 +4,18 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
-from sqlalchemy import UniqueConstraint, String, DateTime, func
+from sqlalchemy import String, DateTime, func
 from sqlalchemy.orm import mapped_column, Mapped, relationship
+from sqlalchemy import Index, text
 
-from app.db.base import Base
+from app.db.base import Base, SoftDeleteMixin
+
 
 if TYPE_CHECKING:
     from app.models.dialog_session_model import DialogSession
 
 
-class User(Base):
+class User(SoftDeleteMixin, Base):
     """
     Модель Юзера, пользователя нашего продукта
 
@@ -23,10 +25,12 @@ class User(Base):
 
     __tablename__ = "users"
     __table_args__ = (
-        UniqueConstraint(
+        Index(
+            "uq_users_channel_anonymous_id",
             "channel",
             "anonymous_id",
-            name="uq_users_channel_anonymous_id",
+            unique=True,
+            postgresql_where=text("deleted_at IS NULL"),
         ),
     )
 
@@ -60,5 +64,4 @@ class User(Base):
 
     sessions: Mapped[list[DialogSession]] = relationship(
         back_populates="user",
-        cascade="all, delete-orphan",
     )

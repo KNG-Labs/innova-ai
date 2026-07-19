@@ -7,11 +7,11 @@ from sqlalchemy import ForeignKey, String, Text, DateTime, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base
+from app.db.base import Base, SoftDeleteMixin
 from app.models.dialog_session_model import DialogSession
 
 
-class Message(Base):
+class Message(SoftDeleteMixin, Base):
     """Одно сообщение в истории диалога."""
 
     __tablename__ = "messages"
@@ -21,7 +21,7 @@ class Message(Base):
         default=uuid4,
     )
     session_id: Mapped[UUID] = mapped_column(
-        ForeignKey("dialog_sessions.id", ondelete="CASCADE"),
+        ForeignKey("dialog_sessions.id", ondelete="RESTRICT"),
         nullable=False,
         index=True,
     )

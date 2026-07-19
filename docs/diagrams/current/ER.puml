@@ -1,0 +1,70 @@
+@startuml
+
+top to bottom direction
+skinparam linetype ortho
+
+class alembic_version {
+   version_num: varchar(32)
+}
+class dialog_sessions {
+   user_id: uuid
+   state: varchar(32)
+   created_at: timestamp with time zone
+   updated_at: timestamp with time zone
+   closed_at: timestamp with time zone
+   contact_attempts: integer
+   deleted_at: timestamp with time zone
+   id: uuid
+}
+class knowledge_chunks {
+   document_id: uuid
+   chunk_index: integer
+   content: text
+   embedding: vector(1536)
+   created_at: timestamp with time zone
+   id: uuid
+}
+class knowledge_documents {
+   title: varchar(512)
+   source: varchar(128)
+   content: text
+   created_at: timestamp with time zone
+   id: uuid
+}
+class leads {
+   user_id: uuid
+   session_id: uuid
+   status: varchar(32)
+   contact: jsonb
+   qualification: jsonb
+   summary: text
+   created_at: timestamp with time zone
+   updated_at: timestamp with time zone
+   deleted_at: timestamp with time zone
+   last_delivery_error: text
+   id: uuid
+}
+class messages {
+   session_id: uuid
+   role: varchar(32)
+   content: text
+   message_metadata: jsonb
+   created_at: timestamp with time zone
+   deleted_at: timestamp with time zone
+   id: uuid
+}
+class users {
+   anonymous_id: varchar(128)
+   channel: varchar(32)
+   created_at: timestamp with time zone
+   updated_at: timestamp with time zone
+   deleted_at: timestamp with time zone
+   id: uuid
+}
+
+dialog_sessions      -[#595959,plain]-^  users               : "user_id:id"
+knowledge_chunks     -[#595959,plain]-^  knowledge_documents : "document_id:id"
+leads                -[#595959,plain]-^  dialog_sessions     : "session_id:id"
+leads                -[#595959,plain]-^  users               : "user_id:id"
+messages             -[#595959,plain]-^  dialog_sessions     : "session_id:id"
+@enduml

@@ -4,6 +4,8 @@ from uuid import UUID
 
 from pydantic import Field, BaseModel, ConfigDict, field_validator
 
+_PAGE_TITLE_MAX = 200
+
 AnonymousId = Annotated[
     str,
     Field(
@@ -26,10 +28,7 @@ class Channel(StrEnum):
 
 
 class DialogState(StrEnum):
-    """Состояние диалога.
-
-    Заготовка под будущий state machine.
-    """
+    """Состояние backend-машины диалога."""
 
     GREETING = "GREETING"
     FAQ = "FAQ"
@@ -61,6 +60,13 @@ class AgentMessageRequest(BaseModel):
         max_length=4000,
         description="User message text.",
     )
+    page_title: str | None = Field(
+        default=None,
+        description=(
+            "Заголовок страницы сайта, с которой пишет пользователь. "
+            "Необязательный context-сигнал для агента."
+        ),
+    )
 
     @field_validator("content")
     @classmethod
@@ -69,6 +75,24 @@ class AgentMessageRequest(BaseModel):
         if not normalized:
             raise ValueError("Сообщение не должно быть пустым")
         return normalized
+
+    @field_validator("page_title")
+    @classmethod
+    def _normalize_page_title(cls, value: str | None) -> str | None:
+        """Внешний (браузерный) ввод -> нормализуем на границе.
+
+        " ".join(split()) схлопывает пробелы И вырезает переводы строк —
+        чтобы заголовок не разорвал строку [Страница сайта: ...] в промпте
+        (минимальная защита от инъекции в контекст).
+        Пустой после нормализации -> None. Длину РЕЖЕМ, а не отвергаем:
+        опциональный context не должен ронять сообщение через 422.
+        """
+        if value is None:
+            return None
+        normalized = " ".join(value.split())
+        if not normalized:
+            return None
+        return normalized[:_PAGE_TITLE_MAX]
 
 
 class AgentMessageResponse(BaseModel):
@@ -86,6 +110,8 @@ class AgentMessageResponse(BaseModel):
     state: DialogState
     intent: str
     next_step: str | None = None
+    missing_fields: list[str] = Field(default_factory=list)
+    lead_id: UUID | None = None
 
 
 class AgentDecision(BaseModel):
@@ -99,3 +125,12 @@ class AgentDecision(BaseModel):
     lead_ready: bool
     extracted_contact: dict[str, str | None] | None = None
     lead_summary: str | None = None
+
+    @field_validator("qualification_data", "extracted_contact", mode="before")
+    @classmethod
+    def _stringify_values(cls, v: object) -> object:
+        """LLM иногда шлёт числа (budget: 500000, phone: 7999...).
+        Приводим значения dict к строке до проверки типа."""
+        if isinstance(v, dict):
+            return {k: (None if val is None else str(val)) for k, val in v.items()}
+        return v

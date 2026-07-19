@@ -1,8 +1,11 @@
 import pytest
 
 from app.client.ag2_agent_client import FakeAg2AgentClient, AgentDecision
+from app.domain import MISSING_ALL
 from app.schemas import DialogState
 from main import app
+from uuid import UUID, uuid4
+from app.models import DialogSession
 
 pytestmark = pytest.mark.integration
 
@@ -19,11 +22,11 @@ async def test_post_message_creates_anonymous_user_session_and_messages(client) 
     app.state.llm_client = FakeAg2AgentClient(
         responses=[
             AgentDecision(
-                answer="Внедрение — от 150 000 ₽. Что ещё подсказать?",
+                answer="Toyota Camry — от 2 500 000 ₽. Что ещё подсказать?",
                 intent="pricing",
                 next_state=DialogState.FAQ,
                 qualification_data={},
-                missing_fields=["service", "deadline", "budget", "contact"],
+                missing_fields=MISSING_ALL,
                 lead_ready=False,
             ),
         ]
@@ -32,7 +35,7 @@ async def test_post_message_creates_anonymous_user_session_and_messages(client) 
     payload = {
         "anonymous_id": "test-user-1",
         "channel": "website",
-        "content": " Сколько   стоит внедрение? ",
+        "content": " Сколько   стоит Camry? ",
     }
 
     response = await client.post("/message", json=payload)
@@ -44,7 +47,7 @@ async def test_post_message_creates_anonymous_user_session_and_messages(client) 
     assert data["session_id"]
     assert data["user_message_id"]
     assert data["assistant_message_id"]
-    assert data["answer"] == "Внедрение — от 150 000 ₽. Что ещё подсказать?"
+    assert data["answer"] == "Toyota Camry — от 2 500 000 ₽. Что ещё подсказать?"
     assert data["intent"] == "pricing"
     # GREETING -> FAQ — допустимый переход в state_machine,
     # next_step в новом контракте — это имя следующего состояния.
@@ -60,10 +63,12 @@ async def test_post_message_creates_anonymous_user_session_and_messages(client) 
 
     assert messages[0]["role"] == "user"
     # content нормализуется: лишние пробелы схлопываются.
-    assert messages[0]["content"] == "Сколько стоит внедрение?"
+    assert messages[0]["content"] == "Сколько стоит Camry?"
 
     assert messages[1]["role"] == "assistant"
-    assert messages[1]["content"] == "Внедрение — от 150 000 ₽. Что ещё подсказать?"
+    assert (
+        messages[1]["content"] == "Toyota Camry — от 2 500 000 ₽. Что ещё подсказать?"
+    )
 
 
 @pytest.mark.asyncio
@@ -77,19 +82,19 @@ async def test_post_message_continues_existing_dialog_session(client) -> None:
     app.state.llm_client = FakeAg2AgentClient(
         responses=[
             AgentDecision(
-                answer="Здравствуйте! Расскажите, что нужно?",
+                answer="Здравствуйте! Какая модель вас интересует?",
                 intent="general",
                 next_state=DialogState.QUALIFICATION,
                 qualification_data={},
-                missing_fields=["service", "deadline", "budget", "contact"],
+                missing_fields=MISSING_ALL,
                 lead_ready=False,
             ),
             AgentDecision(
                 answer="Отлично! Оставьте контакт, и мы свяжемся.",
                 intent="lead_request",
                 next_state=DialogState.CONTACT_CAPTURE,
-                qualification_data={"service": "внедрение"},
-                missing_fields=["deadline", "budget", "contact"],
+                qualification_data={"car_model": "Toyota Camry"},
+                missing_fields=["budget", "purchase_type", "contact"],
                 lead_ready=False,
             ),
         ]
@@ -404,7 +409,6 @@ async def test_post_message_rejects_nonexistent_session_id(client) -> None:
     Тест: если передан несуществующий session_id,
     система не падает, а создаёт новую сессию (graceful fallback).
     """
-    from uuid import uuid4
 
     fake_session_id = str(uuid4())
 
@@ -422,3 +426,118 @@ async def test_post_message_rejects_nonexistent_session_id(client) -> None:
     data = response.json()
     # Создаётся новая сессия, а не используется фейковая
     assert data["session_id"] != fake_session_id
+
+
+@pytest.mark.asyncio
+async def test_closed_session_sets_closed_at_and_next_message_starts_new_session(
+    client,
+) -> None:
+    """CLOSED проставляет closed_at; закрытая сессия не переиспользуется."""
+
+    app.state.llm_client = FakeAg2AgentClient(
+        responses=[
+            AgentDecision(
+                answer="Расскажите, что нужно?",
+                intent="general",
+                next_state=DialogState.QUALIFICATION,
+                qualification_data={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+            ),
+            AgentDecision(
+                answer="Хорошо, закрываю обращение.",
+                intent="general",
+                next_state=DialogState.CLOSED,
+                qualification_data={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+            ),
+        ]
+    )
+
+    # Ход 1: GREETING -> QUALIFICATION
+    first = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "close-user-1",
+            "channel": "website",
+            "content": "Привет",
+        },
+    )
+    assert first.status_code == 200
+    first_data = first.json()
+    session_id = first_data["session_id"]
+
+    # Ход 2: QUALIFICATION -> CLOSED (тот же session_id)
+    second = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "close-user-1",
+            "channel": "website",
+            "session_id": session_id,
+            "content": "Больше не нужно",
+        },
+    )
+    assert second.status_code == 200
+    assert second.json()["state"] == "CLOSED"
+
+    # closed_at проставлен в БД
+    session_maker = app.state.db_session_maker
+    async with session_maker() as db:
+        row = await db.get(DialogSession, UUID(session_id))
+        assert row is not None
+        assert row.closed_at is not None
+
+    # Ход 3: клиент повторно прислал сохранённый ID закрытой сессии.
+    # Backend должен проигнорировать его и создать новую.
+    third = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "close-user-1",
+            "channel": "website",
+            "session_id": session_id,
+            "content": "Здравствуйте снова",
+        },
+    )
+    assert third.status_code == 200
+    third_data = third.json()
+    assert third_data["user_id"] == first_data["user_id"]
+    assert third_data["session_id"] != session_id
+
+
+@pytest.mark.asyncio
+async def test_post_message_threads_page_title_to_llm(client) -> None:
+    """page_title из запроса доходит до llm_client.decide нормализованным."""
+
+    captured: dict = {}
+
+    class _CapturingClient(FakeAg2AgentClient):
+        async def decide(self, *args, page_title=None, **kwargs):
+            captured["page_title"] = page_title
+            return await super().decide(*args, page_title=page_title, **kwargs)
+
+    app.state.llm_client = _CapturingClient(
+        responses=[
+            AgentDecision(
+                answer="Подскажу по Camry.",
+                intent="general",
+                next_state=DialogState.QUALIFICATION,
+                qualification_data={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+            ),
+        ]
+    )
+
+    response = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "test-user-pt",
+            "channel": "website",
+            "content": "расскажите про эту модель",
+            "page_title": "  Toyota   Camry 2024  ",
+        },
+    )
+
+    assert response.status_code == 200
+    assert captured["page_title"] == "Toyota Camry 2024"

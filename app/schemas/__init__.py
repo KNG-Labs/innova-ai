@@ -1,3 +1,4 @@
+from app.schemas.lead_delivery_schema import LeadDeliveryJob
 from app.schemas.agent_schema import (
     AgentMessageRequest,
     AgentMessageResponse,
@@ -10,4 +11,5 @@ __all__ = [
     "AgentMessageResponse",
     "Channel",
     "DialogState",
+    "LeadDeliveryJob",
 ]

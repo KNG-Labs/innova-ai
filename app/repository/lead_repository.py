@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.lead_model import Lead
@@ -11,13 +11,15 @@ class LeadRepository:
         self._session = session
 
     async def get_by_id(self, lead_id: UUID) -> Lead | None:
-        stmt = select(Lead).where(Lead.id == lead_id)
+        stmt = select(Lead).where(Lead.id == lead_id, Lead.deleted_at.is_(None))
 
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
     async def get_by_session_id(self, session_id: UUID) -> Lead | None:
-        stmt = select(Lead).where(Lead.session_id == session_id)
+        stmt = select(Lead).where(
+            Lead.session_id == session_id, Lead.deleted_at.is_(None)
+        )
 
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
@@ -90,12 +92,22 @@ class LeadRepository:
 
     async def list_by_user_id(self, user_id: UUID) -> list[Lead]:
         stmt = (
-            select(Lead).where(Lead.user_id == user_id).order_by(Lead.created_at.desc())
+            select(Lead)
+            .where(Lead.user_id == user_id, Lead.deleted_at.is_(None))
+            .order_by(Lead.created_at.desc())
         )
 
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
 
+    async def list_all(self, status: str | None = None) -> list[Lead]:
+        stmt = select(Lead).where(Lead.deleted_at.is_(None))
+        if status is not None:
+            stmt = stmt.where(Lead.status == status)
+        stmt = stmt.order_by(Lead.created_at.desc())
+
+        result = await self._session.execute(stmt)
+        return list(result.scalars().all())
 
     async def upsert_draft(
         self,
@@ -103,7 +115,7 @@ class LeadRepository:
         session_id: UUID,
         qualification: dict,
         contact: dict | None,
-        summary: str | None
+        summary: str | None,
     ) -> Lead:
         lead = await self.get_by_session_id(session_id)
         if lead is None:
@@ -121,8 +133,14 @@ class LeadRepository:
             if contact:  # непустой dict
                 merged_contact = {**(lead.contact or {}), **contact}
                 # убрать None-значения
-                lead.contact = {k: v for k, v in merged_contact.items() if v is not None}
+                lead.contact = {
+                    k: v for k, v in merged_contact.items() if v is not None
+                }
             if summary:
                 lead.summary = summary
 
-        return Lead
+        return lead
+
+    async def soft_delete(self, lead: Lead) -> None:
+        lead.deleted_at = func.now()
+        await self._session.flush()

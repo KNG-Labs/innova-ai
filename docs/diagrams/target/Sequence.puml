@@ -22,6 +22,12 @@ participant "Lead Builder" as LB
 queue "Redis Queue" as Queue
 participant "CRM / TG / Webhook" as External
 
+note over User, External
+  TARGET STATE
+  Диаграмма описывает целевой сценарий,
+  а не текущую реализацию репозитория.
+end note
+
 == GREETING ==
 
 User -> Channel : Первое сообщение
