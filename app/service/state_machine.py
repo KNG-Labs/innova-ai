@@ -21,6 +21,7 @@ _ALLOWED_TRANSITIONS: dict[DialogState, set[DialogState]] = {
         DialogState.CLOSED,
     },
     DialogState.CONTACT_CAPTURE: {
+        DialogState.FAQ,
         DialogState.CONTACT_CAPTURE,
         DialogState.LEAD_READY,
         DialogState.CLOSED,
@@ -116,17 +117,9 @@ def resolve_next_state(
     return current
 
 
-_MAX_CONTACT_ATTEMPTS = 2
+_MAX_CONTACT_REFUSALS = 2
 
 
-def should_close_after_contact_attempts(
-    current: DialogState,
-    merged_contact: dict | None,
-    contact_attempts: int,
-) -> bool:
-    """True, если в CONTACT_CAPTURE контакт не получен за лимит попыток → закрываем."""
-    return (
-        current == DialogState.CONTACT_CAPTURE
-        and not is_contact_valid(merged_contact)
-        and contact_attempts >= _MAX_CONTACT_ATTEMPTS
-    )
+def should_opt_out_after_contact_refusals(contact_refusals: int) -> bool:
+    """После двух явных отказов сбор контакта прекращается."""
+    return contact_refusals >= _MAX_CONTACT_REFUSALS

@@ -11,6 +11,7 @@ from app.repository.user_repository import UserRepository
 from app.schemas.agent_schema import (
     AgentMessageRequest,
     AgentMessageResponse,
+    ContactPreference,
     DialogState,
     AgentDecision,
 )
@@ -26,7 +27,7 @@ from app.service.state_machine import (
     merge_qualification_data,
     merge_contact,
     compute_missing_fields,
-    should_close_after_contact_attempts,
+    should_opt_out_after_contact_refusals,
 )
 
 _logger = logging.getLogger(__name__)
@@ -82,6 +83,7 @@ class AgentService:
             qualification_data,
             current_contact or None,
         )
+        contact_opt_out = session.contact_opt_out
 
         # История для AG2 (последние 20 сообщений)
         history_rows = await self._messages.list_recent_messages(session.id, limit=20)
@@ -107,6 +109,7 @@ class AgentService:
             retrieved_context=retrieved_context,
             page_title=request.page_title,
             missing_fields=current_missing_fields,
+            contact_opt_out=contact_opt_out,
         )
 
         # Слить данные ДО решения о переходе (backend - источник истины)
@@ -124,16 +127,29 @@ class AgentService:
             final_contact,
         )
 
-        contact_attempts = session.contact_attempts
-        if current_state == DialogState.CONTACT_CAPTURE and not is_contact_valid(
-            final_contact
-        ):
-            contact_attempts += 1
+        contact_refusals = session.contact_refusals
+        contact_opt_in = (
+            session.contact_opt_out
+            and decision.contact_preference == ContactPreference.RESUME
+        )
+        if is_contact_valid(final_contact) or contact_opt_in:
+            contact_refusals = 0
+            contact_opt_out = False
 
-        if should_close_after_contact_attempts(
-            current_state, final_contact, contact_attempts
-        ):
-            next_state = DialogState.CLOSED
+        explicit_contact_refusal = (
+            current_state == DialogState.CONTACT_CAPTURE
+            and not is_contact_valid(final_contact)
+            and decision.contact_preference == ContactPreference.REFUSAL
+        )
+        if explicit_contact_refusal:
+            contact_refusals += 1
+            if should_opt_out_after_contact_refusals(contact_refusals):
+                contact_opt_out = True
+                next_state = DialogState.FAQ
+            else:
+                next_state = DialogState.CONTACT_CAPTURE
+        elif contact_opt_out:
+            next_state = DialogState.FAQ
 
         # Сохранение ответа ассистента
         assistant_message = await self._messages.create(
@@ -151,7 +167,8 @@ class AgentService:
         await self._sessions.update_state(
             session_id=session.id,
             state=next_state.value,
-            contact_attempts=contact_attempts,
+            contact_refusals=contact_refusals,
+            contact_opt_out=contact_opt_out,
             close=is_closing,
         )
 

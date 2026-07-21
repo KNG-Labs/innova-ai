@@ -38,6 +38,14 @@ class DialogState(StrEnum):
     CLOSED = "CLOSED"
 
 
+class ContactPreference(StrEnum):
+    """Отношение пользователя к передаче контакта в текущем сообщении."""
+
+    NONE = "none"
+    REFUSAL = "refusal"
+    RESUME = "resume"
+
+
 class AgentMessageRequest(BaseModel):
     """Публичный request для POST /message.
 
@@ -125,6 +133,7 @@ class AgentDecision(BaseModel):
     lead_ready: bool
     extracted_contact: dict[str, str | None] | None = None
     lead_summary: str | None = None
+    contact_preference: ContactPreference = ContactPreference.NONE
 
     @field_validator("qualification_data", "extracted_contact", mode="before")
     @classmethod

@@ -5,7 +5,7 @@ from app.client.ag2_agent_client import (
     _parse_reply,
     _FALLBACK_DECISION,
 )
-from app.schemas.agent_schema import DialogState
+from app.schemas.agent_schema import ContactPreference, DialogState
 from app.service.state_machine import (
     is_contact_valid,
     is_lead_ready,
@@ -20,6 +20,14 @@ def test_parse_reply_valid_json():
     result = _parse_reply(raw)
     assert result.answer == "Привет"
     assert result.next_state == DialogState.FAQ
+
+
+def test_parse_reply_contact_preference():
+    raw = '{"answer":"Понимаю","intent":"general","next_state":"CONTACT_CAPTURE","qualification_data":{},"missing_fields":["contact"],"lead_ready":false,"contact_preference":"refusal"}'
+
+    result = _parse_reply(raw)
+
+    assert result.contact_preference == ContactPreference.REFUSAL
 
 
 def test_parse_reply_invalid_json_returns_fallback():
@@ -272,36 +280,47 @@ async def test_fake_client_returns_scripted_sequence():
     assert r2.qualification_data["purchase_type"] == "кредит"
 
 
-# Contact attempts
+# Contact refusals
 
 
-def test_close_after_two_contact_attempts():
-    from app.service.state_machine import should_close_after_contact_attempts
+def test_opt_out_after_two_contact_refusals():
+    from app.service.state_machine import should_opt_out_after_contact_refusals
 
-    assert (
-        should_close_after_contact_attempts(DialogState.CONTACT_CAPTURE, None, 2)
-        is True
+    assert should_opt_out_after_contact_refusals(2) is True
+
+
+def test_no_opt_out_after_first_contact_refusal():
+    from app.service.state_machine import should_opt_out_after_contact_refusals
+
+    assert should_opt_out_after_contact_refusals(1) is False
+
+
+def test_contact_preference_defaults_to_none():
+    decision = AgentDecision(
+        answer="ok",
+        intent="general",
+        next_state=DialogState.FAQ,
+        qualification_data={},
+        missing_fields=[],
+        lead_ready=False,
     )
 
+    assert decision.contact_preference == ContactPreference.NONE
 
-def test_no_close_on_first_attempt():
-    from app.service.state_machine import should_close_after_contact_attempts
 
-    assert (
-        should_close_after_contact_attempts(DialogState.CONTACT_CAPTURE, None, 1)
-        is False
+@pytest.mark.parametrize("value", ["none", "refusal", "resume"])
+def test_contact_preference_accepts_contract_values(value):
+    decision = AgentDecision(
+        answer="ok",
+        intent="general",
+        next_state=DialogState.FAQ,
+        qualification_data={},
+        missing_fields=[],
+        lead_ready=False,
+        contact_preference=value,
     )
 
-
-def test_no_close_if_contact_valid():
-    from app.service.state_machine import should_close_after_contact_attempts
-
-    assert (
-        should_close_after_contact_attempts(
-            DialogState.CONTACT_CAPTURE, {"phone": "+79991234567"}, 5
-        )
-        is False
-    )
+    assert decision.contact_preference == ContactPreference(value)
 
 
 def test_context_message_includes_page_title():
@@ -313,12 +332,14 @@ def test_context_message_includes_page_title():
         "",
         page_title="Toyota Camry 2024",
         missing_fields=["car_model", "budget", "purchase_type"],
+        contact_opt_out=True,
     )
     assert "[Страница сайта: Toyota Camry 2024]" in ctx
     assert ctx.index("Страница сайта") < ctx.index("База знаний")
     assert (
         '[Недостающие поля: ["car_model", "budget", "purchase_type"]]' in ctx
     )
+    assert "[Сбор контакта отключён пользователем: true]" in ctx
 
 
 def test_context_message_omits_page_title_when_none():
@@ -327,3 +348,4 @@ def test_context_message_omits_page_title_when_none():
     ctx = _build_context_message("FAQ", {}, "", page_title=None)
     assert "Страница сайта" not in ctx
     assert "[Недостающие поля: []]" in ctx
+    assert "[Сбор контакта отключён пользователем: false]" in ctx

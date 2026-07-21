@@ -506,6 +506,172 @@ async def test_closed_session_sets_closed_at_and_next_message_starts_new_session
 
 
 @pytest.mark.asyncio
+async def test_two_explicit_contact_refusals_opt_out_without_closing_session(
+    client,
+) -> None:
+    captured_opt_out: list[bool] = []
+
+    class _CapturingClient(FakeAg2AgentClient):
+        async def decide(self, *args, contact_opt_out=False, **kwargs):
+            captured_opt_out.append(contact_opt_out)
+            return await super().decide(
+                *args,
+                contact_opt_out=contact_opt_out,
+                **kwargs,
+            )
+
+    app.state.llm_client = _CapturingClient(
+        responses=[
+            AgentDecision(
+                answer="Оставьте контакт для связи.",
+                intent="lead_request",
+                next_state=DialogState.CONTACT_CAPTURE,
+                qualification_data={
+                    "car_model": "Toyota Camry",
+                    "budget": "3000000",
+                    "purchase_type": "кредит",
+                },
+                missing_fields=["contact"],
+                lead_ready=False,
+            ),
+            AgentDecision(
+                answer="Понимаю.",
+                intent="general",
+                next_state=DialogState.CLOSED,
+                qualification_data={},
+                missing_fields=["contact"],
+                lead_ready=False,
+                contact_preference="refusal",
+            ),
+            AgentDecision(
+                answer="Работаем ежедневно с 9:00 до 21:00.",
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_data={},
+                missing_fields=["contact"],
+                lead_ready=False,
+            ),
+            AgentDecision(
+                answer="Могу продолжить подбор. Оставьте контакт.",
+                intent="lead_request",
+                next_state=DialogState.CONTACT_CAPTURE,
+                qualification_data={},
+                missing_fields=["contact"],
+                lead_ready=False,
+            ),
+            AgentDecision(
+                answer="Хорошо, больше не буду просить контакт.",
+                intent="general",
+                next_state=DialogState.CLOSED,
+                qualification_data={},
+                missing_fields=["contact"],
+                lead_ready=False,
+                contact_preference="refusal",
+            ),
+            AgentDecision(
+                answer="Camry стоит от 2 800 000 рублей.",
+                intent="pricing",
+                next_state=DialogState.QUALIFICATION,
+                qualification_data={},
+                missing_fields=["contact"],
+                lead_ready=False,
+            ),
+            AgentDecision(
+                answer="Хорошо, вернёмся к заявке. Оставьте контакт.",
+                intent="lead_request",
+                next_state=DialogState.CONTACT_CAPTURE,
+                qualification_data={},
+                missing_fields=["contact"],
+                lead_ready=False,
+                contact_preference="resume",
+            ),
+        ]
+    )
+
+    first = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "contact-opt-out-user",
+            "channel": "website",
+            "content": "Хочу купить Camry в кредит до 3 миллионов",
+        },
+    )
+    session_id = first.json()["session_id"]
+    assert first.json()["state"] == "CONTACT_CAPTURE"
+
+    first_refusal = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "contact-opt-out-user",
+            "session_id": session_id,
+            "content": "Не хочу оставлять контакт",
+        },
+    )
+    assert first_refusal.json()["state"] == "CONTACT_CAPTURE"
+
+    faq = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "contact-opt-out-user",
+            "session_id": session_id,
+            "content": "А какие часы работы?",
+        },
+    )
+    assert faq.json()["state"] == "FAQ"
+
+    resume = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "contact-opt-out-user",
+            "session_id": session_id,
+            "content": "Продолжим подбор",
+        },
+    )
+    assert resume.json()["state"] == "CONTACT_CAPTURE"
+
+    second_refusal = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "contact-opt-out-user",
+            "session_id": session_id,
+            "content": "Я не буду давать телефон",
+        },
+    )
+    assert second_refusal.json()["state"] == "FAQ"
+
+    after_opt_out = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "contact-opt-out-user",
+            "session_id": session_id,
+            "content": "Сколько стоит Camry?",
+        },
+    )
+    assert after_opt_out.json()["session_id"] == session_id
+    assert after_opt_out.json()["state"] == "FAQ"
+
+    opt_in = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "contact-opt-out-user",
+            "session_id": session_id,
+            "content": "Хочу всё-таки оставить заявку",
+        },
+    )
+    assert opt_in.json()["state"] == "CONTACT_CAPTURE"
+
+    session_maker = app.state.db_session_maker
+    async with session_maker() as db:
+        row = await db.get(DialogSession, UUID(session_id))
+        assert row is not None
+        assert row.closed_at is None
+        assert row.contact_refusals == 0
+        assert row.contact_opt_out is False
+
+    assert captured_opt_out == [False, False, False, False, False, True, True]
+
+
+@pytest.mark.asyncio
 async def test_post_message_threads_page_title_to_llm(client) -> None:
     """page_title из запроса доходит до llm_client.decide нормализованным."""
 

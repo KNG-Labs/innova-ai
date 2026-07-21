@@ -92,12 +92,15 @@ class DialogSessionRepository:
         self,
         session_id: UUID,
         state: str,
-        contact_attempts: int | None = None,
+        contact_refusals: int | None = None,
+        contact_opt_out: bool | None = None,
         close: bool = False,
     ) -> None:
         values: dict = {"state": state}
-        if contact_attempts is not None:
-            values["contact_attempts"] = contact_attempts
+        if contact_refusals is not None:
+            values["contact_refusals"] = contact_refusals
+        if contact_opt_out is not None:
+            values["contact_opt_out"] = contact_opt_out
         if close:
             values["closed_at"] = func.now()
         stmt = (

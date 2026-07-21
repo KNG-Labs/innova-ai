@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
-from sqlalchemy import ForeignKey, String, func, DateTime, Integer
+from sqlalchemy import Boolean, ForeignKey, String, func, DateTime, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, SoftDeleteMixin
@@ -34,11 +34,17 @@ class DialogSession(SoftDeleteMixin, Base):
         nullable=False,
         default="GREETING",
     )
-    contact_attempts: Mapped[int] = mapped_column(
+    contact_refusals: Mapped[int] = mapped_column(
         Integer,
         nullable=False,
         default=0,
         server_default="0",
+    )
+    contact_opt_out: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default="false",
     )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

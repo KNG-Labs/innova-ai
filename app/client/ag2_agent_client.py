@@ -43,23 +43,35 @@ _SYSTEM_PROMPT = f"""\
    без встречного вопроса, даже если текущее состояние — QUALIFICATION или
    CONTACT_CAPTURE.
 
-3. Продолжай квалификацию, только если пользователь явно хочет купить, подобрать,
+3. Если [Сбор контакта отключён пользователем: true], не проводи квалификацию,
+   не проси контакт и не говори, что заявка передана. Продолжай отвечать на вопросы.
+   Исключение: пользователь сам явно возобновил заявку или прислал контакт.
+
+4. Определи contact_preference только по текущему сообщению:
+   - refusal — пользователь явно отказывается предоставлять любой контакт;
+   - resume — при включённом запрете пользователь явно возобновляет заявку;
+   - none — во всех остальных случаях.
+   Отказ от одного канала при выборе другого, вопрос о причине запроса контакта,
+   пауза или обычный FAQ не являются refusal. При refusal спокойно прими отказ,
+   не спорь и не задавай вопросов в текущем ответе.
+
+5. Продолжай квалификацию, только если пользователь явно хочет купить, подобрать,
    оформить автомобиль или оставить заявку либо отвечает на ранее заданный
    квалификационный вопрос.
 
-4. При квалификации используй backend-блок [Недостающие поля]. Поля в порядке
+6. При квалификации используй backend-блок [Недостающие поля]. Поля в порядке
    важности:
    {_fields_desc}
    Извлеки все данные, явно названные в текущем сообщении. При выборе следующего
    вопроса считай эти данные уже заполненными, даже если поле ещё присутствует в
    [Недостающие поля]. Никогда не спрашивай заполненное поле повторно.
 
-5. Задай не более одного вопроса. Сначала уточни неоднозначный ответ пользователя;
+7. Задай не более одного вопроса. Сначала уточни неоднозначный ответ пользователя;
    иначе спроси первое всё ещё недостающее поле по указанному порядку, затем
    контакт. Проси сразу сам телефон, email или Telegram, а не предпочтительный
    способ связи. Имя не является обязательным полем.
 
-6. Если недостающих полей нет, не задавай вопросов. Поблагодари и сообщи, что
+8. Если недостающих полей нет, не задавай вопросов. Поблагодари и сообщи, что
    передаёшь заявку специалисту, который свяжется с пользователем.
 
 Используй историю для понимания ответов вроде "20000", "в евро" или "другую".
@@ -76,7 +88,8 @@ _SYSTEM_PROMPT = f"""\
   "extracted_contact": {{"phone": null, "email": null, "telegram": null, "name": null}},
   "missing_fields": [],
   "lead_ready": false,
-  "lead_summary": null
+  "lead_summary": null,
+  "contact_preference": "none"
 }}
 
 В qualification_data и extracted_contact клади null для всего, что не названо
@@ -101,6 +114,7 @@ class LLMClient(Protocol):
         retrieved_context: str = "",
         page_title: str | None = None,
         missing_fields: list[str] | None = None,
+        contact_opt_out: bool = False,
     ) -> AgentDecision: ...
 
 
@@ -135,6 +149,7 @@ class Ag2AgentClient(LLMClient):
         retrieved_context: str = "",
         page_title: str | None = None,
         missing_fields: list[str] | None = None,
+        contact_opt_out: bool = False,
     ) -> AgentDecision:
         """Вызвать агента и вернуть структурированное решение.
 
@@ -148,6 +163,7 @@ class Ag2AgentClient(LLMClient):
             retrieved_context,
             page_title,
             missing_fields,
+            contact_opt_out,
         )
         full_message = f"{context}\n\nСообщение пользователя: {user_message}"
         messages = history + [{"role": "user", "content": full_message}]
@@ -170,12 +186,15 @@ def _build_context_message(
     retrieved_context: str,
     page_title: str | None = None,
     missing_fields: list[str] | None = None,
+    contact_opt_out: bool = False,
 ) -> str:
     kb = retrieved_context.strip() or "ничего релевантного не найдено"
     lines = [
         f"[Текущее состояние: {state}]",
         f"[Собранные данные: {json.dumps(qualification_data, ensure_ascii=False)}]",
         f"[Недостающие поля: {json.dumps(missing_fields or [], ensure_ascii=False)}]",
+        "[Сбор контакта отключён пользователем: "
+        f"{'true' if contact_opt_out else 'false'}]",
     ]
     if page_title:
         lines.append(f"[Страница сайта: {page_title}]")
@@ -222,6 +241,7 @@ class FakeAg2AgentClient(LLMClient):
         retrieved_context: str = "",
         page_title: str | None = None,
         missing_fields: list[str] | None = None,
+        contact_opt_out: bool = False,
     ) -> AgentDecision:
         if self._responses and self._call_count < len(self._responses):
             result = self._responses[self._call_count]
