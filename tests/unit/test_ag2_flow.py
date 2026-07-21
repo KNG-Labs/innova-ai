@@ -307,9 +307,18 @@ def test_no_close_if_contact_valid():
 def test_context_message_includes_page_title():
     from app.client.ag2_agent_client import _build_context_message
 
-    ctx = _build_context_message("FAQ", {}, "", page_title="Toyota Camry 2024")
+    ctx = _build_context_message(
+        "FAQ",
+        {},
+        "",
+        page_title="Toyota Camry 2024",
+        missing_fields=["car_model", "budget", "purchase_type"],
+    )
     assert "[Страница сайта: Toyota Camry 2024]" in ctx
     assert ctx.index("Страница сайта") < ctx.index("База знаний")
+    assert (
+        '[Недостающие поля: ["car_model", "budget", "purchase_type"]]' in ctx
+    )
 
 
 def test_context_message_omits_page_title_when_none():
@@ -317,3 +326,4 @@ def test_context_message_omits_page_title_when_none():
 
     ctx = _build_context_message("FAQ", {}, "", page_title=None)
     assert "Страница сайта" not in ctx
+    assert "[Недостающие поля: []]" in ctx

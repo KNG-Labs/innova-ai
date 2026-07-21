@@ -541,3 +541,68 @@ async def test_post_message_threads_page_title_to_llm(client) -> None:
 
     assert response.status_code == 200
     assert captured["page_title"] == "Toyota Camry 2024"
+
+
+@pytest.mark.asyncio
+async def test_post_message_threads_missing_fields_to_llm(client) -> None:
+    captured: list[list[str] | None] = []
+
+    class _CapturingClient(FakeAg2AgentClient):
+        async def decide(
+            self,
+            *args,
+            missing_fields=None,
+            **kwargs,
+        ):
+            captured.append(missing_fields)
+            return await super().decide(
+                *args,
+                missing_fields=missing_fields,
+                **kwargs,
+            )
+
+    app.state.llm_client = _CapturingClient(
+        responses=[
+            AgentDecision(
+                answer="Уточню условия покупки.",
+                intent="lead_request",
+                next_state=DialogState.QUALIFICATION,
+                qualification_data={"car_model": "Toyota Camry"},
+                extracted_contact={"phone": "+79991234567"},
+                missing_fields=["budget", "purchase_type"],
+                lead_ready=False,
+            ),
+            AgentDecision(
+                answer="Какой бюджет вы рассматриваете?",
+                intent="lead_request",
+                next_state=DialogState.QUALIFICATION,
+                qualification_data={},
+                missing_fields=["budget", "purchase_type"],
+                lead_ready=False,
+            ),
+        ]
+    )
+
+    first_response = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "test-user-context",
+            "channel": "website",
+            "content": "Хочу Camry, мой телефон +79991234567",
+        },
+    )
+
+    assert first_response.status_code == 200
+    second_response = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "test-user-context",
+            "channel": "website",
+            "session_id": first_response.json()["session_id"],
+            "content": "Что ещё нужно уточнить?",
+        },
+    )
+
+    assert second_response.status_code == 200
+    assert captured[0] == MISSING_ALL
+    assert captured[1] == ["budget", "purchase_type"]

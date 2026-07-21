@@ -78,6 +78,10 @@ class AgentService:
         lead = await self._leads.get_by_session_id(session.id)
         qualification_data = lead.qualification if lead and lead.qualification else {}
         current_contact = lead.contact if lead and lead.contact else {}
+        current_missing_fields = compute_missing_fields(
+            qualification_data,
+            current_contact or None,
+        )
 
         # История для AG2 (последние 20 сообщений)
         history_rows = await self._messages.list_recent_messages(session.id, limit=20)
@@ -102,6 +106,7 @@ class AgentService:
             qualification_data=qualification_data,
             retrieved_context=retrieved_context,
             page_title=request.page_title,
+            missing_fields=current_missing_fields,
         )
 
         # Слить данные ДО решения о переходе (backend - источник истины)

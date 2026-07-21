@@ -92,6 +92,7 @@ class LLMClient(Protocol):
         qualification_data: dict,
         retrieved_context: str = "",
         page_title: str | None = None,
+        missing_fields: list[str] | None = None,
     ) -> AgentDecision: ...
 
 
@@ -125,6 +126,7 @@ class Ag2AgentClient(LLMClient):
         qualification_data: dict,
         retrieved_context: str = "",
         page_title: str | None = None,
+        missing_fields: list[str] | None = None,
     ) -> AgentDecision:
         """Вызвать агента и вернуть структурированное решение.
 
@@ -137,6 +139,7 @@ class Ag2AgentClient(LLMClient):
             qualification_data,
             retrieved_context,
             page_title,
+            missing_fields,
         )
         full_message = f"{context}\n\nСообщение пользователя: {user_message}"
         messages = history + [{"role": "user", "content": full_message}]
@@ -158,11 +161,13 @@ def _build_context_message(
     qualification_data: dict,
     retrieved_context: str,
     page_title: str | None = None,
+    missing_fields: list[str] | None = None,
 ) -> str:
     kb = retrieved_context.strip() or "ничего релевантного не найдено"
     lines = [
         f"[Текущее состояние: {state}]",
         f"[Собранные данные: {json.dumps(qualification_data, ensure_ascii=False)}]",
+        f"[Недостающие поля: {json.dumps(missing_fields or [], ensure_ascii=False)}]",
     ]
     if page_title:
         lines.append(f"[Страница сайта: {page_title}]")
@@ -208,6 +213,7 @@ class FakeAg2AgentClient(LLMClient):
         qualification_data: dict,
         retrieved_context: str = "",
         page_title: str | None = None,
+        missing_fields: list[str] | None = None,
     ) -> AgentDecision:
         if self._responses and self._call_count < len(self._responses):
             result = self._responses[self._call_count]
