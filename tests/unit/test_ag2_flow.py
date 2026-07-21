@@ -16,14 +16,14 @@ pytestmark = pytest.mark.unit
 
 
 def test_parse_reply_valid_json():
-    raw = '{"answer":"Привет","intent":"pricing","next_state":"FAQ","qualification_data":{},"missing_fields":["service"],"lead_ready":false}'
+    raw = '{"answer":"Привет","intent":"pricing","next_state":"FAQ","qualification_patch":{},"missing_fields":["service"],"lead_ready":false}'
     result = _parse_reply(raw)
     assert result.answer == "Привет"
     assert result.next_state == DialogState.FAQ
 
 
 def test_parse_reply_contact_preference():
-    raw = '{"answer":"Понимаю","intent":"general","next_state":"CONTACT_CAPTURE","qualification_data":{},"missing_fields":["contact"],"lead_ready":false,"contact_preference":"refusal"}'
+    raw = '{"answer":"Понимаю","intent":"general","next_state":"CONTACT_CAPTURE","qualification_patch":{},"missing_fields":["contact"],"lead_ready":false,"contact_preference":"refusal"}'
 
     result = _parse_reply(raw)
 
@@ -41,7 +41,7 @@ def test_parse_reply_empty_returns_fallback():
 
 
 def test_parse_reply_strips_code_fence():
-    raw = '```json\n{"answer":"ok","intent":"general","next_state":"GREETING","qualification_data":{},"missing_fields":[],"lead_ready":false}\n```'
+    raw = '```json\n{"answer":"ok","intent":"general","next_state":"GREETING","qualification_patch":{},"missing_fields":[],"lead_ready":false}\n```'
     result = _parse_reply(raw)
     assert result.answer == "ok"
 
@@ -54,7 +54,7 @@ def test_state_machine_allows_valid_transition():
         answer="ok",
         intent="general",
         next_state=DialogState.FAQ,
-        qualification_data={},
+        qualification_patch={},
         missing_fields=[],
         lead_ready=False,
     )
@@ -67,7 +67,7 @@ def test_state_machine_blocks_lead_ready_without_contact():
         answer="ok",
         intent="lead_request",
         next_state=DialogState.LEAD_READY,
-        qualification_data={"purchase_type": "кредит"},
+        qualification_patch={"purchase_type": "кредит"},
         extracted_contact=None,
         missing_fields=[],
         lead_ready=True,
@@ -83,7 +83,7 @@ def test_false_lead_ready_incomplete_qual_stays_qualification():
         answer="ok",
         intent="lead_request",
         next_state=DialogState.LEAD_READY,
-        qualification_data={},
+        qualification_patch={},
         extracted_contact={"phone": "+79991234567"},
         missing_fields=[],
         lead_ready=True,
@@ -102,7 +102,7 @@ def test_false_lead_ready_full_qual_no_contact_goes_contact_capture():
         answer="ok",
         intent="lead_request",
         next_state=DialogState.LEAD_READY,
-        qualification_data={},
+        qualification_patch={},
         extracted_contact=None,
         missing_fields=[],
         lead_ready=True,
@@ -119,7 +119,7 @@ def test_lead_ready_allowed_when_merged_complete():
         answer="ok",
         intent="lead_request",
         next_state=DialogState.LEAD_READY,
-        qualification_data={},
+        qualification_patch={},
         extracted_contact=None,
         missing_fields=[],
         lead_ready=True,
@@ -131,14 +131,25 @@ def test_lead_ready_allowed_when_merged_complete():
     assert result == DialogState.LEAD_READY
 
 
-def test_merge_qual_none_does_not_overwrite():
-    from app.service.state_machine import merge_qualification_data
+def test_qualification_patch_preserves_absent_fields_and_sets_values():
+    from app.service.state_machine import apply_qualification_patch
 
     existing = {"purchase_type": "кредит", "budget": "50k"}
-    extracted = {"purchase_type": None, "car_model": "BMW"}
-    merged = merge_qualification_data(existing, extracted)
+    patch = {"car_model": "BMW"}
+    merged = apply_qualification_patch(existing, patch)
     assert merged["purchase_type"] == "кредит"
     assert merged["car_model"] == "BMW"
+
+
+def test_qualification_patch_null_removes_existing_value():
+    from app.service.state_machine import apply_qualification_patch
+
+    existing = {"car_model": "Toyota Camry", "budget": "3000000"}
+
+    merged = apply_qualification_patch(existing, {"car_model": None})
+
+    assert "car_model" not in merged
+    assert merged["budget"] == "3000000"
 
 
 def test_compute_missing_fields_lists_gaps():
@@ -216,7 +227,7 @@ def test_agent_decision_coerces_numeric_values_to_str():
             "answer": "ok",
             "intent": "lead_request",
             "next_state": "QUALIFICATION",
-            "qualification_data": {
+            "qualification_patch": {
                 "car_model": "Mercedes",
                 "budget": 500000,
                 "purchase_type": None,
@@ -226,9 +237,23 @@ def test_agent_decision_coerces_numeric_values_to_str():
             "lead_ready": False,
         }
     )
-    assert d.qualification_data["budget"] == "500000"
-    assert d.qualification_data["purchase_type"] is None
+    assert d.qualification_patch["budget"] == "500000"
+    assert d.qualification_patch["purchase_type"] is None
     assert d.extracted_contact["phone"] == "79991234567"
+
+
+def test_agent_decision_rejects_unknown_qualification_patch_field():
+    with pytest.raises(ValueError, match="Неизвестные поля qualification_patch"):
+        AgentDecision.model_validate(
+            {
+                "answer": "ok",
+                "intent": "general",
+                "next_state": "QUALIFICATION",
+                "qualification_patch": {"unknown": "value"},
+                "missing_fields": [],
+                "lead_ready": False,
+            }
+        )
 
 
 @pytest.mark.asyncio
@@ -248,7 +273,7 @@ async def test_fake_client_returns_scripted_sequence():
             answer="Привет!",
             intent="general",
             next_state=DialogState.FAQ,
-            qualification_data={},
+            qualification_patch={},
             missing_fields=[],
             lead_ready=False,
         ),
@@ -256,7 +281,7 @@ async def test_fake_client_returns_scripted_sequence():
             answer="Хорошо, уточните бюджет",
             intent="pricing",
             next_state=DialogState.QUALIFICATION,
-            qualification_data={"purchase_type": "кредит"},
+            qualification_patch={"purchase_type": "кредит"},
             missing_fields=["budget", "contact"],
             lead_ready=False,
         ),
@@ -277,7 +302,7 @@ async def test_fake_client_returns_scripted_sequence():
     )
 
     assert r1.next_state == DialogState.FAQ
-    assert r2.qualification_data["purchase_type"] == "кредит"
+    assert r2.qualification_patch["purchase_type"] == "кредит"
 
 
 # Contact refusals
@@ -300,7 +325,7 @@ def test_contact_preference_defaults_to_none():
         answer="ok",
         intent="general",
         next_state=DialogState.FAQ,
-        qualification_data={},
+        qualification_patch={},
         missing_fields=[],
         lead_ready=False,
     )
@@ -314,7 +339,7 @@ def test_contact_preference_accepts_contract_values(value):
         answer="ok",
         intent="general",
         next_state=DialogState.FAQ,
-        qualification_data={},
+        qualification_patch={},
         missing_fields=[],
         lead_ready=False,
         contact_preference=value,

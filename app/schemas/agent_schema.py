@@ -4,6 +4,8 @@ from uuid import UUID
 
 from pydantic import Field, BaseModel, ConfigDict, field_validator
 
+from app.domain import QUALIFICATION_FIELDS
+
 _PAGE_TITLE_MAX = 200
 
 AnonymousId = Annotated[
@@ -128,18 +130,30 @@ class AgentDecision(BaseModel):
     answer: str
     intent: str
     next_state: DialogState
-    qualification_data: dict[str, str | None]
+    qualification_patch: dict[str, str | None] = Field(default_factory=dict)
     missing_fields: list[str]
     lead_ready: bool
     extracted_contact: dict[str, str | None] | None = None
     lead_summary: str | None = None
     contact_preference: ContactPreference = ContactPreference.NONE
 
-    @field_validator("qualification_data", "extracted_contact", mode="before")
+    @field_validator("qualification_patch", mode="before")
     @classmethod
-    def _stringify_values(cls, v: object) -> object:
-        """LLM иногда шлёт числа (budget: 500000, phone: 7999...).
-        Приводим значения dict к строке до проверки типа."""
+    def _validate_qualification_patch(cls, v: object) -> object:
+        """Проверить allowlist полей и привести числовые значения к строкам."""
+        if isinstance(v, dict):
+            unknown = set(v) - set(QUALIFICATION_FIELDS)
+            if unknown:
+                raise ValueError(
+                    f"Неизвестные поля qualification_patch: {sorted(unknown)}"
+                )
+            return {k: (None if val is None else str(val)) for k, val in v.items()}
+        return v
+
+    @field_validator("extracted_contact", mode="before")
+    @classmethod
+    def _stringify_contact_values(cls, v: object) -> object:
+        """LLM иногда возвращает телефон числом."""
         if isinstance(v, dict):
             return {k: (None if val is None else str(val)) for k, val in v.items()}
         return v

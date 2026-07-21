@@ -16,8 +16,8 @@ async def test_get_leads_lists_lead_and_detail_shows_qualification(client) -> No
                 answer="Расскажите подробнее.",
                 intent="lead_request",
                 next_state=DialogState.QUALIFICATION,
-                qualification_data={"service": "SEO"},
-                missing_fields=["deadline", "budget", "contact"],
+                qualification_patch={"car_model": "Toyota Camry"},
+                missing_fields=["budget", "purchase_type", "contact"],
                 lead_ready=False,
             ),
         ]
@@ -28,7 +28,7 @@ async def test_get_leads_lists_lead_and_detail_shows_qualification(client) -> No
         json={
             "anonymous_id": "lead-read-user",
             "channel": "website",
-            "content": "Нужно SEO",
+            "content": "Нужна Toyota Camry",
         },
     )
     assert msg.status_code == 200
@@ -47,7 +47,7 @@ async def test_get_leads_lists_lead_and_detail_shows_qualification(client) -> No
     data = detail.json()
     assert data["id"] == lead_id
     assert data["status"] == "draft"
-    assert data["qualification"]["service"] == "SEO"
+    assert data["qualification"]["car_model"] == "Toyota Camry"
 
 
 @pytest.mark.asyncio

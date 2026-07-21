@@ -19,7 +19,7 @@ async def test_ready_lead_enqueues_once(client) -> None:
                 answer="Готово!",
                 intent="lead_request",
                 next_state=DialogState.CONTACT_CAPTURE,
-                qualification_data={
+                qualification_patch={
                     "car_model": "Toyota Camry",
                     "budget": "3 млн",
                     "purchase_type": "кредит",
@@ -32,7 +32,7 @@ async def test_ready_lead_enqueues_once(client) -> None:
                 answer="Готово!",
                 intent="lead_request",
                 next_state=DialogState.LEAD_READY,
-                qualification_data={
+                qualification_patch={
                     "car_model": "Toyota Camry",
                     "budget": "3 млн",
                     "purchase_type": "кредит",

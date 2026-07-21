@@ -31,17 +31,18 @@ _ALLOWED_TRANSITIONS: dict[DialogState, set[DialogState]] = {
 }
 
 
-def merge_qualification_data(
+def apply_qualification_patch(
     existing: dict[str, str | None],
-    extracted: dict[str, str | None],
+    patch: dict[str, str | None],
 ) -> dict[str, str]:
-    """Слить старые и новые данные.
-    None из LLM не затирает реальные значения."""
-    merged = {k: v for k, v in existing.items() if v is not None}
-    for key, value in extracted.items():
-        if value is not None:
-            merged[key] = value
-    return merged
+    """Применить patch: null удаляет, значение устанавливает."""
+    result = {k: v for k, v in existing.items() if v is not None}
+    for key, value in patch.items():
+        if value is None:
+            result.pop(key, None)
+        else:
+            result[key] = value
+    return result
 
 
 def merge_contact(

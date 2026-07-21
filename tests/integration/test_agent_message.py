@@ -25,7 +25,7 @@ async def test_post_message_creates_anonymous_user_session_and_messages(client) 
                 answer="Toyota Camry — от 2 500 000 ₽. Что ещё подсказать?",
                 intent="pricing",
                 next_state=DialogState.FAQ,
-                qualification_data={},
+                qualification_patch={},
                 missing_fields=MISSING_ALL,
                 lead_ready=False,
             ),
@@ -85,7 +85,7 @@ async def test_post_message_continues_existing_dialog_session(client) -> None:
                 answer="Здравствуйте! Какая модель вас интересует?",
                 intent="general",
                 next_state=DialogState.QUALIFICATION,
-                qualification_data={},
+                qualification_patch={},
                 missing_fields=MISSING_ALL,
                 lead_ready=False,
             ),
@@ -93,7 +93,7 @@ async def test_post_message_continues_existing_dialog_session(client) -> None:
                 answer="Отлично! Оставьте контакт, и мы свяжемся.",
                 intent="lead_request",
                 next_state=DialogState.CONTACT_CAPTURE,
-                qualification_data={"car_model": "Toyota Camry"},
+                qualification_patch={"car_model": "Toyota Camry"},
                 missing_fields=["budget", "purchase_type", "contact"],
                 lead_ready=False,
             ),
@@ -440,7 +440,7 @@ async def test_closed_session_sets_closed_at_and_next_message_starts_new_session
                 answer="Расскажите, что нужно?",
                 intent="general",
                 next_state=DialogState.QUALIFICATION,
-                qualification_data={},
+                qualification_patch={},
                 missing_fields=MISSING_ALL,
                 lead_ready=False,
             ),
@@ -448,7 +448,7 @@ async def test_closed_session_sets_closed_at_and_next_message_starts_new_session
                 answer="Хорошо, закрываю обращение.",
                 intent="general",
                 next_state=DialogState.CLOSED,
-                qualification_data={},
+                qualification_patch={},
                 missing_fields=MISSING_ALL,
                 lead_ready=False,
             ),
@@ -526,7 +526,7 @@ async def test_two_explicit_contact_refusals_opt_out_without_closing_session(
                 answer="Оставьте контакт для связи.",
                 intent="lead_request",
                 next_state=DialogState.CONTACT_CAPTURE,
-                qualification_data={
+                qualification_patch={
                     "car_model": "Toyota Camry",
                     "budget": "3000000",
                     "purchase_type": "кредит",
@@ -538,7 +538,7 @@ async def test_two_explicit_contact_refusals_opt_out_without_closing_session(
                 answer="Понимаю.",
                 intent="general",
                 next_state=DialogState.CLOSED,
-                qualification_data={},
+                qualification_patch={},
                 missing_fields=["contact"],
                 lead_ready=False,
                 contact_preference="refusal",
@@ -547,7 +547,7 @@ async def test_two_explicit_contact_refusals_opt_out_without_closing_session(
                 answer="Работаем ежедневно с 9:00 до 21:00.",
                 intent="general",
                 next_state=DialogState.FAQ,
-                qualification_data={},
+                qualification_patch={},
                 missing_fields=["contact"],
                 lead_ready=False,
             ),
@@ -555,7 +555,7 @@ async def test_two_explicit_contact_refusals_opt_out_without_closing_session(
                 answer="Могу продолжить подбор. Оставьте контакт.",
                 intent="lead_request",
                 next_state=DialogState.CONTACT_CAPTURE,
-                qualification_data={},
+                qualification_patch={},
                 missing_fields=["contact"],
                 lead_ready=False,
             ),
@@ -563,7 +563,7 @@ async def test_two_explicit_contact_refusals_opt_out_without_closing_session(
                 answer="Хорошо, больше не буду просить контакт.",
                 intent="general",
                 next_state=DialogState.CLOSED,
-                qualification_data={},
+                qualification_patch={},
                 missing_fields=["contact"],
                 lead_ready=False,
                 contact_preference="refusal",
@@ -572,7 +572,7 @@ async def test_two_explicit_contact_refusals_opt_out_without_closing_session(
                 answer="Camry стоит от 2 800 000 рублей.",
                 intent="pricing",
                 next_state=DialogState.QUALIFICATION,
-                qualification_data={},
+                qualification_patch={},
                 missing_fields=["contact"],
                 lead_ready=False,
             ),
@@ -580,7 +580,7 @@ async def test_two_explicit_contact_refusals_opt_out_without_closing_session(
                 answer="Хорошо, вернёмся к заявке. Оставьте контакт.",
                 intent="lead_request",
                 next_state=DialogState.CONTACT_CAPTURE,
-                qualification_data={},
+                qualification_patch={},
                 missing_fields=["contact"],
                 lead_ready=False,
                 contact_preference="resume",
@@ -688,7 +688,7 @@ async def test_post_message_threads_page_title_to_llm(client) -> None:
                 answer="Подскажу по Camry.",
                 intent="general",
                 next_state=DialogState.QUALIFICATION,
-                qualification_data={},
+                qualification_patch={},
                 missing_fields=MISSING_ALL,
                 lead_ready=False,
             ),
@@ -733,7 +733,7 @@ async def test_post_message_threads_missing_fields_to_llm(client) -> None:
                 answer="Уточню условия покупки.",
                 intent="lead_request",
                 next_state=DialogState.QUALIFICATION,
-                qualification_data={"car_model": "Toyota Camry"},
+                qualification_patch={"car_model": "Toyota Camry"},
                 extracted_contact={"phone": "+79991234567"},
                 missing_fields=["budget", "purchase_type"],
                 lead_ready=False,
@@ -742,7 +742,7 @@ async def test_post_message_threads_missing_fields_to_llm(client) -> None:
                 answer="Какой бюджет вы рассматриваете?",
                 intent="lead_request",
                 next_state=DialogState.QUALIFICATION,
-                qualification_data={},
+                qualification_patch={},
                 missing_fields=["budget", "purchase_type"],
                 lead_ready=False,
             ),
@@ -772,3 +772,53 @@ async def test_post_message_threads_missing_fields_to_llm(client) -> None:
     assert second_response.status_code == 200
     assert captured[0] == MISSING_ALL
     assert captured[1] == ["budget", "purchase_type"]
+
+
+@pytest.mark.asyncio
+async def test_qualification_patch_null_removes_saved_field(client) -> None:
+    app.state.llm_client = FakeAg2AgentClient(
+        responses=[
+            AgentDecision(
+                answer="Какой бюджет вы рассматриваете?",
+                intent="lead_request",
+                next_state=DialogState.QUALIFICATION,
+                qualification_patch={"car_model": "Toyota Camry"},
+                missing_fields=["budget", "purchase_type", "contact"],
+                lead_ready=False,
+            ),
+            AgentDecision(
+                answer="Хорошо, убрал Camry из параметров подбора.",
+                intent="lead_request",
+                next_state=DialogState.QUALIFICATION,
+                qualification_patch={"car_model": None},
+                missing_fields=["car_model", "budget", "purchase_type", "contact"],
+                lead_ready=False,
+            ),
+        ]
+    )
+
+    first = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "qualification-patch-user",
+            "content": "Хочу Toyota Camry",
+        },
+    )
+    assert first.status_code == 200
+    assert "car_model" not in first.json()["missing_fields"]
+
+    second = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "qualification-patch-user",
+            "session_id": first.json()["session_id"],
+            "content": "Camry больше не хочу, другую пока не выбрал",
+        },
+    )
+
+    assert second.status_code == 200
+    assert "car_model" in second.json()["missing_fields"]
+
+    lead = await client.get(f"/leads/{second.json()['lead_id']}")
+    assert lead.status_code == 200
+    assert "car_model" not in lead.json()["qualification"]

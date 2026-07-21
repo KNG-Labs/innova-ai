@@ -24,7 +24,7 @@ from app.service.state_machine import (
     resolve_next_state,
     is_lead_ready,
     is_contact_valid,
-    merge_qualification_data,
+    apply_qualification_patch,
     merge_contact,
     compute_missing_fields,
     should_opt_out_after_contact_refusals,
@@ -113,8 +113,8 @@ class AgentService:
         )
 
         # Слить данные ДО решения о переходе (backend - источник истины)
-        merged_qual = merge_qualification_data(
-            qualification_data, decision.qualification_data
+        merged_qual = apply_qualification_patch(
+            qualification_data, decision.qualification_patch
         )
         merged_contact = merge_contact(current_contact, decision.extracted_contact)
         final_contact = merged_contact if merged_contact else None
