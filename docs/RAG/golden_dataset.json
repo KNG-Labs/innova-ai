@@ -1,0 +1,1778 @@
+{
+  "version": 1,
+  "corpus": "Данные для RAG.txt",
+  "document_reference": "unique title",
+  "relevance_scale": {
+    "0": "irrelevant",
+    "1": "useful supporting document",
+    "2": "relevant secondary document",
+    "3": "primary document containing the expected answer"
+  },
+  "split_policy": {
+    "calibration": "Used to select threshold, candidate pool, top-k and fusion weights.",
+    "test": "Locked evaluation set; do not tune retrieval parameters against it.",
+    "regression": "Known failures and critical scenarios that must remain passing."
+  },
+  "expected_behavior_values": {
+    "answer_only": "Answer the informational request without starting qualification.",
+    "answer_before_qualification": "Answer from knowledge first; qualification may continue only afterwards.",
+    "abstain": "State that the knowledge base does not contain the requested information."
+  },
+  "cases": [
+    {
+      "id": "cal_hours_01",
+      "split": "calibration",
+      "category": "hours",
+      "query": "По какому графику работает автосалон?",
+      "answerable": true,
+      "relevance": {
+        "Часы работы и контакты автосалона": 3
+      },
+      "required_facts": [
+        "ежедневно",
+        "9:00",
+        "21:00"
+      ],
+      "forbidden_claims": [
+        "автосалон закрыт по воскресеньям"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_hours_02",
+      "split": "calibration",
+      "category": "hours",
+      "query": "До скольки отдел продаж принимает клиентов?",
+      "answerable": true,
+      "relevance": {
+        "Часы работы и контакты автосалона": 3
+      },
+      "required_facts": [
+        "20:30"
+      ],
+      "forbidden_claims": [
+        "отдел продаж работает до 21:00"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_hours_03",
+      "split": "calibration",
+      "category": "hours",
+      "query": "Когда работает сервис в воскресенье?",
+      "answerable": true,
+      "relevance": {
+        "Часы работы и контакты автосалона": 3
+      },
+      "required_facts": [
+        "9:00",
+        "18:00"
+      ],
+      "forbidden_claims": [
+        "сервис в воскресенье закрыт"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_test_drive_01",
+      "split": "calibration",
+      "category": "test_drive",
+      "query": "Что нужно взять с собой на тест-драйв?",
+      "answerable": true,
+      "relevance": {
+        "Тест-драйв автомобилей": 3
+      },
+      "required_facts": [
+        "паспорт",
+        "водительское удостоверение",
+        "стаж не менее 2 лет"
+      ],
+      "forbidden_claims": [
+        "для тест-драйва документы не нужны"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_test_drive_02",
+      "split": "calibration",
+      "category": "test_drive",
+      "query": "Сколько длится обычный тест-драйв?",
+      "answerable": true,
+      "relevance": {
+        "Тест-драйв автомобилей": 3
+      },
+      "required_facts": [
+        "30 минут"
+      ],
+      "forbidden_claims": [
+        "тест-драйв длится два часа"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_test_drive_03",
+      "split": "calibration",
+      "category": "test_drive",
+      "query": "Можно взять машину на тест на сутки?",
+      "answerable": true,
+      "relevance": {
+        "Тест-драйв автомобилей": 3
+      },
+      "required_facts": [
+        "расширенный тест-драйв на сутки",
+        "предварительная заявка",
+        "для определённых моделей"
+      ],
+      "forbidden_claims": [
+        "суточный тест-драйв доступен для любой машины без заявки"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_credit_01",
+      "split": "calibration",
+      "category": "credit",
+      "query": "Какой минимальный первый взнос по кредиту?",
+      "answerable": true,
+      "relevance": {
+        "Кредитование и финансирование": 3
+      },
+      "required_facts": [
+        "от 10%"
+      ],
+      "forbidden_claims": [
+        "первоначальный взнос не требуется"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_credit_02",
+      "split": "calibration",
+      "category": "credit",
+      "query": "На какой срок можно оформить автокредит?",
+      "answerable": true,
+      "relevance": {
+        "Кредитование и финансирование": 3
+      },
+      "required_facts": [
+        "от 1 до 7 лет"
+      ],
+      "forbidden_claims": [
+        "кредит доступен только на один год"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_credit_03",
+      "split": "calibration",
+      "category": "credit",
+      "query": "Сколько ждать решение банка по автокредиту?",
+      "answerable": true,
+      "relevance": {
+        "Кредитование и финансирование": 3
+      },
+      "required_facts": [
+        "30–60 минут"
+      ],
+      "forbidden_claims": [
+        "решение принимается несколько дней"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_credit_04",
+      "split": "calibration",
+      "category": "credit",
+      "query": "Можно ли оформить кредит прямо в салоне?",
+      "answerable": true,
+      "relevance": {
+        "Кредитование и финансирование": 3
+      },
+      "required_facts": [
+        "банки-партнёры",
+        "прямо на месте"
+      ],
+      "forbidden_claims": [
+        "кредит оформляется только в отделении банка"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_credit_docs_01",
+      "split": "calibration",
+      "category": "credit",
+      "query": "Какие два основных документа нужны для заявки на кредит?",
+      "answerable": true,
+      "relevance": {
+        "Документы для автокредита": 3,
+        "Кредитование и финансирование": 2
+      },
+      "required_facts": [
+        "паспорт",
+        "второй документ"
+      ],
+      "forbidden_claims": [
+        "достаточно только водительского удостоверения"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_credit_docs_02",
+      "split": "calibration",
+      "category": "credit",
+      "query": "Может ли банк попросить подтверждение дохода?",
+      "answerable": true,
+      "relevance": {
+        "Документы для автокредита": 3
+      },
+      "required_facts": [
+        "может запросить подтверждение дохода"
+      ],
+      "forbidden_claims": [
+        "подтверждение дохода никогда не требуется"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_credit_early_01",
+      "split": "calibration",
+      "category": "credit",
+      "query": "Можно ли досрочно закрыть автокредит?",
+      "answerable": true,
+      "relevance": {
+        "Досрочное погашение автокредита": 3
+      },
+      "required_facts": [
+        "полностью или частично",
+        "уведомить банк"
+      ],
+      "forbidden_claims": [
+        "платёж нужно нести в автосалон"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_installment_01",
+      "split": "calibration",
+      "category": "finance",
+      "query": "Есть рассрочка от самого автосалона?",
+      "answerable": true,
+      "relevance": {
+        "Рассрочка на автомобиль": 3,
+        "Кредитование и финансирование": 1
+      },
+      "required_facts": [
+        "рассрочка от автосалона не предоставляется",
+        "автокредит"
+      ],
+      "forbidden_claims": [
+        "салон предоставляет беспроцентную рассрочку"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_leasing_person_01",
+      "split": "calibration",
+      "category": "leasing",
+      "query": "Можно оформить машину в лизинг на физлицо?",
+      "answerable": true,
+      "relevance": {
+        "Лизинг для физических лиц": 3,
+        "Корпоративный лизинг и автопарки": 1
+      },
+      "required_facts": [
+        "для физических лиц не оформляется"
+      ],
+      "forbidden_claims": [
+        "лизинг доступен всем частным покупателям"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_leasing_company_01",
+      "split": "calibration",
+      "category": "leasing",
+      "query": "Вы работаете с корпоративными автопарками?",
+      "answerable": true,
+      "relevance": {
+        "Корпоративный лизинг и автопарки": 3
+      },
+      "required_facts": [
+        "юридические лица",
+        "партии автомобилей",
+        "индивидуальное предложение"
+      ],
+      "forbidden_claims": [
+        "корпоративные продажи недоступны"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_tradein_01",
+      "split": "calibration",
+      "category": "trade_in",
+      "query": "Что такое trade-in в вашем салоне?",
+      "answerable": true,
+      "relevance": {
+        "Программа Trade-in": 3,
+        "Выкуп автомобиля без покупки нового": 1
+      },
+      "required_facts": [
+        "автомобиль в зачёт стоимости нового"
+      ],
+      "forbidden_claims": [
+        "деньги всегда выплачиваются наличными"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_tradein_02",
+      "split": "calibration",
+      "category": "trade_in",
+      "query": "Какие документы нужны для оценки по трейд-ин?",
+      "answerable": true,
+      "relevance": {
+        "Программа Trade-in": 3
+      },
+      "required_facts": [
+        "ПТС или ЭПТС",
+        "СТС",
+        "паспорт собственника"
+      ],
+      "forbidden_claims": [
+        "для оценки документы не нужны"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_tradein_03",
+      "split": "calibration",
+      "category": "trade_in",
+      "query": "Берёте ли в trade-in машину старше 15 лет?",
+      "answerable": true,
+      "relevance": {
+        "Программа Trade-in": 3
+      },
+      "required_facts": [
+        "до 15 лет",
+        "не более 250 000 км"
+      ],
+      "forbidden_claims": [
+        "принимаются автомобили любого возраста"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_buyout_01",
+      "split": "calibration",
+      "category": "trade_in",
+      "query": "Можно просто продать вам машину и ничего не покупать?",
+      "answerable": true,
+      "relevance": {
+        "Выкуп автомобиля без покупки нового": 3,
+        "Программа Trade-in": 1
+      },
+      "required_facts": [
+        "может выкупить без покупки другой машины"
+      ],
+      "forbidden_claims": [
+        "выкуп возможен только при покупке новой"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_stock_01",
+      "split": "calibration",
+      "category": "inventory",
+      "query": "Какие бренды сейчас представлены в наличии?",
+      "answerable": true,
+      "relevance": {
+        "Автомобили в наличии": 3
+      },
+      "required_facts": [
+        "Tesla",
+        "Kia",
+        "Toyota",
+        "Hyundai"
+      ],
+      "forbidden_claims": [
+        "BMW есть в наличии"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_stock_02",
+      "split": "calibration",
+      "category": "inventory",
+      "query": "Что можно купить прямо сейчас, если не рассматривать Toyota?",
+      "answerable": true,
+      "relevance": {
+        "Автомобили в наличии": 3,
+        "Tesla Model Y — электрический кроссовер": 1,
+        "Kia Rio — компактный седан и хэтчбек": 1,
+        "Hyundai Creta — компактный кроссовер": 1
+      },
+      "required_facts": [
+        "Tesla Model Y",
+        "Kia Rio",
+        "Hyundai Creta"
+      ],
+      "forbidden_claims": [
+        "Haval Jolion есть в наличии"
+      ],
+      "expected_behavior": "answer_before_qualification"
+    },
+    {
+      "id": "cal_stock_03",
+      "split": "calibration",
+      "category": "inventory",
+      "query": "Перечисли все доступные сейчас модели",
+      "answerable": true,
+      "relevance": {
+        "Автомобили в наличии": 3
+      },
+      "required_facts": [
+        "Tesla Model Y",
+        "Kia Rio",
+        "Toyota Land Cruiser Prado",
+        "Hyundai Creta",
+        "Toyota Camry"
+      ],
+      "forbidden_claims": [
+        "модели под заказ находятся в наличии"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_order_01",
+      "split": "calibration",
+      "category": "inventory",
+      "query": "Какие машины можно привезти под заказ?",
+      "answerable": true,
+      "relevance": {
+        "Автомобили под заказ": 3
+      },
+      "required_facts": [
+        "Haval Jolion",
+        "Geely Monjaro",
+        "Chery Tiggo 7 Pro Max",
+        "Lada Vesta"
+      ],
+      "forbidden_claims": [
+        "все перечисленные машины уже стоят на площадке"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_order_02",
+      "split": "calibration",
+      "category": "inventory",
+      "query": "Сколько обычно ждать заказной автомобиль?",
+      "answerable": true,
+      "relevance": {
+        "Автомобили под заказ": 3
+      },
+      "required_facts": [
+        "от 30 до 90 дней"
+      ],
+      "forbidden_claims": [
+        "поставка всегда занимает ровно 30 дней"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_freshness_01",
+      "split": "calibration",
+      "category": "inventory",
+      "query": "Гарантируется ли указанный на сайте цвет машины?",
+      "answerable": true,
+      "relevance": {
+        "Актуальность наличия и цен": 3,
+        "Автомобили в наличии": 2
+      },
+      "required_facts": [
+        "цвет нужно подтвердить",
+        "перед оплатой"
+      ],
+      "forbidden_claims": [
+        "любой цвет гарантирован"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_booking_01",
+      "split": "calibration",
+      "category": "booking",
+      "query": "На сколько можно забронировать автомобиль?",
+      "answerable": true,
+      "relevance": {
+        "Бронирование автомобиля": 3
+      },
+      "required_facts": [
+        "48 часов"
+      ],
+      "forbidden_claims": [
+        "бронь действует бессрочно"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_booking_02",
+      "split": "calibration",
+      "category": "booking",
+      "query": "Сколько нужно внести для брони?",
+      "answerable": true,
+      "relevance": {
+        "Бронирование автомобиля": 3
+      },
+      "required_facts": [
+        "20 000 рублей",
+        "засчитывается в стоимость покупки"
+      ],
+      "forbidden_claims": [
+        "бронь бесплатна"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_cancel_01",
+      "split": "calibration",
+      "category": "booking",
+      "query": "Как отменить бронь и когда вернут деньги?",
+      "answerable": true,
+      "relevance": {
+        "Отмена брони и возврат платежа": 3
+      },
+      "required_facts": [
+        "до подписания основного договора",
+        "3–10 рабочих дней"
+      ],
+      "forbidden_claims": [
+        "возврат невозможен"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_payment_01",
+      "split": "calibration",
+      "category": "payment",
+      "query": "Какими способами можно оплатить автомобиль?",
+      "answerable": true,
+      "relevance": {
+        "Способы оплаты": 3
+      },
+      "required_facts": [
+        "безналичный перевод",
+        "банковская карта",
+        "наличные"
+      ],
+      "forbidden_claims": [
+        "оплата только наличными"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_payment_02",
+      "split": "calibration",
+      "category": "payment",
+      "query": "Можно расплатиться евро?",
+      "answerable": true,
+      "relevance": {
+        "Способы оплаты": 3
+      },
+      "required_facts": [
+        "оплата в иностранной валюте не принимается",
+        "в рублях"
+      ],
+      "forbidden_claims": [
+        "евро принимаются в кассе"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_osago_01",
+      "split": "calibration",
+      "category": "insurance",
+      "query": "Можно оформить ОСАГО при покупке?",
+      "answerable": true,
+      "relevance": {
+        "Страхование ОСАГО": 3
+      },
+      "required_facts": [
+        "можно оформить в автосалоне",
+        "перед выдачей"
+      ],
+      "forbidden_claims": [
+        "ОСАГО в салоне не оформляется"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_kasko_01",
+      "split": "calibration",
+      "category": "insurance",
+      "query": "От чего защищает КАСКО?",
+      "answerable": true,
+      "relevance": {
+        "Страхование КАСКО": 3
+      },
+      "required_facts": [
+        "ущерб",
+        "угон",
+        "полная гибель"
+      ],
+      "forbidden_claims": [
+        "КАСКО заменяет ОСАГО"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_warranty_new_01",
+      "split": "calibration",
+      "category": "warranty",
+      "query": "Есть гарантия на новую машину?",
+      "answerable": true,
+      "relevance": {
+        "Гарантия на новые автомобили": 3
+      },
+      "required_facts": [
+        "заводская гарантия производителя",
+        "срок в сервисной книжке"
+      ],
+      "forbidden_claims": [
+        "одинаковый срок для всех марок"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_warranty_used_01",
+      "split": "calibration",
+      "category": "warranty",
+      "query": "Какая гарантия на машину с пробегом?",
+      "answerable": true,
+      "relevance": {
+        "Гарантия на автомобили с пробегом": 3
+      },
+      "required_facts": [
+        "12 месяцев",
+        "20 000 км"
+      ],
+      "forbidden_claims": [
+        "гарантия действует бессрочно"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_used_01",
+      "split": "calibration",
+      "category": "used_cars",
+      "query": "Как проверяются автомобили с пробегом?",
+      "answerable": true,
+      "relevance": {
+        "Автомобили с пробегом": 3
+      },
+      "required_facts": [
+        "диагностика",
+        "юридическая история",
+        "диагностический отчёт"
+      ],
+      "forbidden_claims": [
+        "машины с пробегом не проверяются"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_service_01",
+      "split": "calibration",
+      "category": "service",
+      "query": "Можно у вас пройти плановое ТО?",
+      "answerable": true,
+      "relevance": {
+        "Техническое обслуживание": 3
+      },
+      "required_facts": [
+        "плановое техническое обслуживание",
+        "запись по телефону, через сайт или приложение"
+      ],
+      "forbidden_claims": [
+        "сервисный центр не проводит ТО"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_body_01",
+      "split": "calibration",
+      "category": "service",
+      "query": "Делаете кузовной ремонт после ДТП?",
+      "answerable": true,
+      "relevance": {
+        "Кузовной ремонт и покраска": 3
+      },
+      "required_facts": [
+        "оценка повреждений",
+        "восстановление геометрии",
+        "покраска"
+      ],
+      "forbidden_claims": [
+        "точная цена определяется только по фотографии"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_tires_01",
+      "split": "calibration",
+      "category": "service",
+      "query": "Можно оставить у вас зимние колёса на хранение?",
+      "answerable": true,
+      "relevance": {
+        "Шиномонтаж и хранение колёс": 3
+      },
+      "required_facts": [
+        "сезонное хранение"
+      ],
+      "forbidden_claims": [
+        "хранение колёс не предоставляется"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_delivery_01",
+      "split": "calibration",
+      "category": "delivery",
+      "query": "Сколько стоит доставка машины по городу?",
+      "answerable": true,
+      "relevance": {
+        "Доставка купленного автомобиля": 3
+      },
+      "required_facts": [
+        "5 000 рублей",
+        "после полной оплаты"
+      ],
+      "forbidden_claims": [
+        "доставка по городу бесплатна"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_purchase_docs_01",
+      "split": "calibration",
+      "category": "documents",
+      "query": "Что нужно физлицу для покупки машины?",
+      "answerable": true,
+      "relevance": {
+        "Документы для покупки автомобиля": 3
+      },
+      "required_facts": [
+        "паспорт"
+      ],
+      "forbidden_claims": [
+        "обязательно водительское удостоверение"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_registration_01",
+      "split": "calibration",
+      "category": "documents",
+      "query": "Какие документы нужны для постановки на учёт?",
+      "answerable": true,
+      "relevance": {
+        "Регистрация автомобиля в ГИБДД": 3
+      },
+      "required_facts": [
+        "паспорт",
+        "договор купли-продажи",
+        "ЭПТС",
+        "ОСАГО"
+      ],
+      "forbidden_claims": [
+        "регистрация не требует ОСАГО"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_remote_01",
+      "split": "calibration",
+      "category": "remote_purchase",
+      "query": "Можно купить автомобиль дистанционно?",
+      "answerable": true,
+      "relevance": {
+        "Дистанционная покупка": 3
+      },
+      "required_facts": [
+        "выбрать модель",
+        "видеообзор",
+        "согласовать договор дистанционно"
+      ],
+      "forbidden_claims": [
+        "машину можно получить до полной оплаты"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_accessories_01",
+      "split": "calibration",
+      "category": "accessories",
+      "query": "Можно установить видеорегистратор до выдачи?",
+      "answerable": true,
+      "relevance": {
+        "Дополнительное оборудование и аксессуары": 3
+      },
+      "required_facts": [
+        "видеорегистратор",
+        "от одного до трёх рабочих дней"
+      ],
+      "forbidden_claims": [
+        "установка всегда выполняется мгновенно"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_road_01",
+      "split": "calibration",
+      "category": "service",
+      "query": "Что входит в помощь на дороге?",
+      "answerable": true,
+      "relevance": {
+        "Помощь на дороге": 3
+      },
+      "required_facts": [
+        "запуск двигателя",
+        "замена колеса",
+        "эвакуация"
+      ],
+      "forbidden_claims": [
+        "программа действует бессрочно"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_charge_01",
+      "split": "calibration",
+      "category": "electric",
+      "query": "Есть зарядка для электромобиля?",
+      "answerable": true,
+      "relevance": {
+        "Зарядка электромобилей": 3
+      },
+      "required_facts": [
+        "зарядные станции",
+        "бесплатно во время тест-драйва или выдачи"
+      ],
+      "forbidden_claims": [
+        "зарядка доступна всем круглосуточно"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_camry_01",
+      "split": "calibration",
+      "category": "model",
+      "query": "Сколько стоит Toyota Camry?",
+      "answerable": true,
+      "relevance": {
+        "Toyota Camry — седан бизнес-класса": 3
+      },
+      "required_facts": [
+        "от 2 800 000 до 4 200 000 рублей"
+      ],
+      "forbidden_claims": [
+        "Camry стоит от 1 350 000 рублей"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_camry_02",
+      "split": "calibration",
+      "category": "model",
+      "query": "Какая Camry самая дешёвая?",
+      "answerable": true,
+      "relevance": {
+        "Toyota Camry — седан бизнес-класса": 3
+      },
+      "required_facts": [
+        "бензиновая",
+        "2 800 000 рублей"
+      ],
+      "forbidden_claims": [
+        "самая дешёвая версия гибридная"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_creta_01",
+      "split": "calibration",
+      "category": "model",
+      "query": "Какой диапазон цен у Hyundai Creta?",
+      "answerable": true,
+      "relevance": {
+        "Hyundai Creta — компактный кроссовер": 3
+      },
+      "required_facts": [
+        "от 1 750 000 до 2 600 000 рублей"
+      ],
+      "forbidden_claims": [
+        "Creta стоит от 4 200 000 рублей"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_tesla_01",
+      "split": "calibration",
+      "category": "model",
+      "query": "Какой запас хода у Tesla Model Y?",
+      "answerable": true,
+      "relevance": {
+        "Tesla Model Y — электрический кроссовер": 3
+      },
+      "required_facts": [
+        "до 500–530 км"
+      ],
+      "forbidden_claims": [
+        "запас хода 250 км"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_rio_01",
+      "split": "calibration",
+      "category": "out_of_scope",
+      "query": "Можно оплатить у вас штраф ГИБДД?",
+      "answerable": false,
+      "relevance": {},
+      "required_facts": [],
+      "forbidden_claims": [
+        "автосалон принимает оплату штрафов"
+      ],
+      "expected_behavior": "abstain"
+    },
+    {
+      "id": "cal_prado_01",
+      "split": "calibration",
+      "category": "model",
+      "query": "Подойдёт ли Prado для бездорожья и прицепа?",
+      "answerable": true,
+      "relevance": {
+        "Toyota Land Cruiser Prado — полноразмерный внедорожник": 3
+      },
+      "required_facts": [
+        "полный привод",
+        "понижающая передача",
+        "до 3000 кг"
+      ],
+      "forbidden_claims": [
+        "Prado только с передним приводом"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "cal_haval_01",
+      "split": "calibration",
+      "category": "out_of_scope",
+      "query": "Помогаете получить водительские права?",
+      "answerable": false,
+      "relevance": {},
+      "required_facts": [],
+      "forbidden_claims": [
+        "автосалон обучает вождению"
+      ],
+      "expected_behavior": "abstain"
+    },
+    {
+      "id": "cal_geely_01",
+      "split": "calibration",
+      "category": "out_of_scope",
+      "query": "Можно арендовать машину на неделю?",
+      "answerable": false,
+      "relevance": {},
+      "required_facts": [],
+      "forbidden_claims": [
+        "автосалон сдаёт машины в краткосрочную аренду"
+      ],
+      "expected_behavior": "abstain"
+    },
+    {
+      "id": "cal_vesta_01",
+      "split": "calibration",
+      "category": "out_of_scope",
+      "query": "Где находится ближайшая заправка?",
+      "answerable": false,
+      "relevance": {},
+      "required_facts": [],
+      "forbidden_claims": [
+        "адрес ближайшей заправки"
+      ],
+      "expected_behavior": "abstain"
+    },
+    {
+      "id": "cal_kodiaq_01",
+      "split": "calibration",
+      "category": "out_of_scope",
+      "query": "Как оспорить виновность в ДТП?",
+      "answerable": false,
+      "relevance": {},
+      "required_facts": [],
+      "forbidden_claims": [
+        "юридическая консультация по оспариванию ДТП"
+      ],
+      "expected_behavior": "abstain"
+    },
+    {
+      "id": "cal_duster_01",
+      "split": "calibration",
+      "category": "out_of_scope",
+      "query": "Продаёте запчасти для грузовиков?",
+      "answerable": false,
+      "relevance": {},
+      "required_facts": [],
+      "forbidden_claims": [
+        "в продаже есть запчасти для грузовиков"
+      ],
+      "expected_behavior": "abstain"
+    },
+    {
+      "id": "cal_bmw_01",
+      "split": "calibration",
+      "category": "out_of_scope",
+      "query": "Сколько стоит билет на городской автобус?",
+      "answerable": false,
+      "relevance": {},
+      "required_facts": [],
+      "forbidden_claims": [
+        "стоимость проезда на автобусе"
+      ],
+      "expected_behavior": "abstain"
+    },
+    {
+      "id": "cal_negative_01",
+      "split": "calibration",
+      "category": "out_of_scope",
+      "query": "Как приготовить борщ?",
+      "answerable": false,
+      "relevance": {},
+      "required_facts": [],
+      "forbidden_claims": [
+        "рецепт борща"
+      ],
+      "expected_behavior": "abstain"
+    },
+    {
+      "id": "cal_negative_02",
+      "split": "calibration",
+      "category": "out_of_scope",
+      "query": "Какая завтра будет погода?",
+      "answerable": false,
+      "relevance": {},
+      "required_facts": [],
+      "forbidden_claims": [
+        "прогноз погоды"
+      ],
+      "expected_behavior": "abstain"
+    },
+    {
+      "id": "test_hours_01",
+      "split": "test",
+      "category": "hours",
+      "query": "По какому номеру позвонить в отдел продаж?",
+      "answerable": true,
+      "relevance": {
+        "Часы работы и контакты автосалона": 3
+      },
+      "required_facts": [
+        "+7 (999)777-88-01"
+      ],
+      "forbidden_claims": [
+        "номер сервиса является номером продаж"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "test_hours_02",
+      "split": "test",
+      "category": "hours",
+      "query": "Как записаться на визит в салон?",
+      "answerable": true,
+      "relevance": {
+        "Часы работы и контакты автосалона": 3
+      },
+      "required_facts": [
+        "по телефону",
+        "через сайт",
+        "мобильное приложение"
+      ],
+      "forbidden_claims": [
+        "запись возможна только лично"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "test_drive_01",
+      "split": "test",
+      "category": "test_drive",
+      "query": "Нужно ли платить за пробную поездку?",
+      "answerable": true,
+      "relevance": {
+        "Тест-драйв автомобилей": 3
+      },
+      "required_facts": [
+        "бесплатно"
+      ],
+      "forbidden_claims": [
+        "тест-драйв платный"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "test_credit_01",
+      "split": "test",
+      "category": "credit",
+      "query": "Что принести для оформления машины в кредит?",
+      "answerable": true,
+      "relevance": {
+        "Документы для автокредита": 3,
+        "Кредитование и финансирование": 2
+      },
+      "required_facts": [
+        "паспорт",
+        "второй документ"
+      ],
+      "forbidden_claims": [
+        "никакие документы не нужны"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "test_credit_02",
+      "split": "test",
+      "category": "credit",
+      "query": "Хочу платить за машину ежемесячно несколько лет",
+      "answerable": true,
+      "relevance": {
+        "Кредитование и финансирование": 3,
+        "Рассрочка на автомобиль": 2
+      },
+      "required_facts": [
+        "автокредит",
+        "от 1 до 7 лет"
+      ],
+      "forbidden_claims": [
+        "рассрочка от салона"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "test_installment_01",
+      "split": "test",
+      "category": "finance",
+      "query": "Чем ваша рассрочка отличается от кредита?",
+      "answerable": true,
+      "relevance": {
+        "Рассрочка на автомобиль": 3,
+        "Кредитование и финансирование": 2
+      },
+      "required_facts": [
+        "рассрочка от автосалона не предоставляется",
+        "кредит банка-партнёра"
+      ],
+      "forbidden_claims": [
+        "салон даёт беспроцентную рассрочку"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "test_tradein_01",
+      "split": "test",
+      "category": "trade_in",
+      "query": "Сколько времени занимает оценка старого авто?",
+      "answerable": true,
+      "relevance": {
+        "Программа Trade-in": 3,
+        "Выкуп автомобиля без покупки нового": 1
+      },
+      "required_facts": [
+        "30–40 минут"
+      ],
+      "forbidden_claims": [
+        "оценка занимает несколько дней"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "test_buyout_01",
+      "split": "test",
+      "category": "trade_in",
+      "query": "Купите мою машину без обмена на новую?",
+      "answerable": true,
+      "relevance": {
+        "Выкуп автомобиля без покупки нового": 3,
+        "Программа Trade-in": 1
+      },
+      "required_facts": [
+        "да",
+        "без обязательной покупки"
+      ],
+      "forbidden_claims": [
+        "только trade-in"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "test_used_warranty_01",
+      "split": "test",
+      "category": "warranty",
+      "query": "Покрывается ли гарантией подержанный автомобиль?",
+      "answerable": true,
+      "relevance": {
+        "Гарантия на автомобили с пробегом": 3,
+        "Автомобили с пробегом": 1
+      },
+      "required_facts": [
+        "для части автомобилей",
+        "12 месяцев или 20 000 км"
+      ],
+      "forbidden_claims": [
+        "для всех машин пожизненно"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "test_inventory_order_01",
+      "split": "test",
+      "category": "inventory",
+      "query": "BMW X3 уже есть на площадке или её надо ждать?",
+      "answerable": true,
+      "relevance": {
+        "Автомобили под заказ": 3,
+        "BMW X3 — премиальный кроссовер": 2,
+        "Автомобили в наличии": 2
+      },
+      "required_facts": [
+        "под заказ",
+        "30–90 дней"
+      ],
+      "forbidden_claims": [
+        "BMW X3 находится в наличии"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "test_inventory_alt_01",
+      "split": "test",
+      "category": "inventory",
+      "query": "Не предлагайте Тойоту. Есть Kia или Hyundai?",
+      "answerable": true,
+      "relevance": {
+        "Автомобили в наличии": 3,
+        "Kia Rio — компактный седан и хэтчбек": 2,
+        "Hyundai Creta — компактный кроссовер": 2
+      },
+      "required_facts": [
+        "Kia Rio",
+        "Hyundai Creta"
+      ],
+      "forbidden_claims": [
+        "доступна только Toyota"
+      ],
+      "expected_behavior": "answer_before_qualification"
+    },
+    {
+      "id": "test_booking_01",
+      "split": "test",
+      "category": "booking",
+      "query": "Когда бронь начинает действовать?",
+      "answerable": true,
+      "relevance": {
+        "Бронирование автомобиля": 3
+      },
+      "required_facts": [
+        "после подписания соглашения",
+        "после поступления платежа"
+      ],
+      "forbidden_claims": [
+        "сразу после устной просьбы"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "test_cancel_01",
+      "split": "test",
+      "category": "booking",
+      "query": "Через сколько банк вернёт платёж за отменённую бронь?",
+      "answerable": true,
+      "relevance": {
+        "Отмена брони и возврат платежа": 3
+      },
+      "required_facts": [
+        "от 3 до 10 рабочих дней"
+      ],
+      "forbidden_claims": [
+        "возврат в тот же момент"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "test_payment_01",
+      "split": "test",
+      "category": "payment",
+      "query": "Почему большая оплата картой может не пройти?",
+      "answerable": true,
+      "relevance": {
+        "Способы оплаты": 3
+      },
+      "required_facts": [
+        "дневной лимит банка"
+      ],
+      "forbidden_claims": [
+        "автосалон не принимает карты"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "test_leasing_01",
+      "split": "test",
+      "category": "leasing",
+      "query": "Я ИП, могу взять несколько машин в лизинг?",
+      "answerable": true,
+      "relevance": {
+        "Корпоративный лизинг и автопарки": 3
+      },
+      "required_facts": [
+        "индивидуальные предприниматели",
+        "лизинг",
+        "партии автомобилей"
+      ],
+      "forbidden_claims": [
+        "лизинг доступен только физлицам"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "test_osago_01",
+      "split": "test",
+      "category": "insurance",
+      "query": "От чего зависит цена ОСАГО?",
+      "answerable": true,
+      "relevance": {
+        "Страхование ОСАГО": 3
+      },
+      "required_facts": [
+        "регион",
+        "мощность двигателя",
+        "стаж",
+        "возраст"
+      ],
+      "forbidden_claims": [
+        "цена одинакова для всех"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "test_kasko_credit_01",
+      "split": "test",
+      "category": "insurance",
+      "query": "Обязательно ли КАСКО при покупке в кредит?",
+      "answerable": true,
+      "relevance": {
+        "Страхование КАСКО": 3,
+        "Кредитование и финансирование": 1
+      },
+      "required_facts": [
+        "зависит от банка и программы"
+      ],
+      "forbidden_claims": [
+        "КАСКО обязательно при любом кредите"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "test_service_01",
+      "split": "test",
+      "category": "service",
+      "query": "Как записаться на замену масла?",
+      "answerable": true,
+      "relevance": {
+        "Техническое обслуживание": 3,
+        "Часы работы и контакты автосалона": 1
+      },
+      "required_facts": [
+        "по телефону сервиса",
+        "через сайт",
+        "приложение"
+      ],
+      "forbidden_claims": [
+        "только в порядке живой очереди"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "test_warranty_01",
+      "split": "test",
+      "category": "warranty",
+      "query": "Заводская гарантия оплатит ремонт после аварии?",
+      "answerable": true,
+      "relevance": {
+        "Гарантия на новые автомобили": 3,
+        "Кузовной ремонт и покраска": 1
+      },
+      "required_facts": [
+        "не покрывает повреждения в ДТП"
+      ],
+      "forbidden_claims": [
+        "гарантия покрывает любые повреждения"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "test_delivery_01",
+      "split": "test",
+      "category": "delivery",
+      "query": "Доставляете машину в другой город?",
+      "answerable": true,
+      "relevance": {
+        "Доставка купленного автомобиля": 3
+      },
+      "required_facts": [
+        "стоимость рассчитывается по расстоянию"
+      ],
+      "forbidden_claims": [
+        "доставка в любой город стоит 5 000 рублей"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "test_remote_01",
+      "split": "test",
+      "category": "remote_purchase",
+      "query": "Можно посмотреть машину по видео и оформить договор удалённо?",
+      "answerable": true,
+      "relevance": {
+        "Дистанционная покупка": 3
+      },
+      "required_facts": [
+        "видеообзор",
+        "согласовать договор дистанционно"
+      ],
+      "forbidden_claims": [
+        "удалённое оформление невозможно"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "test_registration_01",
+      "split": "test",
+      "category": "documents",
+      "query": "Нужен ли полис для регистрации автомобиля?",
+      "answerable": true,
+      "relevance": {
+        "Регистрация автомобиля в ГИБДД": 3,
+        "Страхование ОСАГО": 1
+      },
+      "required_facts": [
+        "ОСАГО"
+      ],
+      "forbidden_claims": [
+        "полис не нужен"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "test_sportage_01",
+      "split": "test",
+      "category": "model",
+      "query": "Какой объём багажника у Kia Sportage?",
+      "answerable": true,
+      "relevance": {
+        "Kia Sportage — семейный кроссовер": 3
+      },
+      "required_facts": [
+        "около 540 литров"
+      ],
+      "forbidden_claims": [
+        "480 литров"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "test_tucson_01",
+      "split": "test",
+      "category": "model",
+      "query": "Бывает Hyundai Tucson гибридным?",
+      "answerable": true,
+      "relevance": {
+        "Hyundai Tucson — среднеразмерный кроссовер": 3
+      },
+      "required_facts": [
+        "гибридная силовая установка",
+        "на отдельных рынках"
+      ],
+      "forbidden_claims": [
+        "гибридной версии не существует"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "test_chery_01",
+      "split": "test",
+      "category": "out_of_scope",
+      "query": "Можно оформить у вас ипотеку на квартиру?",
+      "answerable": false,
+      "relevance": {},
+      "required_facts": [],
+      "forbidden_claims": [
+        "автосалон оформляет ипотеку"
+      ],
+      "expected_behavior": "abstain"
+    },
+    {
+      "id": "test_audi_01",
+      "split": "test",
+      "category": "out_of_scope",
+      "query": "Можно застраховать через вас квартиру?",
+      "answerable": false,
+      "relevance": {},
+      "required_facts": [],
+      "forbidden_claims": [
+        "автосалон страхует недвижимость"
+      ],
+      "expected_behavior": "abstain"
+    },
+    {
+      "id": "test_mercedes_01",
+      "split": "test",
+      "category": "out_of_scope",
+      "query": "Какой сегодня курс евро?",
+      "answerable": false,
+      "relevance": {},
+      "required_facts": [],
+      "forbidden_claims": [
+        "актуальный курс евро"
+      ],
+      "expected_behavior": "abstain"
+    },
+    {
+      "id": "test_mazda_01",
+      "split": "test",
+      "category": "out_of_scope",
+      "query": "Можно купить у вас велосипед?",
+      "answerable": false,
+      "relevance": {},
+      "required_facts": [],
+      "forbidden_claims": [
+        "в автосалоне продаются велосипеды"
+      ],
+      "expected_behavior": "abstain"
+    },
+    {
+      "id": "test_negative_01",
+      "split": "test",
+      "category": "out_of_scope",
+      "query": "Посоветуй хороший отель в центре города",
+      "answerable": false,
+      "relevance": {},
+      "required_facts": [],
+      "forbidden_claims": [
+        "рекомендация отеля"
+      ],
+      "expected_behavior": "abstain"
+    },
+    {
+      "id": "test_negative_02",
+      "split": "test",
+      "category": "out_of_scope",
+      "query": "Как лечить сильную головную боль?",
+      "answerable": false,
+      "relevance": {},
+      "required_facts": [],
+      "forbidden_claims": [
+        "медицинская рекомендация"
+      ],
+      "expected_behavior": "abstain"
+    },
+    {
+      "id": "reg_time_01",
+      "split": "regression",
+      "category": "hours",
+      "query": "Время",
+      "answerable": true,
+      "relevance": {
+        "Часы работы и контакты автосалона": 3
+      },
+      "required_facts": [
+        "9:00",
+        "21:00"
+      ],
+      "forbidden_claims": [
+        "в базе нет информации"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "reg_hours_01",
+      "split": "regression",
+      "category": "hours",
+      "query": "Часы",
+      "answerable": true,
+      "relevance": {
+        "Часы работы и контакты автосалона": 3
+      },
+      "required_facts": [
+        "9:00",
+        "21:00"
+      ],
+      "forbidden_claims": [
+        "в базе нет информации"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "reg_brands_01",
+      "split": "regression",
+      "category": "inventory",
+      "query": "Какие марки есть?",
+      "answerable": true,
+      "relevance": {
+        "Автомобили в наличии": 3
+      },
+      "required_facts": [
+        "Tesla",
+        "Kia",
+        "Toyota",
+        "Hyundai"
+      ],
+      "forbidden_claims": [
+        "неизвестно, какие марки есть"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "reg_not_toyota_01",
+      "split": "regression",
+      "category": "inventory",
+      "query": "Хочу другую, не Toyota",
+      "answerable": true,
+      "relevance": {
+        "Автомобили в наличии": 3,
+        "Tesla Model Y — электрический кроссовер": 1,
+        "Kia Rio — компактный седан и хэтчбек": 1,
+        "Hyundai Creta — компактный кроссовер": 1
+      },
+      "required_facts": [
+        "Tesla Model Y",
+        "Kia Rio",
+        "Hyundai Creta"
+      ],
+      "forbidden_claims": [
+        "предложена только Toyota"
+      ],
+      "expected_behavior": "answer_before_qualification"
+    },
+    {
+      "id": "reg_credit_01",
+      "split": "regression",
+      "category": "credit",
+      "query": "Можно купить автомобиль в кредит?",
+      "answerable": true,
+      "relevance": {
+        "Кредитование и финансирование": 3
+      },
+      "required_facts": [
+        "можно оформить на месте",
+        "банки-партнёры"
+      ],
+      "forbidden_claims": [
+        "кредит недоступен"
+      ],
+      "expected_behavior": "answer_before_qualification"
+    },
+    {
+      "id": "reg_tradein_01",
+      "split": "regression",
+      "category": "trade_in",
+      "query": "У вас есть trade-in?",
+      "answerable": true,
+      "relevance": {
+        "Программа Trade-in": 3
+      },
+      "required_facts": [
+        "автомобиль в зачёт стоимости нового"
+      ],
+      "forbidden_claims": [
+        "trade-in отсутствует"
+      ],
+      "expected_behavior": "answer_before_qualification"
+    },
+    {
+      "id": "reg_close_time_01",
+      "split": "regression",
+      "category": "hours",
+      "query": "До скольки вы работаете?",
+      "answerable": true,
+      "relevance": {
+        "Часы работы и контакты автосалона": 3
+      },
+      "required_facts": [
+        "21:00"
+      ],
+      "forbidden_claims": [
+        "работаете круглосуточно"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "reg_inventory_01",
+      "split": "regression",
+      "category": "inventory",
+      "query": "Какие автомобили сейчас в наличии?",
+      "answerable": true,
+      "relevance": {
+        "Автомобили в наличии": 3
+      },
+      "required_facts": [
+        "Tesla Model Y",
+        "Kia Rio",
+        "Toyota Land Cruiser Prado",
+        "Hyundai Creta",
+        "Toyota Camry"
+      ],
+      "forbidden_claims": [
+        "машины под заказ уже в наличии"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "reg_credit_downpayment_01",
+      "split": "regression",
+      "category": "credit",
+      "query": "Какой взнос нужен для кредита?",
+      "answerable": true,
+      "relevance": {
+        "Кредитование и финансирование": 3
+      },
+      "required_facts": [
+        "от 10%"
+      ],
+      "forbidden_claims": [
+        "первоначальный взнос не требуется"
+      ],
+      "expected_behavior": "answer_only"
+    },
+    {
+      "id": "reg_tradein_oldcar_01",
+      "split": "regression",
+      "category": "trade_in",
+      "query": "Хочу сдать старую машину в зачёт новой",
+      "answerable": true,
+      "relevance": {
+        "Программа Trade-in": 3
+      },
+      "required_facts": [
+        "trade-in",
+        "бесплатная оценка"
+      ],
+      "forbidden_claims": [
+        "нужно только продать автомобиль"
+      ],
+      "expected_behavior": "answer_before_qualification"
+    }
+  ]
+}
