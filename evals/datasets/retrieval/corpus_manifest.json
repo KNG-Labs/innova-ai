@@ -1,0 +1,409 @@
+{
+  "schema_version": "2.0",
+  "source": "docs/RAG/Данные для RAG.txt",
+  "source_sha256": "fcfbe7b3e4081bc276651fb1cb3d6b1dc101ec8eaeaca1c66390ff659ab444b0",
+  "id_policy": "Stable semantic document ID; chunk ID is document ID plus zero-based chunk index.",
+  "documents": [
+    {
+      "id": "dealer_hours",
+      "title": "Часы работы и контакты автосалона",
+      "content_sha256": "046fe5e76ebb2144b78009ee166cd7e7c4f2d36f3820f1e07cbd5ee266fa97d2",
+      "chunk_ids": [
+        "dealer_hours#0"
+      ]
+    },
+    {
+      "id": "test_drive",
+      "title": "Тест-драйв автомобилей",
+      "content_sha256": "b9d6de7eeb6c41d6d4601a4d9926ccbeb3286cc522704d3ea8ec22316ef7774f",
+      "chunk_ids": [
+        "test_drive#0"
+      ]
+    },
+    {
+      "id": "credit_financing",
+      "title": "Кредитование и финансирование",
+      "content_sha256": "e83e2ec60bae252a115fdcf936118cca140fe1479f0d5dd73ae002ce51b32f20",
+      "chunk_ids": [
+        "credit_financing#0"
+      ]
+    },
+    {
+      "id": "trade_in_program",
+      "title": "Программа Trade-in",
+      "content_sha256": "a82dae0ce96c6240425306561c89c742335e1d207e8e6bc091da4131fec2646f",
+      "chunk_ids": [
+        "trade_in_program#0"
+      ]
+    },
+    {
+      "id": "toyota_camry",
+      "title": "Toyota Camry — седан бизнес-класса",
+      "content_sha256": "11065d62df9f99db58c129ae1a01388f9980fecad68dede83a0c48987f9238c1",
+      "chunk_ids": [
+        "toyota_camry#0",
+        "toyota_camry#1"
+      ]
+    },
+    {
+      "id": "hyundai_creta",
+      "title": "Hyundai Creta — компактный кроссовер",
+      "content_sha256": "99b4ea5cb0a14a0996e1dd71ce92b013236c0ec07e55e6248b483c1e05902045",
+      "chunk_ids": [
+        "hyundai_creta#0"
+      ]
+    },
+    {
+      "id": "toyota_land_cruiser_prado",
+      "title": "Toyota Land Cruiser Prado — полноразмерный внедорожник",
+      "content_sha256": "f232f5d3b68c17c2626b035d6ea9b698a845a50a143f0637720918f5a0607c3f",
+      "chunk_ids": [
+        "toyota_land_cruiser_prado#0"
+      ]
+    },
+    {
+      "id": "tesla_model_y",
+      "title": "Tesla Model Y — электрический кроссовер",
+      "content_sha256": "4b0f52e6be87e7bbfae50bcee975cf2acc722e2c880bd820794a5ad2a092b335",
+      "chunk_ids": [
+        "tesla_model_y#0"
+      ]
+    },
+    {
+      "id": "kia_rio",
+      "title": "Kia Rio — компактный седан и хэтчбек",
+      "content_sha256": "bcd234ae2b9a917fa8e5f196d6bc8a093144ded30c602c1a8e1d01c19e43fc22",
+      "chunk_ids": [
+        "kia_rio#0"
+      ]
+    },
+    {
+      "id": "vehicle_inventory",
+      "title": "Автомобили в наличии",
+      "content_sha256": "a64a61464af0976472aa9fe8a19cc6899c9497fc32a6318324b52aa6a350dec4",
+      "chunk_ids": [
+        "vehicle_inventory#0"
+      ]
+    },
+    {
+      "id": "vehicle_order",
+      "title": "Автомобили под заказ",
+      "content_sha256": "c97f03fe10299f52032e4fb6852f53655d8c61d9bd197b24f0300a2ce12c3c5f",
+      "chunk_ids": [
+        "vehicle_order#0"
+      ]
+    },
+    {
+      "id": "price_and_inventory_freshness",
+      "title": "Актуальность наличия и цен",
+      "content_sha256": "3524328c0d90ecd7dc9bc9fefee866369c151d28120d040db3de620d7df10b91",
+      "chunk_ids": [
+        "price_and_inventory_freshness#0"
+      ]
+    },
+    {
+      "id": "vehicle_booking",
+      "title": "Бронирование автомобиля",
+      "content_sha256": "d3a01cc666b4aad825e0d226e90cced1d6a741f4cb17a90d34552f923251f6bf",
+      "chunk_ids": [
+        "vehicle_booking#0"
+      ]
+    },
+    {
+      "id": "booking_cancellation",
+      "title": "Отмена брони и возврат платежа",
+      "content_sha256": "a3877c3aecd920b6c70f82e1e849200dc32c3cf64979c32aed9eaaa441ea891a",
+      "chunk_ids": [
+        "booking_cancellation#0"
+      ]
+    },
+    {
+      "id": "payment_methods",
+      "title": "Способы оплаты",
+      "content_sha256": "83ac4e7e7b78bc7962eea58297473a0ac5c124f4a056083627849704f43a47ea",
+      "chunk_ids": [
+        "payment_methods#0"
+      ]
+    },
+    {
+      "id": "installment",
+      "title": "Рассрочка на автомобиль",
+      "content_sha256": "47d31d2fbdf1751c2409c430dd32076958d658ad067af068105cba71a4b2e360",
+      "chunk_ids": [
+        "installment#0"
+      ]
+    },
+    {
+      "id": "credit_documents",
+      "title": "Документы для автокредита",
+      "content_sha256": "96d44b90b826f92802cb23e4e23a31b057ac2578ee4f1c5bc896f3d2f0a23f47",
+      "chunk_ids": [
+        "credit_documents#0"
+      ]
+    },
+    {
+      "id": "early_loan_repayment",
+      "title": "Досрочное погашение автокредита",
+      "content_sha256": "45c7fb3e5ceb340754d70b6150a4e0885c0d7863835b2b23acd53839014ddcec",
+      "chunk_ids": [
+        "early_loan_repayment#0"
+      ]
+    },
+    {
+      "id": "personal_leasing",
+      "title": "Лизинг для физических лиц",
+      "content_sha256": "c0c136fe8234acb9908b972c28871cee4b1422ccbd3da57a273b8777707aad91",
+      "chunk_ids": [
+        "personal_leasing#0"
+      ]
+    },
+    {
+      "id": "corporate_leasing",
+      "title": "Корпоративный лизинг и автопарки",
+      "content_sha256": "49439358ddf751613c5e7dd497c7adfa6d3a677712e6d2fb87e8844a3423739d",
+      "chunk_ids": [
+        "corporate_leasing#0"
+      ]
+    },
+    {
+      "id": "osago_insurance",
+      "title": "Страхование ОСАГО",
+      "content_sha256": "0c7fe6cf256f32fba84e3f158a04d52082619f6e5f156954c5e702e2434ee7a9",
+      "chunk_ids": [
+        "osago_insurance#0"
+      ]
+    },
+    {
+      "id": "kasko_insurance",
+      "title": "Страхование КАСКО",
+      "content_sha256": "3bbb056171db4555a47be417ab2fda044d22da0616881bfaf4c9ce69a834efc0",
+      "chunk_ids": [
+        "kasko_insurance#0"
+      ]
+    },
+    {
+      "id": "vehicle_buyout",
+      "title": "Выкуп автомобиля без покупки нового",
+      "content_sha256": "24191357778a06e31c92f27f5722082dd27a0f4968ede1615191b442c9f79082",
+      "chunk_ids": [
+        "vehicle_buyout#0"
+      ]
+    },
+    {
+      "id": "used_vehicles",
+      "title": "Автомобили с пробегом",
+      "content_sha256": "aaf8a700dd07480f4d4e2f6f8c39d9cdabba8f007d9c3ef5a1e47f229d77dcb6",
+      "chunk_ids": [
+        "used_vehicles#0"
+      ]
+    },
+    {
+      "id": "new_vehicle_warranty",
+      "title": "Гарантия на новые автомобили",
+      "content_sha256": "6a7e2a14f1c6093e752fef3d7c009dd8ba39a1bc92c19ada5e97f7de278f4e62",
+      "chunk_ids": [
+        "new_vehicle_warranty#0"
+      ]
+    },
+    {
+      "id": "used_vehicle_warranty",
+      "title": "Гарантия на автомобили с пробегом",
+      "content_sha256": "464b9ce8be9432bbc5218334984550fee0d65e98c19131c29749644f3071de69",
+      "chunk_ids": [
+        "used_vehicle_warranty#0"
+      ]
+    },
+    {
+      "id": "maintenance",
+      "title": "Техническое обслуживание",
+      "content_sha256": "c4400540426853cbbb21dfc30fe4e3c4cbe54d0a3b9842436a79aa5ae002f94c",
+      "chunk_ids": [
+        "maintenance#0"
+      ]
+    },
+    {
+      "id": "body_repair",
+      "title": "Кузовной ремонт и покраска",
+      "content_sha256": "d69ab246c22a859fb28b24d3060b91487cf7e136528d2b21de46b584106b2625",
+      "chunk_ids": [
+        "body_repair#0"
+      ]
+    },
+    {
+      "id": "tire_service",
+      "title": "Шиномонтаж и хранение колёс",
+      "content_sha256": "428d6acce3e7b99a5edcb346e7d8f034d0437cd5c47a05c2db7c1aa27fbdecca",
+      "chunk_ids": [
+        "tire_service#0"
+      ]
+    },
+    {
+      "id": "vehicle_delivery",
+      "title": "Доставка купленного автомобиля",
+      "content_sha256": "24f8cb7f96b487ace60b7ce47ec3838a8c3a04465dec41414e2b610a621f194a",
+      "chunk_ids": [
+        "vehicle_delivery#0"
+      ]
+    },
+    {
+      "id": "purchase_documents",
+      "title": "Документы для покупки автомобиля",
+      "content_sha256": "7cfee93546f497d935aa5e32597f12d6d5e82851b94f5768f83cfd2d99ed1498",
+      "chunk_ids": [
+        "purchase_documents#0"
+      ]
+    },
+    {
+      "id": "vehicle_registration",
+      "title": "Регистрация автомобиля в ГИБДД",
+      "content_sha256": "732569ad673939e8027b243f302dccf9a3a604671399a7da179c69d40c417d7b",
+      "chunk_ids": [
+        "vehicle_registration#0"
+      ]
+    },
+    {
+      "id": "remote_purchase",
+      "title": "Дистанционная покупка",
+      "content_sha256": "ca989bb185bad29373fed184589d7f2b124bb965aa31343f65f786cf81dc8eb4",
+      "chunk_ids": [
+        "remote_purchase#0"
+      ]
+    },
+    {
+      "id": "accessories",
+      "title": "Дополнительное оборудование и аксессуары",
+      "content_sha256": "b17cece8e172a2a849f75c550a097e510ce07fe3663736b4181db3a8c0a520c9",
+      "chunk_ids": [
+        "accessories#0"
+      ]
+    },
+    {
+      "id": "hyundai_tucson",
+      "title": "Hyundai Tucson — среднеразмерный кроссовер",
+      "content_sha256": "4c2c819e8fb8cc504cf0b03d5e0c0dd5c3470665694be243f7b4019cdc0c9e52",
+      "chunk_ids": [
+        "hyundai_tucson#0"
+      ]
+    },
+    {
+      "id": "kia_sportage",
+      "title": "Kia Sportage — семейный кроссовер",
+      "content_sha256": "4cbb8f967bf662547edfe5ab9f69e726170e1e951f5d338e2488e19e466dfb3e",
+      "chunk_ids": [
+        "kia_sportage#0"
+      ]
+    },
+    {
+      "id": "haval_jolion",
+      "title": "Haval Jolion — компактный кроссовер",
+      "content_sha256": "293d4c8af114467c71b413330ecae247974a09dee1367df4bc0dc1fd9206f9bf",
+      "chunk_ids": [
+        "haval_jolion#0"
+      ]
+    },
+    {
+      "id": "geely_monjaro",
+      "title": "Geely Monjaro — полноприводный кроссовер",
+      "content_sha256": "7145c7dbd53754f0d060063a7ffebae6770c9ce21461b26b206c8b1d089fea23",
+      "chunk_ids": [
+        "geely_monjaro#0"
+      ]
+    },
+    {
+      "id": "chery_tiggo_7_pro_max",
+      "title": "Chery Tiggo 7 Pro Max — городской кроссовер",
+      "content_sha256": "9a044a5905d137e2b65c8c2e206246fde7fd079c579f80a4378c10a58d65b011",
+      "chunk_ids": [
+        "chery_tiggo_7_pro_max#0"
+      ]
+    },
+    {
+      "id": "lada_vesta",
+      "title": "Lada Vesta — компактный седан и универсал",
+      "content_sha256": "f50ed8e06366467168b6f22ae57f99a37fb292b19ec66d6e62f72841c79e13e8",
+      "chunk_ids": [
+        "lada_vesta#0"
+      ]
+    },
+    {
+      "id": "skoda_kodiaq",
+      "title": "Skoda Kodiaq — семиместный кроссовер",
+      "content_sha256": "cccbf9b6ab06996b0df2c06c2b7277081077f6319c9b2b03c910240d280a69f6",
+      "chunk_ids": [
+        "skoda_kodiaq#0"
+      ]
+    },
+    {
+      "id": "volkswagen_tiguan",
+      "title": "Volkswagen Tiguan — компактный кроссовер",
+      "content_sha256": "aef199e29102334e39967761227ee16636e4b1789731ce1bab9300d3c5d78386",
+      "chunk_ids": [
+        "volkswagen_tiguan#0"
+      ]
+    },
+    {
+      "id": "mazda_cx5",
+      "title": "Mazda CX-5 — кроссовер с атмосферным двигателем",
+      "content_sha256": "bee7b13c62dc188d924c0b7743f4f8f867362e695a7cb8de46880764d14447b8",
+      "chunk_ids": [
+        "mazda_cx5#0"
+      ]
+    },
+    {
+      "id": "nissan_qashqai",
+      "title": "Nissan Qashqai — городской кроссовер",
+      "content_sha256": "0fbec4b19bcc969b97f4a30bb33f6a83cce31b974340b8e0297654add5847fb5",
+      "chunk_ids": [
+        "nissan_qashqai#0"
+      ]
+    },
+    {
+      "id": "renault_duster",
+      "title": "Renault Duster — доступный полноприводный кроссовер",
+      "content_sha256": "8ff51c21aecbf73cb1b571ff54ca6186715745046eaa8d94ef426b85694bd741",
+      "chunk_ids": [
+        "renault_duster#0"
+      ]
+    },
+    {
+      "id": "bmw_x3",
+      "title": "BMW X3 — премиальный кроссовер",
+      "content_sha256": "0af1291e1f03496b54e368aa1c0c18160196898b5f3191c2eb06e2322921ad72",
+      "chunk_ids": [
+        "bmw_x3#0"
+      ]
+    },
+    {
+      "id": "mercedes_benz_c_class",
+      "title": "Mercedes-Benz C-Class — премиальный седан",
+      "content_sha256": "699ceddb6857efe749f13742e8f685d035076e13dc028e74845c592713405a78",
+      "chunk_ids": [
+        "mercedes_benz_c_class#0"
+      ]
+    },
+    {
+      "id": "audi_q5",
+      "title": "Audi Q5 — премиальный полноприводный кроссовер",
+      "content_sha256": "16bd2dd736981a943c1636b9dfdae048a78517d433431438d326a6dc7270fe29",
+      "chunk_ids": [
+        "audi_q5#0"
+      ]
+    },
+    {
+      "id": "ev_charging",
+      "title": "Зарядка электромобилей",
+      "content_sha256": "47c16e41ac72e02500b70550e372db03e48e5452664110834c9cf2502de40a0c",
+      "chunk_ids": [
+        "ev_charging#0"
+      ]
+    },
+    {
+      "id": "roadside_assistance",
+      "title": "Помощь на дороге",
+      "content_sha256": "abd3365321aa9ab08cb605c1b0aa1ebf8502c007b3ad40b141d21bc878b683d3",
+      "chunk_ids": [
+        "roadside_assistance#0"
+      ]
+    }
+  ]
+}

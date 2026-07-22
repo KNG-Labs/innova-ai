@@ -17,6 +17,10 @@ __pycache__/
 htmlcov/
 .coverage
 
+# Одноразовые evaluation reports; зафиксированные baseline хранятся в baselines/
+evals/reports/latest*.json
+evals/reports/runs/
+
 # IDE
 .idea/
 .vscode/
