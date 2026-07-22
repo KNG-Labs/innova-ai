@@ -211,6 +211,17 @@ EMBEDDING_MODEL
 
 `fake` создаёт детерминированные token-based векторы для локальной разработки и тестов. `openrouter` использует тот же ключ и base URL, что и AG2. Выбранная модель должна возвращать векторы размерности 1536.
 
+### RAG
+
+```text
+RAG_TOP_K=3
+RAG_MIN_SCORE=0.2
+```
+
+`RAG_TOP_K` задаёт максимальное число фрагментов контекста, `RAG_MIN_SCORE` —
+минимальную cosine similarity. API и evaluation runner должны использовать
+одинаковые значения.
+
 ### Доставка лидов
 
 ```text
@@ -331,6 +342,58 @@ uv run mypy app/ --ignore-missing-imports
 ```
 
 Автоматические тесты используют fake-адаптеры LLM, embeddings, очереди и CRM там, где внешние сервисы не являются предметом проверки. Полный сценарий widget -> real AG2 -> lead -> Redis worker -> AmoCRM также проверен вручную.
+
+## Evaluation datasets
+
+Версионируемые golden datasets находятся в `evals/datasets/` и содержат 100
+retrieval, 48 generation и 12 сквозных business-кейсов. Наборы разделены на
+`calibration`, закрытый `test` и критический `regression`. Проверить схему и
+покрытие без запуска приложения:
+
+```bash
+uv run python -m evals.runners.evaluate --dataset evals/datasets
+```
+
+Evaluation нельзя запускать на рабочей БД. Можно использовать тот же экземпляр
+PostgreSQL, но runner по умолчанию принимает только логическую БД с суффиксом
+`_eval` или `_test`. Он сверяет SHA-256 полного 50-документного корпуса с manifest,
+очищает knowledge-таблицы eval-БД и индексирует точную копию корпуса заново:
+
+```bash
+docker compose exec db createdb -U innova innova_ai_eval
+DATABASE_URL=postgresql+asyncpg://innova:innova@localhost:5433/innova_ai_eval \
+  uv run alembic upgrade head
+```
+
+Для generation/business запустите отдельный API-процесс с этой же eval-БД, затем
+выполните минимум три повтора недетерминированной модели:
+
+```bash
+DATABASE_URL=postgresql+asyncpg://innova:innova@localhost:5433/innova_ai_eval \
+  uv run uvicorn main:app --port 8001
+
+EVAL_DATABASE_URL=postgresql+asyncpg://innova:innova@localhost:5433/innova_ai_eval \
+INNOVA_EVAL_API_URL=http://localhost:8001 \
+  uv run python -m evals.runners.run --repetitions 3 \
+  --split test --split regression
+```
+
+Полностью изолированный запуск доступен через `docker-compose.eval.yml`:
+
+```bash
+EVAL_REPORT_NAME=before-rag \
+  docker compose -f docker-compose.eval.yml up --build \
+  --abort-on-container-exit --exit-code-from eval-runner eval-runner
+docker compose -f docker-compose.eval.yml down
+```
+
+Runner пишет одноразовые отчёты в `evals/reports/runs/`. Для презентации baseline
+нужно явно сохранить под версионированным именем в
+`evals/reports/baselines/`; такие файлы не игнорируются Git. Отчёт включает
+знаменатель `n`, срезы по типу/split/category, latency p50/p95, разброс между
+повторами, модели, параметры retrieval и хэши данных. Git SHA и dirty-флаг
+передаются в Docker-запуск через `EVAL_GIT_COMMIT` и `EVAL_GIT_DIRTY`.
+Полный протокол и определения метрик описаны в `evals/README.md`.
 
 ## Известные ограничения
 

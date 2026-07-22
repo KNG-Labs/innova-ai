@@ -109,6 +109,8 @@ async def get_agent_service(
     retrieval = KnowledgeRetrievalService(
         db_session=db_session,
         embedding_client=request.app.state.embedding_client,
+        top_k=int(os.getenv("RAG_TOP_K", "3")),
+        min_score=float(os.getenv("RAG_MIN_SCORE", "0.2")),
     )
     return AgentService(
         db_session=db_session,
