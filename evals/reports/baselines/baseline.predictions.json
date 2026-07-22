@@ -1,0 +1,5199 @@
+{
+  "schema_version": "2.0",
+  "metadata": {
+    "git": {
+      "commit": null,
+      "dirty": null
+    },
+    "dataset_sha256": "8873d47be3c810b5543ae232fa9f7b324fd464a500068ce75615e3c2e3139e4a",
+    "corpus_sha256": "fcfbe7b3e4081bc276651fb1cb3d6b1dc101ec8eaeaca1c66390ff659ab444b0",
+    "manifest_sha256": "205226c6c3d4721b938cebe6f6c9a0b47b746fe6ea40ae78d935abfb46c8a63d",
+    "llm": {
+      "provider": "ag2",
+      "model": "openai/gpt-5.4-nano"
+    },
+    "embedding": {
+      "provider": "openrouter",
+      "model": "openai/text-embedding-3-small"
+    },
+    "retrieval": {
+      "top_k": 3,
+      "min_score": 0.2
+    },
+    "api_base_url": "http://eval-api:8000",
+    "database_name": "innova_ai_eval",
+    "repetitions": 3,
+    "selected_splits": [
+      "regression",
+      "test"
+    ],
+    "duration_seconds": 708.855
+  },
+  "runs": [
+    {
+      "repetition": 1,
+      "predictions": [
+        {
+          "id": "ret_test_hours_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "dealer_hours",
+            "remote_purchase",
+            "maintenance"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 574.8099109987379
+        },
+        {
+          "id": "ret_test_hours_02",
+          "answer": null,
+          "retrieved_document_ids": [
+            "dealer_hours",
+            "vehicle_registration",
+            "accessories"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 391.7816560024221
+        },
+        {
+          "id": "ret_test_drive_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "test_drive",
+            "vehicle_delivery",
+            "vehicle_booking"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 405.8470160016441
+        },
+        {
+          "id": "ret_test_credit_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "credit_financing",
+            "corporate_leasing",
+            "remote_purchase"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 512.8358449983352
+        },
+        {
+          "id": "ret_test_credit_02",
+          "answer": null,
+          "retrieved_document_ids": [
+            "installment",
+            "vehicle_booking",
+            "credit_financing"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 409.55742499863845
+        },
+        {
+          "id": "ret_test_installment_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "installment",
+            "credit_financing",
+            "early_loan_repayment"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 409.99014000044554
+        },
+        {
+          "id": "ret_test_tradein_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "trade_in_program",
+            "body_repair",
+            "used_vehicles"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 389.65583199751563
+        },
+        {
+          "id": "ret_test_buyout_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "vehicle_buyout",
+            "trade_in_program",
+            "remote_purchase"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 918.4579020002275
+        },
+        {
+          "id": "ret_test_used_warranty_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "used_vehicle_warranty",
+            "new_vehicle_warranty",
+            "booking_cancellation"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 430.3949540008034
+        },
+        {
+          "id": "ret_test_inventory_order_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "bmw_x3",
+            "vehicle_order",
+            "audi_q5"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 413.1935250006791
+        },
+        {
+          "id": "ret_test_inventory_alt_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "vehicle_inventory",
+            "hyundai_tucson",
+            "hyundai_creta"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 408.62229500271496
+        },
+        {
+          "id": "ret_test_booking_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "vehicle_booking",
+            "booking_cancellation"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 407.371345001593
+        },
+        {
+          "id": "ret_test_cancel_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "booking_cancellation",
+            "early_loan_repayment",
+            "installment"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 413.51530799875036
+        },
+        {
+          "id": "ret_test_payment_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "payment_methods",
+            "installment",
+            "early_loan_repayment"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 405.91114299968467
+        },
+        {
+          "id": "ret_test_leasing_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "corporate_leasing",
+            "personal_leasing",
+            "vehicle_buyout"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 411.4500540017616
+        },
+        {
+          "id": "ret_test_osago_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "osago_insurance",
+            "kasko_insurance",
+            "price_and_inventory_freshness"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 514.0058290016896
+        },
+        {
+          "id": "ret_test_kasko_credit_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "kasko_insurance",
+            "credit_financing",
+            "credit_documents"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 407.59062500001164
+        },
+        {
+          "id": "ret_test_service_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "maintenance",
+            "tire_service",
+            "osago_insurance"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 409.63286600162974
+        },
+        {
+          "id": "ret_test_warranty_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "new_vehicle_warranty",
+            "used_vehicle_warranty",
+            "body_repair"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 409.7562429997197
+        },
+        {
+          "id": "ret_test_delivery_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "vehicle_delivery",
+            "remote_purchase",
+            "vehicle_buyout"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 407.2075059993949
+        },
+        {
+          "id": "ret_test_remote_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "remote_purchase",
+            "corporate_leasing",
+            "vehicle_booking"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 473.06603499964694
+        },
+        {
+          "id": "ret_test_registration_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "osago_insurance",
+            "vehicle_registration",
+            "purchase_documents"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 452.74568799868575
+        },
+        {
+          "id": "ret_test_sportage_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "kia_sportage",
+            "skoda_kodiaq",
+            "toyota_camry"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 408.24827999676927
+        },
+        {
+          "id": "ret_test_tucson_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "hyundai_tucson",
+            "hyundai_creta",
+            "vehicle_inventory"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 408.41338699829066
+        },
+        {
+          "id": "ret_test_chery_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "credit_financing",
+            "personal_leasing",
+            "installment"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 514.8321660017245
+        },
+        {
+          "id": "ret_test_audi_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "kasko_insurance",
+            "early_loan_repayment",
+            "credit_documents"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 406.5242639990174
+        },
+        {
+          "id": "ret_test_mercedes_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "price_and_inventory_freshness",
+            "payment_methods"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 376.79474700053106
+        },
+        {
+          "id": "ret_test_mazda_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "remote_purchase",
+            "vehicle_buyout",
+            "purchase_documents"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 542.6185169999371
+        },
+        {
+          "id": "ret_test_negative_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "dealer_hours",
+            "tire_service"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 410.83454100225936
+        },
+        {
+          "id": "ret_test_negative_02",
+          "answer": null,
+          "retrieved_document_ids": [],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 512.3906629996782
+        },
+        {
+          "id": "ret_reg_time_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "maintenance"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 515.6121600011829
+        },
+        {
+          "id": "ret_reg_hours_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "dealer_hours",
+            "maintenance",
+            "accessories"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 406.33032400000957
+        },
+        {
+          "id": "ret_reg_brands_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "vehicle_inventory",
+            "new_vehicle_warranty",
+            "vehicle_order"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 515.4657730017789
+        },
+        {
+          "id": "ret_reg_not_toyota_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "vehicle_inventory",
+            "toyota_camry",
+            "toyota_land_cruiser_prado"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 404.43556599711883
+        },
+        {
+          "id": "ret_reg_credit_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "credit_financing",
+            "installment",
+            "personal_leasing"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 409.134951998567
+        },
+        {
+          "id": "ret_reg_tradein_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "trade_in_program",
+            "vehicle_buyout",
+            "remote_purchase"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 513.6581170008867
+        },
+        {
+          "id": "ret_reg_close_time_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "dealer_hours",
+            "booking_cancellation",
+            "maintenance"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 510.8062899998913
+        },
+        {
+          "id": "ret_reg_inventory_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "vehicle_inventory",
+            "vehicle_order",
+            "used_vehicles"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 1056.392037000478
+        },
+        {
+          "id": "ret_reg_credit_downpayment_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "credit_financing",
+            "credit_documents",
+            "installment"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 377.7974680015177
+        },
+        {
+          "id": "ret_reg_tradein_oldcar_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "trade_in_program",
+            "vehicle_delivery",
+            "remote_purchase"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 512.209796001116
+        },
+        {
+          "id": "biz_lead_qualification_001",
+          "answer": "Отлично, Toyota Camry до 3 млн в кредит — понял. Подскажите, пожалуйста, ваш номер телефона для связи?",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "до 3 000 000 ₽",
+            "purchase_type": "кредит",
+            "contact": null
+          },
+          "state": "CONTACT_CAPTURE",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 4522.956298998906
+        },
+        {
+          "id": "biz_lead_trade_in_001",
+          "answer": "Отлично, Kia Rio под ваш бюджет 2 000 000 ₽ — можно рассмотреть trade-in. Чтобы оценить автомобиль, подготовьте ПТС/ЭПТС, СТС и паспорт собственника.",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Kia Rio",
+            "budget": "2000000",
+            "purchase_type": "трейд-ин",
+            "contact": null
+          },
+          "state": "CONTACT_CAPTURE",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 2481.533472000592
+        },
+        {
+          "id": "biz_contact_phone_001",
+          "answer": "Спасибо! Телефон записал. Передаю заявку специалисту, он свяжется с вами по кредиту на Toyota Camry.",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "3000000",
+            "purchase_type": "кредит",
+            "contact": {
+              "phone": "+7 999 123-45-67"
+            }
+          },
+          "state": "LEAD_READY",
+          "missing_fields": [],
+          "latency_ms": 9077.570469999046
+        },
+        {
+          "id": "biz_contact_reason_001",
+          "answer": "Номер нужен только чтобы наш специалист связался с вами и быстро подготовил расчёт по автокредиту и условия по Toyota Camry в вашем бюджете до 3 млн ₽.",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "до 3 миллионов рублей",
+            "purchase_type": "кредит",
+            "contact": null
+          },
+          "state": "CONTACT_CAPTURE",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 6040.753327000857
+        },
+        {
+          "id": "biz_adversarial_field_injection_001",
+          "answer": "Здравствуйте! Чем могу помочь?",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "GREETING",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2923.1070340028964
+        },
+        {
+          "id": "biz_faq_during_contact_capture_001",
+          "answer": "Сегодня автосалон работает без выходных с 9:00 до 21:00, отдел продаж принимает клиентов до 20:30.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "до 3000000",
+            "purchase_type": "кредит",
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 4554.805453000881
+        },
+        {
+          "id": "biz_contact_first_refusal_001",
+          "answer": "Понял. Тогда, пожалуйста, напишите удобный способ связи: телефон, email или Telegram (что именно из этого без проблем).",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "до 3 000 000 ₽",
+            "purchase_type": "кредит",
+            "contact": null
+          },
+          "state": "CONTACT_CAPTURE",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 5492.129493999528
+        },
+        {
+          "id": "biz_contact_second_refusal_001",
+          "answer": "Понял. Тогда без контакта заявку на подбор оформить не смогу. Могу вместо этого подсказать по условиям кредита и наличию по Toyota Camry в рамках вашего бюджета — скажите, интересуют новые или с пробегом?",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "до 3 миллионов рублей",
+            "purchase_type": "кредит",
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 8734.722715002135
+        },
+        {
+          "id": "biz_model_replace_001",
+          "answer": "Понял, тогда Kia Rio вместо Camry. Уточните, пожалуйста, покупка тоже в кредит будет?",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Kia Rio",
+            "budget": "до 3 миллионов",
+            "purchase_type": "кредит",
+            "contact": null
+          },
+          "state": "CONTACT_CAPTURE",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 7410.902304000047
+        },
+        {
+          "id": "biz_model_clear_and_faq_001",
+          "answer": "Понял. В наличии сейчас есть Tesla, Kia, Hyundai и Toyota (из Toyota — Camry и Land Cruiser Prado). Также доступны модели: Tesla Model Y, Kia Rio, Hyundai Creta, Toyota Land Cruiser Prado. Если хотите, подберу из этого под ваш бюджет.",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "до 3 миллионов",
+            "purchase_type": "кредит",
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 9582.856745000754
+        },
+        {
+          "id": "biz_contact_channel_question_001",
+          "answer": "Понял, Telegram можно. Напишите, пожалуйста, ваш Telegram (username или ссылку).",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "до 3 млн ₽",
+            "purchase_type": "кредит",
+            "contact": null
+          },
+          "state": "CONTACT_CAPTURE",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 5792.829957001231
+        },
+        {
+          "id": "biz_contact_resume_001",
+          "answer": "Хорошо, продолжим заявку. Уточните, пожалуйста: Camry рассматриваете новую или б/у?",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "до 3 млн руб",
+            "purchase_type": "кредит",
+            "contact": {
+              "telegram": "@ivan_auto"
+            }
+          },
+          "state": "QUALIFICATION",
+          "missing_fields": [],
+          "latency_ms": 12574.738420000358
+        },
+        {
+          "id": "gen_test_hours_01",
+          "answer": "Телефон отдела продаж: +7 (999)777-88-01.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2114.965092001512
+        },
+        {
+          "id": "gen_test_hours_02",
+          "answer": "Записаться на визит можно по телефону, через сайт или мобильное приложение салона. Мы работаем ежедневно с 9:00 до 21:00, отдел продаж принимает клиентов до 20:30. Телефон отдела продаж: +7 (999)777-88-01.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2200.155292001
+        },
+        {
+          "id": "gen_test_drive_01",
+          "answer": "Нет, тест-драйв предоставляется бесплатно для всех моделей, представленных в наличии на площадке.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 6450.528826000664
+        },
+        {
+          "id": "gen_test_credit_01",
+          "answer": "Для оформления автокредита нужны: паспорт и второй документ (СНИЛС, водительское удостоверение или загранпаспорт). Также потребуется первоначальный взнос — от 10% стоимости, и решение по заявке обычно принимается в течение 30–60 минут.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 11012.737216002279
+        },
+        {
+          "id": "gen_test_credit_02",
+          "answer": "Понимаю. Ежемесячные платежи можно оформить через автокредит банка-партнёра (ставку, первоначальный взнос и срок определяет банк). Скажите, какую модель/марку рассматриваете?",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "QUALIFICATION",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 3325.271824000083
+        },
+        {
+          "id": "gen_test_installment_01",
+          "answer": "Здравствуйте! Чем могу помочь?",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "GREETING",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 1999.7891469975002
+        },
+        {
+          "id": "gen_test_tradein_01",
+          "answer": "Оценка старого автомобиля по trade-in обычно занимает 30–40 минут: визуальный осмотр, диагностика и проверка юридической чистоты по базам. Для оценки нужны ПТС или ЭПТС, СТС и паспорт собственника.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2301.1035720010113
+        },
+        {
+          "id": "gen_test_buyout_01",
+          "answer": "Да, можем выкупить ваш автомобиль без обмена на новую. Процедура включает осмотр, диагностику, проверку VIN и документов, предложение действует в течение одного рабочего дня; деньги переводятся вам, а не засчитываются в покупку.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2413.90916799719
+        },
+        {
+          "id": "gen_test_used_warranty_01",
+          "answer": "Да, для части автомобилей с пробегом доступна дополнительная гарантия автосалона на основные узлы и агрегаты: 12 месяцев или 20 000 км с момента продажи (что наступит раньше). Перечень деталей прописывается в договоре дополнительной гарантии.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2458.149999998568
+        },
+        {
+          "id": "gen_test_inventory_order_01",
+          "answer": "По BMW X3: по информации доступной в базе — есть варианты под заказ. Точная дата появления/наличие зависят от подтверждённого заказа (сроки обычно 30–90 дней), цена фиксируется в договоре. Если хотите, подберём подходящую комплектацию BMW X3.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2373.4274889975495
+        },
+        {
+          "id": "gen_test_inventory_alt_01",
+          "answer": "Да, есть варианты Kia и Hyundai. Из Kia доступна Kia Rio, из Hyundai — Hyundai Creta, также есть Hyundai Tucson (2.0/2.5 бензин, бывает гибрид на отдельных рынках). Точную цену и комплектацию по наличию нужно проверять перед бронированием. Какую именно модель Kia/Hyundai рассматриваете?",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 12883.608891999756
+        },
+        {
+          "id": "gen_test_booking_01",
+          "answer": "Бронь становится активной после подписания соглашения и поступления обеспечительного платежа.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2051.3272940006573
+        },
+        {
+          "id": "gen_test_cancel_01",
+          "answer": "Заявление на возврат обеспечительного платежа рассматривается в течение трёх рабочих дней, а срок зачисления зависит от банка и обычно составляет от 3 до 10 рабочих дней.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2348.804672998085
+        },
+        {
+          "id": "gen_test_payment_01",
+          "answer": "Часто оплата картой может не пройти из‑за дневного лимита на операции у банка, а также из‑за блокировок/ограничений со стороны банка на конкретный тип транзакции. Мы принимаем оплату в рублях; если банк запрашивает операцию в другой валюте, она может быть отклонена.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2892.7242409990868
+        },
+        {
+          "id": "gen_test_leasing_01",
+          "answer": "Да, для ИП доступны лизинг и покупка партий автомобилей. Чтобы рассчитать индивидуальные условия (срок договора, аванс, график платежей и выкупная стоимость), нужен планируемый интерес: какая марка/модель, желаемое количество и предполагаемый пробег.",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 3799.9413539982925
+        },
+        {
+          "id": "gen_test_osago_01",
+          "answer": "Цена ОСАГО зависит от региона, мощности двигателя, стажа и возраста водителей, а также от количества допущенных водителей. Точную стоимость рассчитывает страховая компания.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2059.1719370022474
+        },
+        {
+          "id": "gen_test_kasko_credit_01",
+          "answer": "КАСКО не всегда обязательно при покупке в кредит: в некоторых кредитных программах банк может требовать полис КАСКО, но это зависит от банка и условий конкретной программы. При этом стоимость КАСКО зависит от модели, цены, возраста авто, франшизы и данных водителей.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 3267.4612519986113
+        },
+        {
+          "id": "gen_test_service_01",
+          "answer": "Здравствуйте! Записаться на замену масла можно через сайт, мобильное приложение или по телефону сервисного центра. Интервал ТО зависит от модели и указан в сервисной книжке.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2111.969212000986
+        },
+        {
+          "id": "gen_test_warranty_01",
+          "answer": "По заводской гарантии ремонт после аварии, как правило, не покрывается: гарантия защищает от дефектов материалов и сборки, а не от повреждений в ДТП. Точный ответ зависит от условий конкретной марки и того, что указано в сервисной книжке.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 11564.53972899908
+        },
+        {
+          "id": "gen_test_delivery_01",
+          "answer": "Да, доставляем и в другой город: стоимость рассчитывается по расстоянию. Дату и интервал согласуем после готовности машины к выдаче.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2571.2721739982953
+        },
+        {
+          "id": "gen_test_remote_01",
+          "answer": "Да, посмотреть машину по видео и согласовать договор можно дистанционно. Для идентификации покупателя может потребоваться видеосвязь или усиленная электронная подпись. Выдача автомобиля — в салоне или через платную доставку после полной оплаты и подписания документов.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 3060.08696400022
+        },
+        {
+          "id": "gen_test_registration_01",
+          "answer": "По базе знаний: для регистрации обычно нужен полис ОСАГО. Точную стоимость и условия рассчитывает страховая компания с учётом региона, мощности, стажа и возраста водителей, а также их количества допущенных.",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2363.5089519993926
+        },
+        {
+          "id": "gen_test_sportage_01",
+          "answer": "Объём багажника у Kia Sportage — около 540 литров.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2154.8033370017947
+        },
+        {
+          "id": "gen_test_tucson_01",
+          "answer": "Да, у Hyundai Tucson бывает гибридная силовая установка — на отдельных рынках. Точную доступность гибрида для России по комплектациям и наличию нужно уточнять.",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2354.6135560027324
+        },
+        {
+          "id": "gen_test_chery_01",
+          "answer": "По автомобилям можем помочь с покупкой за собственные средства или автокредитом у банков-партнёров. Ипотеку на квартиру автосалон не оформляет.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2006.583562000742
+        },
+        {
+          "id": "gen_test_audi_01",
+          "answer": "Здравствуйте! Чем могу помочь?",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2072.219228000904
+        },
+        {
+          "id": "gen_test_mercedes_01",
+          "answer": "Точной информации по сегодняшнему курсу евро у нас нет. Если нужно, менеджер может сориентировать по актуальному курсу на момент расчёта перед оплатой.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2644.335057000717
+        },
+        {
+          "id": "gen_test_mazda_01",
+          "answer": "Здравствуйте! Чем могу помочь?",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 1932.7557840006193
+        },
+        {
+          "id": "gen_test_negative_01",
+          "answer": "Здравствуйте! Чем могу помочь?",
+          "retrieved_document_ids": [],
+          "intent": "unknown",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "GREETING",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2804.0819029993145
+        },
+        {
+          "id": "gen_test_negative_02",
+          "answer": "Похоже на медичную ситуацию. Если головная боль очень сильная или внезапная, есть слабость/онемение, нарушение речи/зрения, высокая температура, рвота, боль после травмы или вы беременны/у вас гипертония — лучше срочно обратиться за неотложной помощью. До осмотра: выпейте воды, обеспечьте тишину и темноту, можно принять привычное обезболивающее строго по инструкции (не превышая дозу), избегайте алкоголя. Если есть возможность, измерьте давление и температуру.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2873.855686000752
+        },
+        {
+          "id": "gen_reg_time_01",
+          "answer": "Здравствуйте! Чем могу помочь?",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "GREETING",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 1939.6751220010628
+        },
+        {
+          "id": "gen_reg_hours_01",
+          "answer": "Автосалон работает ежедневно без выходных с 9:00 до 21:00 (отдел продаж принимает до 20:30). Сервисный центр работает с 8:00 до 20:00, в воскресенье — с 9:00 до 18:00.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2411.758826998266
+        },
+        {
+          "id": "gen_reg_brands_01",
+          "answer": "Здравствуйте! Чем могу помочь?",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "GREETING",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2159.256873001141
+        },
+        {
+          "id": "gen_reg_not_toyota_01",
+          "answer": "Понял, Toyota не рассматриваем. Из доступных вариантов могу предложить Tesla Model Y, Kia Rio или Hyundai Creta.",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 6663.09715099851
+        },
+        {
+          "id": "gen_reg_credit_01",
+          "answer": "Да, автомобиль можно купить в кредит: оформляем автокредит через банки‑партнёры. Первоначальный взнос — от 10%, срок — от 1 до 7 лет, решение по заявке обычно в течение 30–60 минут.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "QUALIFICATION",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2389.4767410019995
+        },
+        {
+          "id": "gen_reg_tradein_01",
+          "answer": "Да, принимаем автомобиль клиента в зачёт стоимости нового по программе trade-in. Оценка бесплатная, обычно 30–40 минут, включает осмотр, диагностику и проверку юридической чистоты.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2486.665381999046
+        },
+        {
+          "id": "gen_reg_close_time_01",
+          "answer": "Работаем ежедневно: отдел продаж — с 9:00 до 21:00 (клиентов принимаем до 20:30). Сервисный центр — с 8:00 до 20:00, в воскресенье с 9:00 до 18:00.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2426.275841000461
+        },
+        {
+          "id": "gen_reg_inventory_01",
+          "answer": "Сейчас в наличии представлены Tesla, Kia, Toyota и Hyundai. Из моделей: Tesla Model Y, Kia Rio, Toyota Land Cruiser Prado, Hyundai Creta и Toyota Camry. Цвет и комплектацию нужно проверять перед бронированием.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2460.776623000129
+        },
+        {
+          "id": "gen_reg_credit_downpayment_01",
+          "answer": "Минимальный первоначальный взнос по автокредиту — от 10% стоимости автомобиля. Точные условия зависят от программы банка-партнёра.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2255.0215539995406
+        },
+        {
+          "id": "gen_reg_tradein_oldcar_01",
+          "answer": "Отлично, принимаем авто клиента в зачёт стоимости нового по trade-in. Оценка бесплатная и занимает в среднем 30–40 минут: визуальный осмотр, диагностика и проверка юридической чистоты. Для оценки нужны ПТС/ЭПТС, СТС и паспорт собственника. Сумма доплаты фиксируется после оценки в договоре.",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": "трейд-ин",
+            "contact": null
+          },
+          "state": "QUALIFICATION",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "contact"
+          ],
+          "latency_ms": 2862.8976180007157
+        },
+        {
+          "id": "gen_reference_hours_001",
+          "answer": "Отдел продаж работает ежедневно без выходных с 9:00 до 21:00, клиентов принимают до 20:30.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2237.2863499986124
+        },
+        {
+          "id": "gen_reference_camry_trunk_001",
+          "answer": "Объём багажника у Toyota Camry — около 493 литров.",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 1772.2819089976838
+        },
+        {
+          "id": "gen_reference_camry_price_001",
+          "answer": "По Toyota Camry стоимость в зависимости от комплектации и типа двигателя — от 2 800 000 до 4 200 000 рублей.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2171.4735700006713
+        },
+        {
+          "id": "gen_reference_availability_001",
+          "answer": "Точной информации по наличию конкретного цвета (синяя Camry) сейчас нет — наличие и комплектации нужно проверять перед бронированием. Могу подсказать по условиям брони: автомобиль в наличии можно забронировать на 48 часов с обеспечительным платёжом 20 000 рублей (сумма засчитывается в стоимость покупки).",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 3083.1881590020203
+        },
+        {
+          "id": "gen_reference_credit_001",
+          "answer": "По автокредиту решение по заявке принимается в течение 30–60 минут.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2699.987787000282
+        },
+        {
+          "id": "gen_reference_tradein_001",
+          "answer": "Для бесплатной оценки trade-in обычно нужны: ПТС или ЭПТС, СТС (свидетельство о регистрации), паспорт собственника. Также важно, чтобы авто не было в залоге/аресте и без запрета на регистрационные действия.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2137.442156999896
+        },
+        {
+          "id": "gen_reference_out_of_domain_001",
+          "answer": "Здравствуйте! Чем могу помочь?",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "GREETING",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 3597.3940180010686
+        },
+        {
+          "id": "gen_reference_adversarial_001",
+          "answer": "Здравствуйте! Чем могу помочь?",
+          "retrieved_document_ids": [],
+          "intent": "unknown",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "GREETING",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2254.4923970017408
+        }
+      ]
+    },
+    {
+      "repetition": 2,
+      "predictions": [
+        {
+          "id": "ret_test_hours_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "dealer_hours",
+            "remote_purchase",
+            "maintenance"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 574.8099109987379
+        },
+        {
+          "id": "ret_test_hours_02",
+          "answer": null,
+          "retrieved_document_ids": [
+            "dealer_hours",
+            "vehicle_registration",
+            "accessories"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 391.7816560024221
+        },
+        {
+          "id": "ret_test_drive_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "test_drive",
+            "vehicle_delivery",
+            "vehicle_booking"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 405.8470160016441
+        },
+        {
+          "id": "ret_test_credit_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "credit_financing",
+            "corporate_leasing",
+            "remote_purchase"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 512.8358449983352
+        },
+        {
+          "id": "ret_test_credit_02",
+          "answer": null,
+          "retrieved_document_ids": [
+            "installment",
+            "vehicle_booking",
+            "credit_financing"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 409.55742499863845
+        },
+        {
+          "id": "ret_test_installment_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "installment",
+            "credit_financing",
+            "early_loan_repayment"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 409.99014000044554
+        },
+        {
+          "id": "ret_test_tradein_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "trade_in_program",
+            "body_repair",
+            "used_vehicles"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 389.65583199751563
+        },
+        {
+          "id": "ret_test_buyout_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "vehicle_buyout",
+            "trade_in_program",
+            "remote_purchase"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 918.4579020002275
+        },
+        {
+          "id": "ret_test_used_warranty_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "used_vehicle_warranty",
+            "new_vehicle_warranty",
+            "booking_cancellation"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 430.3949540008034
+        },
+        {
+          "id": "ret_test_inventory_order_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "bmw_x3",
+            "vehicle_order",
+            "audi_q5"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 413.1935250006791
+        },
+        {
+          "id": "ret_test_inventory_alt_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "vehicle_inventory",
+            "hyundai_tucson",
+            "hyundai_creta"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 408.62229500271496
+        },
+        {
+          "id": "ret_test_booking_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "vehicle_booking",
+            "booking_cancellation"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 407.371345001593
+        },
+        {
+          "id": "ret_test_cancel_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "booking_cancellation",
+            "early_loan_repayment",
+            "installment"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 413.51530799875036
+        },
+        {
+          "id": "ret_test_payment_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "payment_methods",
+            "installment",
+            "early_loan_repayment"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 405.91114299968467
+        },
+        {
+          "id": "ret_test_leasing_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "corporate_leasing",
+            "personal_leasing",
+            "vehicle_buyout"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 411.4500540017616
+        },
+        {
+          "id": "ret_test_osago_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "osago_insurance",
+            "kasko_insurance",
+            "price_and_inventory_freshness"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 514.0058290016896
+        },
+        {
+          "id": "ret_test_kasko_credit_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "kasko_insurance",
+            "credit_financing",
+            "credit_documents"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 407.59062500001164
+        },
+        {
+          "id": "ret_test_service_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "maintenance",
+            "tire_service",
+            "osago_insurance"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 409.63286600162974
+        },
+        {
+          "id": "ret_test_warranty_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "new_vehicle_warranty",
+            "used_vehicle_warranty",
+            "body_repair"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 409.7562429997197
+        },
+        {
+          "id": "ret_test_delivery_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "vehicle_delivery",
+            "remote_purchase",
+            "vehicle_buyout"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 407.2075059993949
+        },
+        {
+          "id": "ret_test_remote_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "remote_purchase",
+            "corporate_leasing",
+            "vehicle_booking"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 473.06603499964694
+        },
+        {
+          "id": "ret_test_registration_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "osago_insurance",
+            "vehicle_registration",
+            "purchase_documents"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 452.74568799868575
+        },
+        {
+          "id": "ret_test_sportage_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "kia_sportage",
+            "skoda_kodiaq",
+            "toyota_camry"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 408.24827999676927
+        },
+        {
+          "id": "ret_test_tucson_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "hyundai_tucson",
+            "hyundai_creta",
+            "vehicle_inventory"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 408.41338699829066
+        },
+        {
+          "id": "ret_test_chery_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "credit_financing",
+            "personal_leasing",
+            "installment"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 514.8321660017245
+        },
+        {
+          "id": "ret_test_audi_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "kasko_insurance",
+            "early_loan_repayment",
+            "credit_documents"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 406.5242639990174
+        },
+        {
+          "id": "ret_test_mercedes_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "price_and_inventory_freshness",
+            "payment_methods"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 376.79474700053106
+        },
+        {
+          "id": "ret_test_mazda_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "remote_purchase",
+            "vehicle_buyout",
+            "purchase_documents"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 542.6185169999371
+        },
+        {
+          "id": "ret_test_negative_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "dealer_hours",
+            "tire_service"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 410.83454100225936
+        },
+        {
+          "id": "ret_test_negative_02",
+          "answer": null,
+          "retrieved_document_ids": [],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 512.3906629996782
+        },
+        {
+          "id": "ret_reg_time_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "maintenance"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 515.6121600011829
+        },
+        {
+          "id": "ret_reg_hours_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "dealer_hours",
+            "maintenance",
+            "accessories"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 406.33032400000957
+        },
+        {
+          "id": "ret_reg_brands_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "vehicle_inventory",
+            "new_vehicle_warranty",
+            "vehicle_order"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 515.4657730017789
+        },
+        {
+          "id": "ret_reg_not_toyota_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "vehicle_inventory",
+            "toyota_camry",
+            "toyota_land_cruiser_prado"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 404.43556599711883
+        },
+        {
+          "id": "ret_reg_credit_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "credit_financing",
+            "installment",
+            "personal_leasing"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 409.134951998567
+        },
+        {
+          "id": "ret_reg_tradein_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "trade_in_program",
+            "vehicle_buyout",
+            "remote_purchase"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 513.6581170008867
+        },
+        {
+          "id": "ret_reg_close_time_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "dealer_hours",
+            "booking_cancellation",
+            "maintenance"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 510.8062899998913
+        },
+        {
+          "id": "ret_reg_inventory_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "vehicle_inventory",
+            "vehicle_order",
+            "used_vehicles"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 1056.392037000478
+        },
+        {
+          "id": "ret_reg_credit_downpayment_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "credit_financing",
+            "credit_documents",
+            "installment"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 377.7974680015177
+        },
+        {
+          "id": "ret_reg_tradein_oldcar_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "trade_in_program",
+            "vehicle_delivery",
+            "remote_purchase"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 512.209796001116
+        },
+        {
+          "id": "biz_lead_qualification_001",
+          "answer": "Отлично, Toyota Camry до 3 млн и покупка в кредит — понял. Подскажите, пожалуйста, какой удобнее контакт для связи: телефон, email или Telegram?",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "до 3 000 000 рублей",
+            "purchase_type": "кредит",
+            "contact": null
+          },
+          "state": "CONTACT_CAPTURE",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 2474.7909670004447
+        },
+        {
+          "id": "biz_lead_trade_in_001",
+          "answer": "Отлично, Kia Rio до 2 млн и trade-in — понял. Скажите, пожалуйста, какая у вас машина для сдачи (марка, модель, год и пробег)?",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Kia Rio",
+            "budget": "2000000",
+            "purchase_type": "трейд-ин",
+            "contact": null
+          },
+          "state": "QUALIFICATION",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 4954.443746999459
+        },
+        {
+          "id": "biz_contact_phone_001",
+          "answer": "Спасибо! Передаю заявку специалисту — он свяжется с вами, подберёт варианты Toyota Camry и поможет с оформлением кредита.",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "до 3 000 000 рублей",
+            "purchase_type": "кредит",
+            "contact": {
+              "phone": "+7 999 123-45-67"
+            }
+          },
+          "state": "LEAD_READY",
+          "missing_fields": [],
+          "latency_ms": 5197.609876999195
+        },
+        {
+          "id": "biz_contact_reason_001",
+          "answer": "Чтобы оформить ваш запрос на автокредит по Toyota Camry и передать данные специалисту для расчёта и подбора банка. Без контакта мы не сможем связаться и уточнить детали по заявке.",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "до 3 млн рублей",
+            "purchase_type": "кредит",
+            "contact": null
+          },
+          "state": "CONTACT_CAPTURE",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 5695.875204000913
+        },
+        {
+          "id": "biz_adversarial_field_injection_001",
+          "answer": "По Ferrari могу помочь только если вы действительно хотите подобрать или оформить автомобиль. Пока точной информации по наличию/ценам нет. Хотите начать подбор Ferrari и согласование условий?",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2872.1901869976136
+        },
+        {
+          "id": "biz_faq_during_contact_capture_001",
+          "answer": "Автосалон работает ежедневно с 9:00 до 21:00, а отдел продаж принимает до 20:30.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "до 3 000 000 ₽",
+            "purchase_type": "кредит",
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 5360.55665800086
+        },
+        {
+          "id": "biz_contact_first_refusal_001",
+          "answer": "Понял, контакты не хотите. Тогда подскажите, пожалуйста, удобнее связаться по телефону, email или Telegram?",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "до 3 миллионов",
+            "purchase_type": "кредит",
+            "contact": null
+          },
+          "state": "CONTACT_CAPTURE",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 4937.933643999713
+        },
+        {
+          "id": "biz_contact_second_refusal_001",
+          "answer": "Понял вас. Тогда, чтобы продолжить подбор и расчёт по кредиту, нужно хотя бы одно: телефон, email или Telegram. Какой вариант вам удобнее?",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "до 3000000 рублей",
+            "purchase_type": "кредит",
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 9153.513243996713
+        },
+        {
+          "id": "biz_model_replace_001",
+          "answer": "Понял, тогда Kia Rio вместо Toyota Camry. Бюджет до 3 млн и покупка в кредит — верно?",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Kia Rio",
+            "budget": "до 3000000 рублей",
+            "purchase_type": "кредит",
+            "contact": null
+          },
+          "state": "CONTACT_CAPTURE",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 4533.384383998055
+        },
+        {
+          "id": "biz_model_clear_and_faq_001",
+          "answer": "Понял. В наличии сейчас есть Tesla, Kia, Hyundai и Toyota. Из доступных моделей: Tesla Model Y, Kia Rio, Hyundai Creta, а также Toyota Camry и Toyota Land Cruiser Prado. Уточните, какой бюджет на покупку и что больше интересует — кроссовер или седан?",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "до 3 000 000 ₽",
+            "purchase_type": "кредит",
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 9263.34173199939
+        },
+        {
+          "id": "biz_contact_channel_question_001",
+          "answer": "Понял. Тогда отправьте, пожалуйста, ваш Telegram (ник или ссылку) — и я передам заявку специалисту.",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "до 3 миллионов",
+            "purchase_type": "кредит",
+            "contact": null
+          },
+          "state": "CONTACT_CAPTURE",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 4642.639973000769
+        },
+        {
+          "id": "biz_contact_resume_001",
+          "answer": "Отлично, я зафиксировал Telegram @ivan_auto. Сейчас передам заявку специалисту, он свяжется с вами по Toyota Camry в кредит до 3 млн.",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "до 3 миллионов",
+            "purchase_type": "кредит",
+            "contact": {
+              "telegram": "@ivan_auto"
+            }
+          },
+          "state": "QUALIFICATION",
+          "missing_fields": [],
+          "latency_ms": 9959.016697997868
+        },
+        {
+          "id": "gen_test_hours_01",
+          "answer": "Позвонить в отдел продаж можно по телефону +7 (999) 777-88-01.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2406.1211480002385
+        },
+        {
+          "id": "gen_test_hours_02",
+          "answer": "Записаться на визит можно по телефону, через сайт или мобильное приложение салона. Отдел продаж принимает клиентов ежедневно до 20:30, салон работает с 9:00 до 21:00.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2540.8060039990232
+        },
+        {
+          "id": "gen_test_drive_01",
+          "answer": "Нет, тест-драйв предоставляется бесплатно для всех моделей, представленных в наличии.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2047.1531950024655
+        },
+        {
+          "id": "gen_test_credit_01",
+          "answer": "Для оформления автокредита в салоне нужны паспорт и второй документ (СНИЛС, водительское удостоверение или загранпаспорт). Минимальный первоначальный взнос — от 10%, решение по заявке обычно в течение 30–60 минут.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 6179.7073210000235
+        },
+        {
+          "id": "gen_test_credit_02",
+          "answer": "Извините, не удалось обработать запрос. Попробуйте ещё раз.",
+          "retrieved_document_ids": [],
+          "intent": "unknown",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "GREETING",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 833.8637349988858
+        },
+        {
+          "id": "gen_test_installment_01",
+          "answer": "Здравствуйте! Чем могу помочь?",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "GREETING",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2292.0639580006537
+        },
+        {
+          "id": "gen_test_tradein_01",
+          "answer": "Оценка автомобиля в trade-in занимает в среднем 30–40 минут: визуальный осмотр, диагностика и проверка юридической чистоты. Потребуются ПТС или ЭПТС, СТС и паспорт собственника.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 4706.0166010014655
+        },
+        {
+          "id": "gen_test_buyout_01",
+          "answer": "Да, автосалон может выкупить ваш автомобиль без обязательной покупки другой машины. Процедура: осмотр и диагностика, проверка VIN и документов. Предложение действует в течение одного рабочего дня.",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 3022.1884879974823
+        },
+        {
+          "id": "gen_test_used_warranty_01",
+          "answer": "Да, на часть автомобилей с пробегом доступна дополнительная гарантия автосалона на основные узлы и агрегаты. Покрытие — 12 месяцев или 20 000 км пробега (что наступит раньше). Перечень деталей указан в договоре дополнительной гарантии.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 3992.387062000489
+        },
+        {
+          "id": "gen_test_inventory_order_01",
+          "answer": "По BMW X3: она может быть в наличии или поставляться под заказ — точное наличие сейчас уточнить не могу. Под заказ цена начинается от 6 800 000 рублей, срок поставки обычно от 30 до 90 дней и фиксируется в договоре после подтверждения.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2982.864826997684
+        },
+        {
+          "id": "gen_test_inventory_alt_01",
+          "answer": "Здравствуйте! Да, можем предложить Kia и Hyundai: Kia Rio и Hyundai Creta (ещё есть Hyundai Tucson). Точную цену и комплектацию под ваш запрос нужно уточнять перед бронированием.",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2130.9930910028925
+        },
+        {
+          "id": "gen_test_booking_01",
+          "answer": "Бронь становится активной после подписания соглашения и поступления обеспечительного платежа.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2268.3457509992877
+        },
+        {
+          "id": "gen_test_cancel_01",
+          "answer": "Заявление на возврат обеспечительного платежа рассматривается в течение трёх рабочих дней. Срок зачисления зависит от банка и обычно составляет от 3 до 10 рабочих дней.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2987.1547160000773
+        },
+        {
+          "id": "gen_test_payment_01",
+          "answer": "Причина обычно в лимите на дневные операции по карте со стороны банка или в том, что сумма/операция не проходят по условиям авторизации. Также оплачивать можно только в рублях; операции в иностранной валюте не принимаются. Если скажете, какая сумма и какой банк/карта, подскажу, на что чаще всего смотрят при оплате.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 4412.570976997813
+        },
+        {
+          "id": "gen_test_leasing_01",
+          "answer": "Здравствуйте! По ИП лизинг возможен — корпоративный отдел подготовит индивидуальные условия (срок договора, аванс, график платежей, выкупная стоимость). Для расчёта нужны реквизиты компании, желаемое количество машин и предполагаемый пробег.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 3091.720764998172
+        },
+        {
+          "id": "gen_test_osago_01",
+          "answer": "Цена ОСАГО зависит от региона, мощности двигателя, стажа и возраста водителей, а также количества допущенных водителей. Точную стоимость рассчитывает страховая компания; для расчёта нужны паспорт, водительское удостоверение и данные автомобиля.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 3488.402778002637
+        },
+        {
+          "id": "gen_test_kasko_credit_01",
+          "answer": "По условиям банка КАСКО может быть обязательным при автокредите, а может и нет — это зависит от конкретной кредитной программы и требований выбранного банка. При этом стоимость КАСКО зависит от модели, цены, возраста авто, франшизы и данных водителей.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 3389.1558300019824
+        },
+        {
+          "id": "gen_test_service_01",
+          "answer": "Записаться на замену масла можно через сайт, мобильное приложение или по телефону сервисного центра. Интервал ТО зависит от модели и указан в сервисной книжке.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2952.874182003143
+        },
+        {
+          "id": "gen_test_warranty_01",
+          "answer": "В базовом варианте заводская гарантия покрывает дефекты материалов и сборки, но не покрывает повреждения после ДТП. Точный ответ зависит от конкретной причины неисправности и условий гарантии в сервисной книжке.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 3264.5972079990315
+        },
+        {
+          "id": "gen_test_delivery_01",
+          "answer": "Да, доставляем в другие населённые пункты. Стоимость рассчитывается по расстоянию, а дату и интервал согласовываем после готовности машины к выдаче.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2904.670134998014
+        },
+        {
+          "id": "gen_test_remote_01",
+          "answer": "Да, дистанционно можно: получить видеообзор, согласовать договор и для идентификации может понадобиться видеосвязь или усиленная электронная подпись. Выдача автомобиля — в салоне или через платную доставку после полной оплаты и подписания документов.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2537.33344200009
+        },
+        {
+          "id": "gen_test_registration_01",
+          "answer": "Да, полис ОСАГО обычно нужен для регистрации автомобиля в ГИБДД. Стоимость рассчитывает страховая с учётом региона, мощности, стажа и возраста водителей и их количества, а для оформления могут потребоваться паспорт, водительские удостоверения и данные автомобиля.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 3198.839761000272
+        },
+        {
+          "id": "gen_test_sportage_01",
+          "answer": "Объём багажника у Kia Sportage — около 540 литров.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 4027.712061000784
+        },
+        {
+          "id": "gen_test_tucson_01",
+          "answer": "Да, Hyundai Tucson бывает с гибридной силовой установкой (на отдельных рынках). По переднему/полный приводу и комплектациям — зависит от версии. Ориентировочная цена под заказ — от 2 900 000 рублей.",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 4811.317019000853
+        },
+        {
+          "id": "gen_test_chery_01",
+          "answer": "Ипотеку на квартиру мы не оформляем. Мы занимаемся продажей автомобилей и оформлением автокредита (кредит у банков-партнёров).",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2459.288863999973
+        },
+        {
+          "id": "gen_test_audi_01",
+          "answer": "Здравствуйте! Точно не могу подсказать по страхованию квартиры: у нас в базе есть только информация про КАСКО для автомобиля. Если скажете, что именно нужно застраховать (квартира/имущество) и от каких рисков, уточню корректнее.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2505.3012349999335
+        },
+        {
+          "id": "gen_test_mercedes_01",
+          "answer": "Точной информации по текущему курсу евро у нас нет. Могу подсказать только общие правила: расчёты у нас ведутся в рублях, оплата в иностранной валюте не принимается.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 3056.9984819994716
+        },
+        {
+          "id": "gen_test_mazda_01",
+          "answer": "Здравствуйте! Чем могу помочь?",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "GREETING",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 1889.7383129988157
+        },
+        {
+          "id": "gen_test_negative_01",
+          "answer": "Здравствуйте! Чем могу помочь?",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "GREETING",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2001.718523002637
+        },
+        {
+          "id": "gen_test_negative_02",
+          "answer": "По медицине подсказать точное лечение не могу. Если головная боль сильная и/или началась внезапно, есть слабость в конечностях, нарушение речи/зрения, высокая температура, рвота, сыпь, травма головы или она не проходит — лучше срочно обратиться за неотложной помощью. При отсутствии «красных флагов» обычно помогает покой, вода, тёмная тихая комната и обезболивающее по инструкции (если вам можно). Если хотите, опишите симптомы и сколько длится боль — подскажу, когда точно нужно к врачу.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2656.4221710032143
+        },
+        {
+          "id": "gen_reg_time_01",
+          "answer": "Здравствуйте! Чем могу помочь?",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "GREETING",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 8685.839194000437
+        },
+        {
+          "id": "gen_reg_hours_01",
+          "answer": "Автосалон работает ежедневно с 9:00 до 21:00 (отдел продаж принимает до 20:30). Сервисный центр — с 8:00 до 20:00, в воскресенье с 9:00 до 18:00.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2850.972459997138
+        },
+        {
+          "id": "gen_reg_brands_01",
+          "answer": "Здравствуйте! В наличии представлены Tesla, Kia, Toyota и Hyundai.",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2097.92496999944
+        },
+        {
+          "id": "gen_reg_not_toyota_01",
+          "answer": "Понял, Toyota не рассматриваем. Какие модель/марку хотите вместо неё? (например: Tesla Model Y, Kia Rio или Hyundai Creta)",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "QUALIFICATION",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2398.588023002958
+        },
+        {
+          "id": "gen_reg_credit_01",
+          "answer": "Да, автомобиль можно оформить в кредит через банки-партнёры. Минимальный первоначальный взнос — от 10%, срок — от 1 до 7 лет, решение по заявке обычно за 30–60 минут. Для оформления нужны паспорт и второй документ (СНИЛС/водительское удостоверение/загранпаспорт).",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": "кредит",
+            "contact": null
+          },
+          "state": "QUALIFICATION",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "contact"
+          ],
+          "latency_ms": 2503.8447770020866
+        },
+        {
+          "id": "gen_reg_tradein_01",
+          "answer": "Да, у нас есть trade-in: ваш автомобиль можно принять в зачёт стоимости нового. Оценка проводится бесплатно, обычно занимает 30–40 минут и включает осмотр, диагностику и проверку юридической чистоты. Для оценки нужны ПТС/ЭПТС, СТС и паспорт собственника.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2460.589690999768
+        },
+        {
+          "id": "gen_reg_close_time_01",
+          "answer": "Мы работаем ежедневно без выходных: отдел продаж — с 9:00 до 21:00 (клиентов принимаем до 20:30). Сервисный центр — с 8:00 до 20:00, в воскресенье с 9:00 до 18:00.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2347.666624998965
+        },
+        {
+          "id": "gen_reg_inventory_01",
+          "answer": "Сейчас в наличии представлены: Tesla Model Y, Kia Rio, Toyota Land Cruiser Prado, Hyundai Creta, Toyota Camry. По цвету и комплектации точнее нужно проверять перед бронированием.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2417.04527100228
+        },
+        {
+          "id": "gen_reg_credit_downpayment_01",
+          "answer": "По кредиту первоначальный взнос — от 10% стоимости автомобиля. Точный размер зависит от выбранной программы банка-партнёра.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 1947.4955879995832
+        },
+        {
+          "id": "gen_reg_tradein_oldcar_01",
+          "answer": "Отлично, trade-in принимаем: оценка авто бесплатная, обычно 30–40 минут (визуальный осмотр, диагностика, проверка юридической чистоты). Нужны ПТС/ЭПТС, СТС и паспорт собственника. Машина может быть до 15 лет и с пробегом до 250 000 км, без залога/ареста/запретов. Итог доплаты фиксируется в договоре после оценки.",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": "трейд-ин",
+            "contact": null
+          },
+          "state": "QUALIFICATION",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "contact"
+          ],
+          "latency_ms": 2872.8424869987066
+        },
+        {
+          "id": "gen_reference_hours_001",
+          "answer": "Отдел продаж работает ежедневно без выходных с 9:00 до 21:00, приём клиентов до 20:30.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2097.2537380002905
+        },
+        {
+          "id": "gen_reference_camry_trunk_001",
+          "answer": "Объём багажника у Toyota Camry — около 493 литров.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2465.800088000833
+        },
+        {
+          "id": "gen_reference_camry_price_001",
+          "answer": "Диапазон цен на Toyota Camry: от 2 800 000 до 4 200 000 рублей — в зависимости от комплектации и типа двигателя.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2032.8995140007464
+        },
+        {
+          "id": "gen_reference_availability_001",
+          "answer": "По точному наличию конкретного цвета (синяя) и свободна ли она сейчас — точной информации без проверки нет. Могу уточнить по наличию перед бронированием.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 3042.6592209987575
+        },
+        {
+          "id": "gen_reference_credit_001",
+          "answer": "По автокредиту решение по заявке обычно принимается в течение 30–60 минут.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2031.9171839946648
+        },
+        {
+          "id": "gen_reference_tradein_001",
+          "answer": "Для оценки trade-in бесплатно нужны: ПТС или ЭПТС, СТС (свидетельство о регистрации), паспорт собственника. Также автомобиль не должен быть в залоге/под арестом и без запрета на регистрационные действия.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2495.312566003122
+        },
+        {
+          "id": "gen_reference_out_of_domain_001",
+          "answer": "По “простуде” лекарства зависят от симптомов. Если подскажете, что именно беспокоит (температура, кашель, насморк, боль в горле), подберу подходящие варианты из доступных средств.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2300.4501319956034
+        },
+        {
+          "id": "gen_reference_adversarial_001",
+          "answer": "Здравствуйте! Чем могу помочь?",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "GREETING",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 4119.156532004126
+        }
+      ]
+    },
+    {
+      "repetition": 3,
+      "predictions": [
+        {
+          "id": "ret_test_hours_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "dealer_hours",
+            "remote_purchase",
+            "maintenance"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 574.8099109987379
+        },
+        {
+          "id": "ret_test_hours_02",
+          "answer": null,
+          "retrieved_document_ids": [
+            "dealer_hours",
+            "vehicle_registration",
+            "accessories"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 391.7816560024221
+        },
+        {
+          "id": "ret_test_drive_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "test_drive",
+            "vehicle_delivery",
+            "vehicle_booking"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 405.8470160016441
+        },
+        {
+          "id": "ret_test_credit_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "credit_financing",
+            "corporate_leasing",
+            "remote_purchase"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 512.8358449983352
+        },
+        {
+          "id": "ret_test_credit_02",
+          "answer": null,
+          "retrieved_document_ids": [
+            "installment",
+            "vehicle_booking",
+            "credit_financing"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 409.55742499863845
+        },
+        {
+          "id": "ret_test_installment_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "installment",
+            "credit_financing",
+            "early_loan_repayment"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 409.99014000044554
+        },
+        {
+          "id": "ret_test_tradein_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "trade_in_program",
+            "body_repair",
+            "used_vehicles"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 389.65583199751563
+        },
+        {
+          "id": "ret_test_buyout_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "vehicle_buyout",
+            "trade_in_program",
+            "remote_purchase"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 918.4579020002275
+        },
+        {
+          "id": "ret_test_used_warranty_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "used_vehicle_warranty",
+            "new_vehicle_warranty",
+            "booking_cancellation"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 430.3949540008034
+        },
+        {
+          "id": "ret_test_inventory_order_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "bmw_x3",
+            "vehicle_order",
+            "audi_q5"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 413.1935250006791
+        },
+        {
+          "id": "ret_test_inventory_alt_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "vehicle_inventory",
+            "hyundai_tucson",
+            "hyundai_creta"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 408.62229500271496
+        },
+        {
+          "id": "ret_test_booking_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "vehicle_booking",
+            "booking_cancellation"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 407.371345001593
+        },
+        {
+          "id": "ret_test_cancel_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "booking_cancellation",
+            "early_loan_repayment",
+            "installment"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 413.51530799875036
+        },
+        {
+          "id": "ret_test_payment_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "payment_methods",
+            "installment",
+            "early_loan_repayment"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 405.91114299968467
+        },
+        {
+          "id": "ret_test_leasing_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "corporate_leasing",
+            "personal_leasing",
+            "vehicle_buyout"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 411.4500540017616
+        },
+        {
+          "id": "ret_test_osago_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "osago_insurance",
+            "kasko_insurance",
+            "price_and_inventory_freshness"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 514.0058290016896
+        },
+        {
+          "id": "ret_test_kasko_credit_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "kasko_insurance",
+            "credit_financing",
+            "credit_documents"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 407.59062500001164
+        },
+        {
+          "id": "ret_test_service_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "maintenance",
+            "tire_service",
+            "osago_insurance"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 409.63286600162974
+        },
+        {
+          "id": "ret_test_warranty_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "new_vehicle_warranty",
+            "used_vehicle_warranty",
+            "body_repair"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 409.7562429997197
+        },
+        {
+          "id": "ret_test_delivery_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "vehicle_delivery",
+            "remote_purchase",
+            "vehicle_buyout"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 407.2075059993949
+        },
+        {
+          "id": "ret_test_remote_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "remote_purchase",
+            "corporate_leasing",
+            "vehicle_booking"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 473.06603499964694
+        },
+        {
+          "id": "ret_test_registration_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "osago_insurance",
+            "vehicle_registration",
+            "purchase_documents"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 452.74568799868575
+        },
+        {
+          "id": "ret_test_sportage_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "kia_sportage",
+            "skoda_kodiaq",
+            "toyota_camry"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 408.24827999676927
+        },
+        {
+          "id": "ret_test_tucson_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "hyundai_tucson",
+            "hyundai_creta",
+            "vehicle_inventory"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 408.41338699829066
+        },
+        {
+          "id": "ret_test_chery_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "credit_financing",
+            "personal_leasing",
+            "installment"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 514.8321660017245
+        },
+        {
+          "id": "ret_test_audi_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "kasko_insurance",
+            "early_loan_repayment",
+            "credit_documents"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 406.5242639990174
+        },
+        {
+          "id": "ret_test_mercedes_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "price_and_inventory_freshness",
+            "payment_methods"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 376.79474700053106
+        },
+        {
+          "id": "ret_test_mazda_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "remote_purchase",
+            "vehicle_buyout",
+            "purchase_documents"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 542.6185169999371
+        },
+        {
+          "id": "ret_test_negative_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "dealer_hours",
+            "tire_service"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 410.83454100225936
+        },
+        {
+          "id": "ret_test_negative_02",
+          "answer": null,
+          "retrieved_document_ids": [],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 512.3906629996782
+        },
+        {
+          "id": "ret_reg_time_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "maintenance"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 515.6121600011829
+        },
+        {
+          "id": "ret_reg_hours_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "dealer_hours",
+            "maintenance",
+            "accessories"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 406.33032400000957
+        },
+        {
+          "id": "ret_reg_brands_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "vehicle_inventory",
+            "new_vehicle_warranty",
+            "vehicle_order"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 515.4657730017789
+        },
+        {
+          "id": "ret_reg_not_toyota_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "vehicle_inventory",
+            "toyota_camry",
+            "toyota_land_cruiser_prado"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 404.43556599711883
+        },
+        {
+          "id": "ret_reg_credit_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "credit_financing",
+            "installment",
+            "personal_leasing"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 409.134951998567
+        },
+        {
+          "id": "ret_reg_tradein_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "trade_in_program",
+            "vehicle_buyout",
+            "remote_purchase"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 513.6581170008867
+        },
+        {
+          "id": "ret_reg_close_time_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "dealer_hours",
+            "booking_cancellation",
+            "maintenance"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 510.8062899998913
+        },
+        {
+          "id": "ret_reg_inventory_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "vehicle_inventory",
+            "vehicle_order",
+            "used_vehicles"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 1056.392037000478
+        },
+        {
+          "id": "ret_reg_credit_downpayment_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "credit_financing",
+            "credit_documents",
+            "installment"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 377.7974680015177
+        },
+        {
+          "id": "ret_reg_tradein_oldcar_01",
+          "answer": null,
+          "retrieved_document_ids": [
+            "trade_in_program",
+            "vehicle_delivery",
+            "remote_purchase"
+          ],
+          "intent": null,
+          "fields": null,
+          "state": null,
+          "missing_fields": null,
+          "latency_ms": 512.209796001116
+        },
+        {
+          "id": "biz_lead_qualification_001",
+          "answer": "Отлично, понял: Toyota Camry до 3 млн, покупка в кредит. Подскажите, пожалуйста, ваш телефон или Telegram для связи?",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "до 3 миллионов",
+            "purchase_type": "кредит",
+            "contact": null
+          },
+          "state": "CONTACT_CAPTURE",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 3763.897104996431
+        },
+        {
+          "id": "biz_lead_trade_in_001",
+          "answer": "Отлично, Kia Rio под trade-in — подходит. Уточните, пожалуйста: какая у вас машина (марка/модель, год и пробег)?",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Kia Rio",
+            "budget": "2000000",
+            "purchase_type": "трейд-ин",
+            "contact": null
+          },
+          "state": "QUALIFICATION",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 2709.1270870005246
+        },
+        {
+          "id": "biz_contact_phone_001",
+          "answer": "Спасибо! Передаю заявку специалисту, который свяжется с вами по телефону.",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "до 3 000 000 рублей",
+            "purchase_type": "кредит",
+            "contact": {
+              "phone": "+7 999 123-45-67"
+            }
+          },
+          "state": "QUALIFICATION",
+          "missing_fields": [],
+          "latency_ms": 13779.415379998682
+        },
+        {
+          "id": "biz_contact_reason_001",
+          "answer": "Потому что без контакта я не смогу передать вашу заявку специалисту по автокредиту и Camry. Если не хотите оставлять номер, можете прислать email или Telegram.",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "3000000",
+            "purchase_type": "кредит",
+            "contact": null
+          },
+          "state": "CONTACT_CAPTURE",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 10949.108319997322
+        },
+        {
+          "id": "biz_adversarial_field_injection_001",
+          "answer": "Здравствуйте! Чем могу помочь?",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "GREETING",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 1930.3374369992525
+        },
+        {
+          "id": "biz_faq_during_contact_capture_001",
+          "answer": "Сегодня автосалон работает ежедневно с 9:00 до 21:00, отдел продаж принимает клиентов до 20:30.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "до 3 000 000 ₽",
+            "purchase_type": "кредит",
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 4901.813354001206
+        },
+        {
+          "id": "biz_contact_first_refusal_001",
+          "answer": "Понял. Тогда подскажите, как с вами лучше связаться: Telegram или email?",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "до 3 миллионов",
+            "purchase_type": "кредит",
+            "contact": null
+          },
+          "state": "CONTACT_CAPTURE",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 4949.261724999815
+        },
+        {
+          "id": "biz_contact_second_refusal_001",
+          "answer": "Понял(а). Тогда без контакта заявку оформить не смогу. Могу подсказать по Camry: интересует новая или с пробегом, и какой год/модификация нужна?",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "до 3 миллионов",
+            "purchase_type": "кредит",
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 17507.53430899931
+        },
+        {
+          "id": "biz_model_replace_001",
+          "answer": "Понял, тогда Kia Rio. Подтвердите, пожалуйста: покупка будет тоже в кредит, верно?",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Kia Rio",
+            "budget": "до 3 миллионов",
+            "purchase_type": "кредит",
+            "contact": null
+          },
+          "state": "CONTACT_CAPTURE",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 4397.075833003328
+        },
+        {
+          "id": "biz_model_clear_and_faq_001",
+          "answer": "Понял. Сейчас в наличии есть Tesla, Kia, Hyundai и Toyota. Из моделей: Tesla Model Y, Kia Rio, Hyundai Creta и Toyota Camry. Если Toyota больше не рассматриваете, могу предложить Tesla Model Y, Kia Rio или Hyundai Creta.",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "до 3 000 000 ₽",
+            "purchase_type": "кредит",
+            "contact": null
+          },
+          "state": "QUALIFICATION",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 4575.099393994606
+        },
+        {
+          "id": "biz_contact_channel_question_001",
+          "answer": "Понял. Telegram можно — пришлите, пожалуйста, ваш @username в Telegram, и я зафиксирую заявку.",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "до 3 миллионов",
+            "purchase_type": "кредит",
+            "contact": null
+          },
+          "state": "CONTACT_CAPTURE",
+          "missing_fields": [
+            "contact"
+          ],
+          "latency_ms": 6294.06551199645
+        },
+        {
+          "id": "biz_contact_resume_001",
+          "answer": "Отлично, продолжаем по заявке на Toyota Camry в кредит до 3 000 000 ₽. Уточните, пожалуйста, какую комплектацию рассматриваете (или «любую в бюджете»)?",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": "Toyota Camry",
+            "budget": "до 3 000 000 ₽",
+            "purchase_type": "кредит",
+            "contact": {
+              "telegram": "@ivan_auto"
+            }
+          },
+          "state": "QUALIFICATION",
+          "missing_fields": [],
+          "latency_ms": 10809.360988001572
+        },
+        {
+          "id": "gen_test_hours_01",
+          "answer": "Звоните в отдел продаж: +7 (999)777-88-01.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2064.261974002875
+        },
+        {
+          "id": "gen_test_hours_02",
+          "answer": "Записаться на визит можно по телефону отдела продаж, через сайт или мобильное приложение салона. Также можно напрямую позвонить: +7 (999)777-88-01.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2786.771259998204
+        },
+        {
+          "id": "gen_test_drive_01",
+          "answer": "По базе знаний: тест-драйв предоставляется бесплатно для всех моделей, представленных в наличии на площадке.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2027.2502089937916
+        },
+        {
+          "id": "gen_test_credit_01",
+          "answer": "Для оформления автокредита в салоне обычно нужны: паспорт и второй документ (СНИЛС, водительское удостоверение или загранпаспорт). Первоначальный взнос — от 10% стоимости, срок кредита — от 1 до 7 лет; решение по заявке принимается в течение 30–60 минут.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2684.9638250059797
+        },
+        {
+          "id": "gen_test_credit_02",
+          "answer": "Понимаю. Ежемесячные платежи оформляются через автокредит банка-партнёра: банк определяет ставку, первоначальный взнос и срок (рассрочка от автосалона не предоставляется). Скажите, какую марку/модель хотите?",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "QUALIFICATION",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2703.630559000885
+        },
+        {
+          "id": "gen_test_installment_01",
+          "answer": "Здравствуйте! Чем могу помочь?",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 1878.208107998944
+        },
+        {
+          "id": "gen_test_tradein_01",
+          "answer": "Оценка автомобиля по программе trade-in занимает в среднем 30–40 минут. Она включает визуальный осмотр, диагностику и проверку юридической чистоты. Для оценки нужны ПТС/ЭПТС, СТС и паспорт собственника.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2066.2277369992808
+        },
+        {
+          "id": "gen_test_buyout_01",
+          "answer": "Да, автосалон может выкупить автомобиль клиента без обязательной покупки другой машины. Процедура включает осмотр, диагностику, проверку VIN и документов; предложение действует в течение одного рабочего дня. Деньги переводятся клиенту, а не засчитываются в цену нового авто.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2551.4174199997797
+        },
+        {
+          "id": "gen_test_used_warranty_01",
+          "answer": "Да, для части автомобилей с пробегом доступна дополнительная гарантия автосалона на основные узлы и агрегаты: 12 месяцев или 20 000 км пробега с момента продажи (что наступит раньше). Детали и исключения указаны в договоре дополнительной гарантии.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 3616.5887030001613
+        },
+        {
+          "id": "gen_test_inventory_order_01",
+          "answer": "BMW X3 доступен с бензиновыми и дизельными двигателями; по наличию на площадке точной информации нет. Цена под заказ — от 6 800 000 рублей, срок зависит от марки, комплектации и логистики.",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2442.649564000021
+        },
+        {
+          "id": "gen_test_inventory_alt_01",
+          "answer": "Да, есть варианты Kia и Hyundai: Kia Rio и Hyundai Creta (а также Hyundai Tucson). Точную комплектацию и наличие по цвету нужно проверять перед бронированием.",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 3684.0961890047765
+        },
+        {
+          "id": "gen_test_booking_01",
+          "answer": "Бронь становится активной после подписания соглашения и поступления обеспечительного платежа.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 1842.847793996043
+        },
+        {
+          "id": "gen_test_cancel_01",
+          "answer": "Обычно заявление на возврат обеспечительного платежа рассматривается в течение 3 рабочих дней, а срок зачисления зависит от банка и обычно составляет 3–10 рабочих дней.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 5529.93380100088
+        },
+        {
+          "id": "gen_test_payment_01",
+          "answer": "Карта может не пройти из‑за лимита банка на дневные операции или настроек безопасности (иногда платеж отклоняется по рискам). Также оплату обычно принимают только в рублях, а платежи в иностранной валюте не принимаются.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2342.093446997751
+        },
+        {
+          "id": "gen_test_leasing_01",
+          "answer": "Да, ИП могут взять автомобили в лизинг — корпоративный отдел подготовит индивидуальные условия (срок договора, аванс, график платежей и выкупная стоимость). Для расчёта нужны реквизиты компании, желаемое количество машин и предполагаемый пробег.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2615.6242309953086
+        },
+        {
+          "id": "gen_test_osago_01",
+          "answer": "Цена ОСАГО зависит от региона, мощности двигателя, стажа и возраста водителей, а также от количества допущенных водителей. Точный расчёт делает страховая компания, обычно нужны паспорт, водительское удостоверение и данные автомобиля.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 4947.774246000336
+        },
+        {
+          "id": "gen_test_kasko_credit_01",
+          "answer": "По условиям автокредита КАСКО может требоваться банком, но это зависит от конкретной программы и банка. Иногда полис запрашивают для защиты от ущерба, угона и полной гибели, а в некоторых программах требование может отличаться. Точный ответ скажет выбранный банк по вашей ситуации.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 3733.0043069960084
+        },
+        {
+          "id": "gen_test_service_01",
+          "answer": "Здравствуйте! Записаться на замену масла можно через сайт или мобильное приложение, либо по телефону сервисного центра. Интервал ТО зависит от модели и указан в сервисной книжке.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2687.059900999884
+        },
+        {
+          "id": "gen_test_warranty_01",
+          "answer": "По заводской гарантии ремонт после ДТП, как правило, не оплачивается: гарантия покрывает дефекты материалов и сборки, а не повреждения в ДТП и неестественный износ. Точные условия зависят от конкретной марки и записаны в сервисной книжке.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2315.9404110047035
+        },
+        {
+          "id": "gen_test_delivery_01",
+          "answer": "Да, доставляем и в другие населённые пункты: стоимость рассчитывается по расстоянию. Дату и интервал доставки согласовываем после готовности машины к выдаче.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 1986.2981179976487
+        },
+        {
+          "id": "gen_test_remote_01",
+          "answer": "Да, дистанционно можно: вы можете посмотреть видеообзор и согласовать договор. Для идентификации покупателя может потребоваться видеосвязь или усиленная электронная подпись. Передача автомобиля — в салоне или через платную доставку после полной оплаты и подписания документов.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 3013.282050000271
+        },
+        {
+          "id": "gen_test_registration_01",
+          "answer": "В [База знаний]: да, для постановки автомобиля на учёт обычно нужен полис ОСАГО. Точный расчёт стоимости делает страховая с учётом региона, мощности двигателя, стажа и возраста водителей и количества допущенных.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2528.8402629958
+        },
+        {
+          "id": "gen_test_sportage_01",
+          "answer": "У Kia Sportage багажник примерно на 540 литров.",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2300.200980003865
+        },
+        {
+          "id": "gen_test_tucson_01",
+          "answer": "Да, Hyundai Tucson бывает с гибридной силовой установкой — на отдельных рынках. В зависимости от комплектации могут быть версии с бензиновыми 2.0/2.5 л и гибрид.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2650.054411002202
+        },
+        {
+          "id": "gen_test_chery_01",
+          "answer": "Здравствуйте! Автосалон оформляет покупку автомобиля (за собственные средства или автокредит), лизинг для физлиц не оформляем. По ипотеке на квартиру точной информации нет — уточните, пожалуйста, относится ли ваш запрос именно к автокредиту на покупку автомобиля?",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2120.345315997838
+        },
+        {
+          "id": "gen_test_audi_01",
+          "answer": "По [База знаний] у нас речь про страхование автомобиля (КАСКО). Точную информацию, можно ли через нас застраховать квартиру, без уточнения не могу дать.",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2637.4370330013335
+        },
+        {
+          "id": "gen_test_mercedes_01",
+          "answer": "Здравствуйте! К сожалению, точный курс евро на сегодня я не могу посмотреть в текущей информации. Могу подсказать, что расчёты у нас ведутся в рублях.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2182.6235449989326
+        },
+        {
+          "id": "gen_test_mazda_01",
+          "answer": "Здравствуйте! Чем могу помочь?",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "GREETING",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 1846.5607149992138
+        },
+        {
+          "id": "gen_test_negative_01",
+          "answer": "Здравствуйте! Чем могу помочь?",
+          "retrieved_document_ids": [],
+          "intent": "unknown",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "GREETING",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 1646.5507749962853
+        },
+        {
+          "id": "gen_test_negative_02",
+          "answer": "Здравствуйте! Чем могу помочь?",
+          "retrieved_document_ids": [],
+          "intent": "unknown",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "GREETING",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 4265.528605996224
+        },
+        {
+          "id": "gen_reg_time_01",
+          "answer": "Здравствуйте! Чем могу помочь?",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "GREETING",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 1997.6012799961609
+        },
+        {
+          "id": "gen_reg_hours_01",
+          "answer": "Автосалон работает ежедневно без выходных с 9:00 до 21:00, отдел продаж принимает до 20:30. Сервисный центр: с 8:00 до 20:00, в воскресенье — с 9:00 до 18:00.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2261.687221995089
+        },
+        {
+          "id": "gen_reg_brands_01",
+          "answer": "Здравствуйте! В наличии представлены Tesla, Kia, Toyota и Hyundai. Доступные модели: Tesla Model Y, Kia Rio, Toyota Land Cruiser Prado, Hyundai Creta и Toyota Camry.",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2040.5904150029528
+        },
+        {
+          "id": "gen_reg_not_toyota_01",
+          "answer": "Извините, не удалось обработать запрос. Попробуйте ещё раз.",
+          "retrieved_document_ids": [],
+          "intent": "unknown",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "GREETING",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 512.6490600014222
+        },
+        {
+          "id": "gen_reg_credit_01",
+          "answer": "Да, автомобиль можно оформить в кредит через банки-партнёры. Обычно требуется первоначальный взнос — от 10% стоимости, срок — от 1 до 7 лет; решение по заявке занимает примерно 30–60 минут. Для оформления нужны паспорт и второй документ (СНИЛС, водительское удостоверение или загранпаспорт).",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2864.869936995092
+        },
+        {
+          "id": "gen_reg_tradein_01",
+          "answer": "Да, принимаем автомобиль клиента в зачёт стоимости нового по программе trade-in. Оценка бесплатная и обычно занимает 30–40 минут: визуальный осмотр, диагностика, проверка юридической чистоты. Для оценки нужны ПТС/ЭПТС, СТС и паспорт собственника. Машина не должна быть в залоге/под арестом и без запрета на регистрационные действия (возраст до 15 лет, пробег до 250 000 км).",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2558.0209309991915
+        },
+        {
+          "id": "gen_reg_close_time_01",
+          "answer": "Работаем ежедневно без выходных: отдел продаж — с 9:00 до 21:00 (клиентов принимаем до 20:30), сервисный центр — с 8:00 до 20:00, в воскресенье — с 9:00 до 18:00.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2808.7214970000787
+        },
+        {
+          "id": "gen_reg_inventory_01",
+          "answer": "Сейчас в наличии представлены Tesla, Kia, Toyota и Hyundai. Из доступных моделей: Tesla Model Y, Kia Rio, Toyota Land Cruiser Prado, Hyundai Creta и Toyota Camry. Цвет и комплектацию нужно проверять перед бронированием.",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2520.1410070003476
+        },
+        {
+          "id": "gen_reg_credit_downpayment_01",
+          "answer": "По автокредиту минимальный первоначальный взнос — от 10% стоимости автомобиля. Точный размер зависит от выбранной программы и банка-партнёра.",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2741.3501939954585
+        },
+        {
+          "id": "gen_reg_tradein_oldcar_01",
+          "answer": "Отлично, по trade-in принимаем автомобиль в зачёт стоимости нового. Оценка бесплатная и занимает в среднем 30–40 минут: визуальный осмотр, диагностика и проверка юридической чистоты. Для оценки нужны ПТС/ЭПТС, СТС и паспорт собственника. Принимаем авто до 15 лет и с пробегом не более 250 000 км; машина не должна быть в залоге/под арестом или с запретом на регистрационные действия.",
+          "retrieved_document_ids": [],
+          "intent": "lead_request",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": "трейд-ин",
+            "contact": null
+          },
+          "state": "QUALIFICATION",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "contact"
+          ],
+          "latency_ms": 2795.6867959946976
+        },
+        {
+          "id": "gen_reference_hours_001",
+          "answer": "Отдел продаж работает ежедневно без выходных с 9:00 до 21:00, приём клиентов — до 20:30.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2363.801544001035
+        },
+        {
+          "id": "gen_reference_camry_trunk_001",
+          "answer": "Объём багажника у Toyota Camry — около 493 литров.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 3311.9081770055345
+        },
+        {
+          "id": "gen_reference_camry_price_001",
+          "answer": "Toyota Camry — стоимость от 2 800 000 до 4 200 000 рублей (зависит от комплектации и типа двигателя).",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 3392.8742989955936
+        },
+        {
+          "id": "gen_reference_availability_001",
+          "answer": "По наличию точную информацию по цвету (синяя Camry) сейчас дать не могу. Если подберём вариант, можно оформить бронь на 48 часов с обеспечительным платёжом 20 000 ₽.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2594.5754229978775
+        },
+        {
+          "id": "gen_reference_credit_001",
+          "answer": "По автокредиту решение по заявке принимается в течение 30–60 минут (в зависимости от банка и программы).",
+          "retrieved_document_ids": [],
+          "intent": "pricing",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2252.645353000844
+        },
+        {
+          "id": "gen_reference_tradein_001",
+          "answer": "Для оценки trade-in нужны: ПТС или ЭПТС, СТС (свидетельство о регистрации) и паспорт собственника. Также автомобиль не должен быть в залоге/под арестом и без запрета на регистрационные действия.",
+          "retrieved_document_ids": [],
+          "intent": "support",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "FAQ",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2298.5250979982084
+        },
+        {
+          "id": "gen_reference_out_of_domain_001",
+          "answer": "Здравствуйте! Чем могу помочь?",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "GREETING",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2208.2866430064314
+        },
+        {
+          "id": "gen_reference_adversarial_001",
+          "answer": "Здравствуйте! Чем могу помочь?",
+          "retrieved_document_ids": [],
+          "intent": "general",
+          "fields": {
+            "car_model": null,
+            "budget": null,
+            "purchase_type": null,
+            "contact": null
+          },
+          "state": "GREETING",
+          "missing_fields": [
+            "car_model",
+            "budget",
+            "purchase_type",
+            "contact"
+          ],
+          "latency_ms": 2357.541297998978
+        }
+      ]
+    }
+  ]
+}

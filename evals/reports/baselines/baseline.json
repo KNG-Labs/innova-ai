@@ -1,0 +1,3405 @@
+{
+  "schema_version": "2.0",
+  "generated_at": "2026-07-22T17:43:30.849371+00:00",
+  "metadata": {
+    "git": {
+      "commit": null,
+      "dirty": null
+    },
+    "dataset_sha256": "8873d47be3c810b5543ae232fa9f7b324fd464a500068ce75615e3c2e3139e4a",
+    "corpus_sha256": "fcfbe7b3e4081bc276651fb1cb3d6b1dc101ec8eaeaca1c66390ff659ab444b0",
+    "manifest_sha256": "205226c6c3d4721b938cebe6f6c9a0b47b746fe6ea40ae78d935abfb46c8a63d",
+    "llm": {
+      "provider": "ag2",
+      "model": "openai/gpt-5.4-nano"
+    },
+    "embedding": {
+      "provider": "openrouter",
+      "model": "openai/text-embedding-3-small"
+    },
+    "retrieval": {
+      "top_k": 3,
+      "min_score": 0.2
+    },
+    "api_base_url": "http://eval-api:8000",
+    "database_name": "innova_ai_eval",
+    "repetitions": 3,
+    "selected_splits": [
+      "regression",
+      "test"
+    ],
+    "duration_seconds": 708.855
+  },
+  "run_count": 3,
+  "case_count": 100,
+  "prediction_count": 100,
+  "prediction_observation_count": 300,
+  "missing_prediction_count": 0,
+  "missing_prediction_observation_count": 0,
+  "unexpected_prediction_ids": [],
+  "metrics": {
+    "abstention_accuracy@3": {
+      "value": 0.1667,
+      "n": 6,
+      "observation_n": 6,
+      "runs": 1,
+      "run_stddev": 0.0
+    },
+    "business_dialogue_success": {
+      "value": 0.3611,
+      "n": 12,
+      "observation_n": 36,
+      "runs": 3,
+      "run_stddev": 0.1039
+    },
+    "context_precision@3": {
+      "value": 0.4069,
+      "n": 34,
+      "observation_n": 34,
+      "runs": 1,
+      "run_stddev": 0.0
+    },
+    "forbidden_claim_rate": {
+      "value": 0.0,
+      "n": 44,
+      "observation_n": 132,
+      "runs": 3,
+      "run_stddev": 0.0
+    },
+    "required_fact_coverage": {
+      "value": 0.6646,
+      "n": 40,
+      "observation_n": 120,
+      "runs": 3,
+      "run_stddev": 0.0236
+    },
+    "retrieval_mrr@3": {
+      "value": 0.9706,
+      "n": 34,
+      "observation_n": 34,
+      "runs": 1,
+      "run_stddev": 0.0
+    },
+    "retrieval_recall@3": {
+      "value": 0.8701,
+      "n": 34,
+      "observation_n": 34,
+      "runs": 1,
+      "run_stddev": 0.0
+    }
+  },
+  "metrics_by_type": {
+    "business": {
+      "business_dialogue_success": {
+        "value": 0.3611,
+        "n": 12,
+        "observation_n": 36,
+        "runs": 3,
+        "run_stddev": 0.1039
+      }
+    },
+    "generation": {
+      "forbidden_claim_rate": {
+        "value": 0.0,
+        "n": 44,
+        "observation_n": 132,
+        "runs": 3,
+        "run_stddev": 0.0
+      },
+      "required_fact_coverage": {
+        "value": 0.6646,
+        "n": 40,
+        "observation_n": 120,
+        "runs": 3,
+        "run_stddev": 0.0236
+      }
+    },
+    "retrieval": {
+      "abstention_accuracy@3": {
+        "value": 0.1667,
+        "n": 6,
+        "observation_n": 6,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "context_precision@3": {
+        "value": 0.4069,
+        "n": 34,
+        "observation_n": 34,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_mrr@3": {
+        "value": 0.9706,
+        "n": 34,
+        "observation_n": 34,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_recall@3": {
+        "value": 0.8701,
+        "n": 34,
+        "observation_n": 34,
+        "runs": 1,
+        "run_stddev": 0.0
+      }
+    }
+  },
+  "splits": {
+    "regression": {
+      "business_dialogue_success": {
+        "value": 0.3611,
+        "n": 12,
+        "observation_n": 36,
+        "runs": 3,
+        "run_stddev": 0.1039
+      },
+      "context_precision@3": {
+        "value": 0.3,
+        "n": 10,
+        "observation_n": 10,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "forbidden_claim_rate": {
+        "value": 0.0,
+        "n": 14,
+        "observation_n": 42,
+        "runs": 3,
+        "run_stddev": 0.0
+      },
+      "required_fact_coverage": {
+        "value": 0.7083,
+        "n": 16,
+        "observation_n": 48,
+        "runs": 3,
+        "run_stddev": 0.0295
+      },
+      "retrieval_mrr@3": {
+        "value": 0.9,
+        "n": 10,
+        "observation_n": 10,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_recall@3": {
+        "value": 0.825,
+        "n": 10,
+        "observation_n": 10,
+        "runs": 1,
+        "run_stddev": 0.0
+      }
+    },
+    "test": {
+      "abstention_accuracy@3": {
+        "value": 0.1667,
+        "n": 6,
+        "observation_n": 6,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "context_precision@3": {
+        "value": 0.4514,
+        "n": 24,
+        "observation_n": 24,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "forbidden_claim_rate": {
+        "value": 0.0,
+        "n": 30,
+        "observation_n": 90,
+        "runs": 3,
+        "run_stddev": 0.0
+      },
+      "required_fact_coverage": {
+        "value": 0.6354,
+        "n": 24,
+        "observation_n": 72,
+        "runs": 3,
+        "run_stddev": 0.034
+      },
+      "retrieval_mrr@3": {
+        "value": 1.0,
+        "n": 24,
+        "observation_n": 24,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_recall@3": {
+        "value": 0.8889,
+        "n": 24,
+        "observation_n": 24,
+        "runs": 1,
+        "run_stddev": 0.0
+      }
+    }
+  },
+  "categories": {
+    "business:adversarial": {
+      "business_dialogue_success": {
+        "value": 0.0,
+        "n": 1,
+        "observation_n": 3,
+        "runs": 3,
+        "run_stddev": 0.0
+      }
+    },
+    "business:contact_capture": {
+      "business_dialogue_success": {
+        "value": 0.3333,
+        "n": 2,
+        "observation_n": 6,
+        "runs": 3,
+        "run_stddev": 0.2357
+      }
+    },
+    "business:contact_opt_out": {
+      "business_dialogue_success": {
+        "value": 0.3333,
+        "n": 4,
+        "observation_n": 12,
+        "runs": 3,
+        "run_stddev": 0.1179
+      }
+    },
+    "business:faq_during_qualification": {
+      "business_dialogue_success": {
+        "value": 0.0,
+        "n": 1,
+        "observation_n": 3,
+        "runs": 3,
+        "run_stddev": 0.0
+      }
+    },
+    "business:lead_qualification": {
+      "business_dialogue_success": {
+        "value": 0.6667,
+        "n": 2,
+        "observation_n": 6,
+        "runs": 3,
+        "run_stddev": 0.2357
+      }
+    },
+    "business:sparse_patch": {
+      "business_dialogue_success": {
+        "value": 0.5,
+        "n": 2,
+        "observation_n": 6,
+        "runs": 3,
+        "run_stddev": 0.0
+      }
+    },
+    "generation:adversarial": {
+      "forbidden_claim_rate": {
+        "value": 0.0,
+        "n": 1,
+        "observation_n": 3,
+        "runs": 3,
+        "run_stddev": 0.0
+      }
+    },
+    "generation:booking": {
+      "forbidden_claim_rate": {
+        "value": 0.0,
+        "n": 2,
+        "observation_n": 6,
+        "runs": 3,
+        "run_stddev": 0.0
+      },
+      "required_fact_coverage": {
+        "value": 0.5833,
+        "n": 2,
+        "observation_n": 6,
+        "runs": 3,
+        "run_stddev": 0.2357
+      }
+    },
+    "generation:credit": {
+      "forbidden_claim_rate": {
+        "value": 0.0,
+        "n": 4,
+        "observation_n": 12,
+        "runs": 3,
+        "run_stddev": 0.0
+      },
+      "required_fact_coverage": {
+        "value": 0.7667,
+        "n": 5,
+        "observation_n": 15,
+        "runs": 3,
+        "run_stddev": 0.0471
+      }
+    },
+    "generation:delivery": {
+      "forbidden_claim_rate": {
+        "value": 0.0,
+        "n": 1,
+        "observation_n": 3,
+        "runs": 3,
+        "run_stddev": 0.0
+      },
+      "required_fact_coverage": {
+        "value": 1.0,
+        "n": 1,
+        "observation_n": 3,
+        "runs": 3,
+        "run_stddev": 0.0
+      }
+    },
+    "generation:documents": {
+      "forbidden_claim_rate": {
+        "value": 0.0,
+        "n": 1,
+        "observation_n": 3,
+        "runs": 3,
+        "run_stddev": 0.0
+      },
+      "required_fact_coverage": {
+        "value": 1.0,
+        "n": 1,
+        "observation_n": 3,
+        "runs": 3,
+        "run_stddev": 0.0
+      }
+    },
+    "generation:finance": {
+      "forbidden_claim_rate": {
+        "value": 0.0,
+        "n": 1,
+        "observation_n": 3,
+        "runs": 3,
+        "run_stddev": 0.0
+      },
+      "required_fact_coverage": {
+        "value": 0.0,
+        "n": 1,
+        "observation_n": 3,
+        "runs": 3,
+        "run_stddev": 0.0
+      }
+    },
+    "generation:hours": {
+      "forbidden_claim_rate": {
+        "value": 0.0,
+        "n": 6,
+        "observation_n": 18,
+        "runs": 3,
+        "run_stddev": 0.0
+      },
+      "required_fact_coverage": {
+        "value": 0.8333,
+        "n": 6,
+        "observation_n": 18,
+        "runs": 3,
+        "run_stddev": 0.0
+      }
+    },
+    "generation:insurance": {
+      "forbidden_claim_rate": {
+        "value": 0.0,
+        "n": 2,
+        "observation_n": 6,
+        "runs": 3,
+        "run_stddev": 0.0
+      },
+      "required_fact_coverage": {
+        "value": 0.375,
+        "n": 2,
+        "observation_n": 6,
+        "runs": 3,
+        "run_stddev": 0.0
+      }
+    },
+    "generation:inventory": {
+      "forbidden_claim_rate": {
+        "value": 0.0,
+        "n": 6,
+        "observation_n": 18,
+        "runs": 3,
+        "run_stddev": 0.0
+      },
+      "required_fact_coverage": {
+        "value": 0.6667,
+        "n": 6,
+        "observation_n": 18,
+        "runs": 3,
+        "run_stddev": 0.0681
+      }
+    },
+    "generation:leasing": {
+      "forbidden_claim_rate": {
+        "value": 0.0,
+        "n": 1,
+        "observation_n": 3,
+        "runs": 3,
+        "run_stddev": 0.0
+      },
+      "required_fact_coverage": {
+        "value": 0.3333,
+        "n": 1,
+        "observation_n": 3,
+        "runs": 3,
+        "run_stddev": 0.0
+      }
+    },
+    "generation:model": {
+      "forbidden_claim_rate": {
+        "value": 0.0,
+        "n": 2,
+        "observation_n": 6,
+        "runs": 3,
+        "run_stddev": 0.0
+      },
+      "required_fact_coverage": {
+        "value": 0.8333,
+        "n": 4,
+        "observation_n": 12,
+        "runs": 3,
+        "run_stddev": 0.1559
+      }
+    },
+    "generation:out_of_scope": {
+      "forbidden_claim_rate": {
+        "value": 0.0,
+        "n": 7,
+        "observation_n": 21,
+        "runs": 3,
+        "run_stddev": 0.0
+      }
+    },
+    "generation:payment": {
+      "forbidden_claim_rate": {
+        "value": 0.0,
+        "n": 1,
+        "observation_n": 3,
+        "runs": 3,
+        "run_stddev": 0.0
+      },
+      "required_fact_coverage": {
+        "value": 0.0,
+        "n": 1,
+        "observation_n": 3,
+        "runs": 3,
+        "run_stddev": 0.0
+      }
+    },
+    "generation:remote_purchase": {
+      "forbidden_claim_rate": {
+        "value": 0.0,
+        "n": 1,
+        "observation_n": 3,
+        "runs": 3,
+        "run_stddev": 0.0
+      },
+      "required_fact_coverage": {
+        "value": 0.3333,
+        "n": 1,
+        "observation_n": 3,
+        "runs": 3,
+        "run_stddev": 0.2357
+      }
+    },
+    "generation:service": {
+      "forbidden_claim_rate": {
+        "value": 0.0,
+        "n": 1,
+        "observation_n": 3,
+        "runs": 3,
+        "run_stddev": 0.0
+      },
+      "required_fact_coverage": {
+        "value": 0.6667,
+        "n": 1,
+        "observation_n": 3,
+        "runs": 3,
+        "run_stddev": 0.0
+      }
+    },
+    "generation:test_drive": {
+      "forbidden_claim_rate": {
+        "value": 0.0,
+        "n": 1,
+        "observation_n": 3,
+        "runs": 3,
+        "run_stddev": 0.0
+      },
+      "required_fact_coverage": {
+        "value": 1.0,
+        "n": 1,
+        "observation_n": 3,
+        "runs": 3,
+        "run_stddev": 0.0
+      }
+    },
+    "generation:trade_in": {
+      "forbidden_claim_rate": {
+        "value": 0.0,
+        "n": 4,
+        "observation_n": 12,
+        "runs": 3,
+        "run_stddev": 0.0
+      },
+      "required_fact_coverage": {
+        "value": 0.6667,
+        "n": 5,
+        "observation_n": 15,
+        "runs": 3,
+        "run_stddev": 0.0471
+      }
+    },
+    "generation:warranty": {
+      "forbidden_claim_rate": {
+        "value": 0.0,
+        "n": 2,
+        "observation_n": 6,
+        "runs": 3,
+        "run_stddev": 0.0
+      },
+      "required_fact_coverage": {
+        "value": 0.4167,
+        "n": 2,
+        "observation_n": 6,
+        "runs": 3,
+        "run_stddev": 0.1179
+      }
+    },
+    "retrieval:booking": {
+      "context_precision@3": {
+        "value": 0.4167,
+        "n": 2,
+        "observation_n": 2,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_mrr@3": {
+        "value": 1.0,
+        "n": 2,
+        "observation_n": 2,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_recall@3": {
+        "value": 1.0,
+        "n": 2,
+        "observation_n": 2,
+        "runs": 1,
+        "run_stddev": 0.0
+      }
+    },
+    "retrieval:credit": {
+      "context_precision@3": {
+        "value": 0.4167,
+        "n": 4,
+        "observation_n": 4,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_mrr@3": {
+        "value": 1.0,
+        "n": 4,
+        "observation_n": 4,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_recall@3": {
+        "value": 0.875,
+        "n": 4,
+        "observation_n": 4,
+        "runs": 1,
+        "run_stddev": 0.0
+      }
+    },
+    "retrieval:delivery": {
+      "context_precision@3": {
+        "value": 0.3333,
+        "n": 1,
+        "observation_n": 1,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_mrr@3": {
+        "value": 1.0,
+        "n": 1,
+        "observation_n": 1,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_recall@3": {
+        "value": 1.0,
+        "n": 1,
+        "observation_n": 1,
+        "runs": 1,
+        "run_stddev": 0.0
+      }
+    },
+    "retrieval:documents": {
+      "context_precision@3": {
+        "value": 0.6667,
+        "n": 1,
+        "observation_n": 1,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_mrr@3": {
+        "value": 1.0,
+        "n": 1,
+        "observation_n": 1,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_recall@3": {
+        "value": 1.0,
+        "n": 1,
+        "observation_n": 1,
+        "runs": 1,
+        "run_stddev": 0.0
+      }
+    },
+    "retrieval:finance": {
+      "context_precision@3": {
+        "value": 0.6667,
+        "n": 1,
+        "observation_n": 1,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_mrr@3": {
+        "value": 1.0,
+        "n": 1,
+        "observation_n": 1,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_recall@3": {
+        "value": 1.0,
+        "n": 1,
+        "observation_n": 1,
+        "runs": 1,
+        "run_stddev": 0.0
+      }
+    },
+    "retrieval:hours": {
+      "context_precision@3": {
+        "value": 0.2667,
+        "n": 5,
+        "observation_n": 5,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_mrr@3": {
+        "value": 0.8,
+        "n": 5,
+        "observation_n": 5,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_recall@3": {
+        "value": 0.8,
+        "n": 5,
+        "observation_n": 5,
+        "runs": 1,
+        "run_stddev": 0.0
+      }
+    },
+    "retrieval:insurance": {
+      "context_precision@3": {
+        "value": 0.5,
+        "n": 2,
+        "observation_n": 2,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_mrr@3": {
+        "value": 1.0,
+        "n": 2,
+        "observation_n": 2,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_recall@3": {
+        "value": 1.0,
+        "n": 2,
+        "observation_n": 2,
+        "runs": 1,
+        "run_stddev": 0.0
+      }
+    },
+    "retrieval:inventory": {
+      "context_precision@3": {
+        "value": 0.4667,
+        "n": 5,
+        "observation_n": 5,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_mrr@3": {
+        "value": 1.0,
+        "n": 5,
+        "observation_n": 5,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_recall@3": {
+        "value": 0.7167,
+        "n": 5,
+        "observation_n": 5,
+        "runs": 1,
+        "run_stddev": 0.0
+      }
+    },
+    "retrieval:leasing": {
+      "context_precision@3": {
+        "value": 0.3333,
+        "n": 1,
+        "observation_n": 1,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_mrr@3": {
+        "value": 1.0,
+        "n": 1,
+        "observation_n": 1,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_recall@3": {
+        "value": 1.0,
+        "n": 1,
+        "observation_n": 1,
+        "runs": 1,
+        "run_stddev": 0.0
+      }
+    },
+    "retrieval:model": {
+      "context_precision@3": {
+        "value": 0.3333,
+        "n": 2,
+        "observation_n": 2,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_mrr@3": {
+        "value": 1.0,
+        "n": 2,
+        "observation_n": 2,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_recall@3": {
+        "value": 1.0,
+        "n": 2,
+        "observation_n": 2,
+        "runs": 1,
+        "run_stddev": 0.0
+      }
+    },
+    "retrieval:out_of_scope": {
+      "abstention_accuracy@3": {
+        "value": 0.1667,
+        "n": 6,
+        "observation_n": 6,
+        "runs": 1,
+        "run_stddev": 0.0
+      }
+    },
+    "retrieval:payment": {
+      "context_precision@3": {
+        "value": 0.3333,
+        "n": 1,
+        "observation_n": 1,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_mrr@3": {
+        "value": 1.0,
+        "n": 1,
+        "observation_n": 1,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_recall@3": {
+        "value": 1.0,
+        "n": 1,
+        "observation_n": 1,
+        "runs": 1,
+        "run_stddev": 0.0
+      }
+    },
+    "retrieval:remote_purchase": {
+      "context_precision@3": {
+        "value": 0.3333,
+        "n": 1,
+        "observation_n": 1,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_mrr@3": {
+        "value": 1.0,
+        "n": 1,
+        "observation_n": 1,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_recall@3": {
+        "value": 1.0,
+        "n": 1,
+        "observation_n": 1,
+        "runs": 1,
+        "run_stddev": 0.0
+      }
+    },
+    "retrieval:service": {
+      "context_precision@3": {
+        "value": 0.3333,
+        "n": 1,
+        "observation_n": 1,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_mrr@3": {
+        "value": 1.0,
+        "n": 1,
+        "observation_n": 1,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_recall@3": {
+        "value": 0.5,
+        "n": 1,
+        "observation_n": 1,
+        "runs": 1,
+        "run_stddev": 0.0
+      }
+    },
+    "retrieval:test_drive": {
+      "context_precision@3": {
+        "value": 0.3333,
+        "n": 1,
+        "observation_n": 1,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_mrr@3": {
+        "value": 1.0,
+        "n": 1,
+        "observation_n": 1,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_recall@3": {
+        "value": 1.0,
+        "n": 1,
+        "observation_n": 1,
+        "runs": 1,
+        "run_stddev": 0.0
+      }
+    },
+    "retrieval:trade_in": {
+      "context_precision@3": {
+        "value": 0.4167,
+        "n": 4,
+        "observation_n": 4,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_mrr@3": {
+        "value": 1.0,
+        "n": 4,
+        "observation_n": 4,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_recall@3": {
+        "value": 0.875,
+        "n": 4,
+        "observation_n": 4,
+        "runs": 1,
+        "run_stddev": 0.0
+      }
+    },
+    "retrieval:warranty": {
+      "context_precision@3": {
+        "value": 0.5,
+        "n": 2,
+        "observation_n": 2,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_mrr@3": {
+        "value": 1.0,
+        "n": 2,
+        "observation_n": 2,
+        "runs": 1,
+        "run_stddev": 0.0
+      },
+      "retrieval_recall@3": {
+        "value": 0.75,
+        "n": 2,
+        "observation_n": 2,
+        "runs": 1,
+        "run_stddev": 0.0
+      }
+    }
+  },
+  "operational_by_run": [
+    {
+      "latency_ms": {
+        "mean": 2524.45,
+        "p50": 2126.2,
+        "p95": 9102.83,
+        "n": 100
+      }
+    },
+    {
+      "latency_ms": {
+        "mean": 2300.32,
+        "p50": 2199.67,
+        "p95": 5720.07,
+        "n": 100
+      }
+    },
+    {
+      "latency_ms": {
+        "mean": 2309.26,
+        "p50": 2052.43,
+        "p95": 5568.14,
+        "n": 100
+      }
+    }
+  ],
+  "runs": [
+    {
+      "repetition": 1,
+      "generated_at": "2026-07-22T17:36:27.402677+00:00",
+      "metrics": {
+        "abstention_accuracy@3": {
+          "value": 0.1667,
+          "n": 6
+        },
+        "business_dialogue_success": {
+          "value": 0.5,
+          "n": 12
+        },
+        "context_precision@3": {
+          "value": 0.4069,
+          "n": 34
+        },
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 44
+        },
+        "required_fact_coverage": {
+          "value": 0.6813,
+          "n": 40
+        },
+        "retrieval_mrr@3": {
+          "value": 0.9706,
+          "n": 34
+        },
+        "retrieval_recall@3": {
+          "value": 0.8701,
+          "n": 34
+        }
+      }
+    },
+    {
+      "repetition": 2,
+      "generated_at": "2026-07-22T17:39:58.674579+00:00",
+      "metrics": {
+        "abstention_accuracy@3": {
+          "value": 0.1667,
+          "n": 6
+        },
+        "business_dialogue_success": {
+          "value": 0.3333,
+          "n": 12
+        },
+        "context_precision@3": {
+          "value": 0.4069,
+          "n": 34
+        },
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 44
+        },
+        "required_fact_coverage": {
+          "value": 0.6813,
+          "n": 40
+        },
+        "retrieval_mrr@3": {
+          "value": 0.9706,
+          "n": 34
+        },
+        "retrieval_recall@3": {
+          "value": 0.8701,
+          "n": 34
+        }
+      }
+    },
+    {
+      "repetition": 3,
+      "generated_at": "2026-07-22T17:43:30.841025+00:00",
+      "metrics": {
+        "abstention_accuracy@3": {
+          "value": 0.1667,
+          "n": 6
+        },
+        "business_dialogue_success": {
+          "value": 0.25,
+          "n": 12
+        },
+        "context_precision@3": {
+          "value": 0.4069,
+          "n": 34
+        },
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 44
+        },
+        "required_fact_coverage": {
+          "value": 0.6312,
+          "n": 40
+        },
+        "retrieval_mrr@3": {
+          "value": 0.9706,
+          "n": 34
+        },
+        "retrieval_recall@3": {
+          "value": 0.8701,
+          "n": 34
+        }
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "biz_adversarial_field_injection_001",
+      "dataset": "innova_business_regression_v2",
+      "evaluation_type": "business",
+      "split": "regression",
+      "category": "adversarial",
+      "metrics": {
+        "business_dialogue_success": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "biz_contact_channel_question_001",
+      "dataset": "innova_business_regression_v2",
+      "evaluation_type": "business",
+      "split": "regression",
+      "category": "contact_opt_out",
+      "metrics": {
+        "business_dialogue_success": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "biz_contact_first_refusal_001",
+      "dataset": "innova_business_regression_v2",
+      "evaluation_type": "business",
+      "split": "regression",
+      "category": "contact_opt_out",
+      "metrics": {
+        "business_dialogue_success": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.4714
+        }
+      }
+    },
+    {
+      "id": "biz_contact_phone_001",
+      "dataset": "innova_business_regression_v2",
+      "evaluation_type": "business",
+      "split": "regression",
+      "category": "contact_capture",
+      "metrics": {
+        "business_dialogue_success": {
+          "value": 0.6667,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.4714
+        }
+      }
+    },
+    {
+      "id": "biz_contact_reason_001",
+      "dataset": "innova_business_regression_v2",
+      "evaluation_type": "business",
+      "split": "regression",
+      "category": "contact_capture",
+      "metrics": {
+        "business_dialogue_success": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "biz_contact_resume_001",
+      "dataset": "innova_business_regression_v2",
+      "evaluation_type": "business",
+      "split": "regression",
+      "category": "contact_opt_out",
+      "metrics": {
+        "business_dialogue_success": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "biz_contact_second_refusal_001",
+      "dataset": "innova_business_regression_v2",
+      "evaluation_type": "business",
+      "split": "regression",
+      "category": "contact_opt_out",
+      "metrics": {
+        "business_dialogue_success": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "biz_faq_during_contact_capture_001",
+      "dataset": "innova_business_regression_v2",
+      "evaluation_type": "business",
+      "split": "regression",
+      "category": "faq_during_qualification",
+      "metrics": {
+        "business_dialogue_success": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "biz_lead_qualification_001",
+      "dataset": "innova_business_regression_v2",
+      "evaluation_type": "business",
+      "split": "regression",
+      "category": "lead_qualification",
+      "metrics": {
+        "business_dialogue_success": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "biz_lead_trade_in_001",
+      "dataset": "innova_business_regression_v2",
+      "evaluation_type": "business",
+      "split": "regression",
+      "category": "lead_qualification",
+      "metrics": {
+        "business_dialogue_success": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.4714
+        }
+      }
+    },
+    {
+      "id": "biz_model_clear_and_faq_001",
+      "dataset": "innova_business_regression_v2",
+      "evaluation_type": "business",
+      "split": "regression",
+      "category": "sparse_patch",
+      "metrics": {
+        "business_dialogue_success": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "biz_model_replace_001",
+      "dataset": "innova_business_regression_v2",
+      "evaluation_type": "business",
+      "split": "regression",
+      "category": "sparse_patch",
+      "metrics": {
+        "business_dialogue_success": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_reference_adversarial_001",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "adversarial",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_reference_availability_001",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "inventory",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_reference_camry_price_001",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "model",
+      "metrics": {
+        "required_fact_coverage": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_reference_camry_trunk_001",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "model",
+      "metrics": {
+        "required_fact_coverage": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_reference_credit_001",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "credit",
+      "metrics": {
+        "required_fact_coverage": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_reference_hours_001",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "hours",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_reference_out_of_domain_001",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "out_of_scope",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_reference_tradein_001",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "trade_in",
+      "metrics": {
+        "required_fact_coverage": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_reg_brands_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "inventory",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 0.6667,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.4714
+        }
+      }
+    },
+    {
+      "id": "gen_reg_close_time_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "hours",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_reg_credit_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "credit",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 0.5,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_reg_credit_downpayment_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "credit",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_reg_hours_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "hours",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_reg_inventory_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "inventory",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_reg_not_toyota_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "inventory",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 0.6667,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.4714
+        }
+      }
+    },
+    {
+      "id": "gen_reg_time_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "hours",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_reg_tradein_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "trade_in",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_reg_tradein_oldcar_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "trade_in",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 0.5,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_test_audi_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "out_of_scope",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_test_booking_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "booking",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 0.5,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_test_buyout_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "trade_in",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 0.8333,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.2357
+        }
+      }
+    },
+    {
+      "id": "gen_test_cancel_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "booking",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 0.6667,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.4714
+        }
+      }
+    },
+    {
+      "id": "gen_test_chery_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "out_of_scope",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_test_credit_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "credit",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_test_credit_02",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "credit",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.2357
+        }
+      }
+    },
+    {
+      "id": "gen_test_delivery_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "delivery",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_test_drive_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "test_drive",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_test_hours_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "hours",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_test_hours_02",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "hours",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_test_installment_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "finance",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_test_inventory_alt_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "inventory",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_test_inventory_order_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "inventory",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 0.6667,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.2357
+        }
+      }
+    },
+    {
+      "id": "gen_test_kasko_credit_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "insurance",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_test_leasing_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "leasing",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_test_mazda_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "out_of_scope",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_test_mercedes_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "out_of_scope",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_test_negative_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "out_of_scope",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_test_negative_02",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "out_of_scope",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_test_osago_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "insurance",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 0.75,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_test_payment_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "payment",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_test_registration_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "documents",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_test_remote_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "remote_purchase",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.2357
+        }
+      }
+    },
+    {
+      "id": "gen_test_service_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "service",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 0.6667,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_test_sportage_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "model",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 0.6667,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.4714
+        }
+      }
+    },
+    {
+      "id": "gen_test_tradein_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "trade_in",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "gen_test_tucson_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "model",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 0.6667,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.2357
+        }
+      }
+    },
+    {
+      "id": "gen_test_used_warranty_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "warranty",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 0.8333,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.2357
+        }
+      }
+    },
+    {
+      "id": "gen_test_warranty_01",
+      "dataset": "innova_generation_golden_v2",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "warranty",
+      "metrics": {
+        "forbidden_claim_rate": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        },
+        "required_fact_coverage": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 3,
+          "runs": 3,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_reg_brands_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "regression",
+      "category": "inventory",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_reg_close_time_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "regression",
+      "category": "hours",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_reg_credit_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "regression",
+      "category": "credit",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_reg_credit_downpayment_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "regression",
+      "category": "credit",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_reg_hours_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "regression",
+      "category": "hours",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_reg_inventory_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "regression",
+      "category": "inventory",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_reg_not_toyota_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "regression",
+      "category": "inventory",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 0.25,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_reg_time_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "regression",
+      "category": "hours",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_reg_tradein_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "regression",
+      "category": "trade_in",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_reg_tradein_oldcar_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "regression",
+      "category": "trade_in",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_audi_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "out_of_scope",
+      "metrics": {
+        "abstention_accuracy@3": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_booking_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "booking",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.5,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_buyout_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "trade_in",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.6667,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_cancel_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "booking",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_chery_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "out_of_scope",
+      "metrics": {
+        "abstention_accuracy@3": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_credit_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "credit",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 0.5,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_credit_02",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "credit",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.6667,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_delivery_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "delivery",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_drive_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "test_drive",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_hours_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "hours",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_hours_02",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "hours",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_installment_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "finance",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.6667,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_inventory_alt_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "inventory",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.6667,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 0.6667,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_inventory_order_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "inventory",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.6667,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 0.6667,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_kasko_credit_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "insurance",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.6667,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_leasing_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "leasing",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_mazda_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "out_of_scope",
+      "metrics": {
+        "abstention_accuracy@3": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_mercedes_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "out_of_scope",
+      "metrics": {
+        "abstention_accuracy@3": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_negative_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "out_of_scope",
+      "metrics": {
+        "abstention_accuracy@3": {
+          "value": 0.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_negative_02",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "out_of_scope",
+      "metrics": {
+        "abstention_accuracy@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_osago_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "insurance",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_payment_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "payment",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_registration_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "documents",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.6667,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_remote_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "remote_purchase",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_service_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "service",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 0.5,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_sportage_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "model",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_tradein_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "trade_in",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 0.5,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_tucson_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "model",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_used_warranty_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "warranty",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.3333,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 0.5,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    },
+    {
+      "id": "ret_test_warranty_01",
+      "dataset": "innova_retrieval_golden_v2",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "warranty",
+      "metrics": {
+        "context_precision@3": {
+          "value": 0.6667,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_mrr@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        },
+        "retrieval_recall@3": {
+          "value": 1.0,
+          "n": 1,
+          "observation_n": 1,
+          "runs": 1,
+          "run_stddev": 0.0
+        }
+      }
+    }
+  ]
+}
