@@ -1,0 +1,183 @@
+name: Innova CI/CD
+
+on:
+  pull_request:
+    branches: [jmlc_mvp]
+  push:
+    branches: [jmlc_mvp]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: innova-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  PYTHON_VERSION: "3.13"
+  APP_IMAGE: ghcr.io/kng-labs/innova-ai:${{ github.sha }}
+
+jobs:
+  checks:
+    name: Checks
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: innova
+          POSTGRES_PASSWORD: innova
+          POSTGRES_DB: innova_ai_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U innova -d innova_ai_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      DATABASE_URL: postgresql+asyncpg://innova:innova@localhost:5432/innova_ai_test
+      TEST_DATABASE_URL: postgresql+asyncpg://innova:innova@localhost:5432/innova_ai_test
+      LLM_PROVIDER: stub
+      EMBEDDING_PROVIDER: fake
+      LEAD_DELIVERY_PROVIDER: disabled
+      REDIS_URL: ""
+      OPENROUTER_API_KEY: ""
+      AMOCRM_ACCESS_TOKEN: ""
+      TELEGRAM_BOT_TOKEN: ""
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.15"
+          python-version: ${{ env.PYTHON_VERSION }}
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Check formatting
+        run: uv run ruff format --check app tests main.py
+
+      - name: Run linter
+        run: uv run ruff check app tests main.py
+
+      - name: Run type checking
+        run: uv run mypy app/ --ignore-missing-imports
+
+      - name: Verify migrations
+        run: |
+          uv run alembic upgrade head
+          uv run alembic check
+
+      - name: Run tests
+        run: uv run pytest -q
+
+      - name: Build production image
+        run: |
+          docker build \
+            --label "org.opencontainers.image.source=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" \
+            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            --tag "${APP_IMAGE}" \
+            .
+
+      - name: Inspect production image
+        run: |
+          docker run --rm --entrypoint sh "${APP_IMAGE}" -c '
+            test "$(id -u)" != "0"
+            test ! -e /app/.env
+            test ! -e /app/.env.production
+            test ! -e /app/tests
+            test ! -e /app/docs
+            test ! -e /app/evals
+            test ! -e /app/.git
+          '
+
+      - name: Save verified image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/jmlc_mvp'
+        run: |
+          mkdir -p /tmp/innova-image
+          docker image inspect --format '{{.Id}}' "${APP_IMAGE}" > /tmp/innova-image/image-id
+          docker save --output /tmp/innova-image/image.tar "${APP_IMAGE}"
+
+      - name: Upload verified image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/jmlc_mvp'
+        uses: actions/upload-artifact@v4
+        with:
+          name: verified-image-${{ github.run_id }}
+          path: /tmp/innova-image/
+          if-no-files-found: error
+          retention-days: 1
+          compression-level: 0
+          overwrite: true
+
+  publish-and-deploy:
+    name: Publish and deploy
+    if: github.event_name == 'push' && github.ref == 'refs/heads/jmlc_mvp'
+    needs: checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    environment: production
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Download verified image
+        uses: actions/download-artifact@v4
+        with:
+          name: verified-image-${{ github.run_id }}
+          path: /tmp/innova-image
+
+      - name: Load and verify image
+        run: |
+          docker load --input /tmp/innova-image/image.tar
+          EXPECTED_IMAGE_ID="$(cat /tmp/innova-image/image-id)"
+          ACTUAL_IMAGE_ID="$(docker image inspect --format '{{.Id}}' "${APP_IMAGE}")"
+          test -n "${EXPECTED_IMAGE_ID}"
+          test "${ACTUAL_IMAGE_ID}" = "${EXPECTED_IMAGE_ID}"
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Publish immutable image
+        run: docker push "${APP_IMAGE}"
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d "${HOME}/.ssh"
+          printf '%s\n' "${SSH_PRIVATE_KEY}" >"${HOME}/.ssh/id_ed25519"
+          chmod 600 "${HOME}/.ssh/id_ed25519"
+          printf '%s\n' "${SSH_KNOWN_HOSTS}" >"${HOME}/.ssh/known_hosts"
+          chmod 600 "${HOME}/.ssh/known_hosts"
+
+      - name: Upload release bundle
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          RELEASE_DIR="/opt/innova/releases/${GITHUB_SHA}"
+          tar -czf /tmp/innova-release.tgz docker-compose.prod.yml scripts
+          ssh -p "${VPS_PORT}" "${VPS_USER}@${VPS_HOST}" "mkdir -p '${RELEASE_DIR}'"
+          scp -P "${VPS_PORT}" /tmp/innova-release.tgz "${VPS_USER}@${VPS_HOST}:${RELEASE_DIR}/"
+          ssh -p "${VPS_PORT}" "${VPS_USER}@${VPS_HOST}" \
+            "tar -xzf '${RELEASE_DIR}/innova-release.tgz' -C '${RELEASE_DIR}'"
+
+      - name: Deploy release
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          RELEASE_DIR="/opt/innova/releases/${GITHUB_SHA}"
+          ssh -p "${VPS_PORT}" "${VPS_USER}@${VPS_HOST}" \
+            "bash '${RELEASE_DIR}/scripts/deploy.sh' '${APP_IMAGE}' '${RELEASE_DIR}'"
