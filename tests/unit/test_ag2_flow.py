@@ -361,9 +361,7 @@ def test_context_message_includes_page_title():
     )
     assert "[Страница сайта: Toyota Camry 2024]" in ctx
     assert ctx.index("Страница сайта") < ctx.index("База знаний")
-    assert (
-        '[Недостающие поля: ["car_model", "budget", "purchase_type"]]' in ctx
-    )
+    assert '[Недостающие поля: ["car_model", "budget", "purchase_type"]]' in ctx
     assert "[Сбор контакта отключён пользователем: true]" in ctx
 
 
