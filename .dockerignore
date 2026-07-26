@@ -6,9 +6,13 @@ __pycache__/
 .ruff_cache/
 .git/
 .gitignore
+.github/
 .env
 .env.*
 tests/
 docs/
+scripts/
+docker-compose*.yml
 *.md
 repomix-output.xml
+evals/
