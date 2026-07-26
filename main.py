@@ -13,6 +13,7 @@ from app.router.message_router import router as message_router
 from app.router.session_router import router as session_router
 from app.router.lead_router import router as lead_router
 from app.router.knowledge_router import router as knowledge_router
+from app.router.health_router import router as health_router
 
 
 load_dotenv()
@@ -31,9 +32,11 @@ def _cors_origins() -> list[str]:
 
 @asynccontextmanager
 async def lifespan(current_app: FastAPI) -> AsyncIterator[None]:
-    await init_app_state(current_app)
-    yield
-    await close_app_state(current_app)
+    try:
+        await init_app_state(current_app)
+        yield
+    finally:
+        await close_app_state(current_app)
 
 
 app = FastAPI(lifespan=lifespan)
@@ -50,5 +53,6 @@ app.include_router(message_router, tags=["Messages"])
 app.include_router(session_router)
 app.include_router(lead_router)
 app.include_router(knowledge_router)
+app.include_router(health_router)
 
 app.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static")

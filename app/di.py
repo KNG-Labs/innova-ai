@@ -85,14 +85,17 @@ async def close_app_state(app: FastAPI) -> None:
     http_client = getattr(app.state, "http_client", None)
     if http_client is not None:
         await http_client.aclose()
+        app.state.http_client = None
 
     redis_conn = getattr(app.state, "redis_conn", None)
     if redis_conn is not None:
         await redis_conn.aclose()
+        app.state.redis_conn = None
 
     db_engine = getattr(app.state, "db_engine", None)
     if db_engine is not None:
         await db_engine.dispose()
+        app.state.db_engine = None
 
 
 async def get_db_session(request: Request) -> AsyncGenerator[AsyncSession, None]:
