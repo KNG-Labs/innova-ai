@@ -15,7 +15,7 @@ concurrency:
 
 env:
   PYTHON_VERSION: "3.13"
-  APP_IMAGE: ghcr.io/georgiisadunyan/innova-ai:${{ github.sha }}
+  APP_IMAGE: ghcr.io/kng-labs/innova-ai:${{ github.sha }}
 
 jobs:
   checks:
