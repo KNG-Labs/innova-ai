@@ -1,6 +1,7 @@
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Body, Depends
 
 from app.di import get_knowledge_ingestion_service
 from app.schemas.knowledge_schema import (
@@ -10,6 +11,10 @@ from app.schemas.knowledge_schema import (
 from app.service.knowledge_ingestion_service import KnowledgeIngestionService
 
 router = APIRouter(prefix="/knowledge", tags=["Knowledge"])
+KnowledgeDocumentsPayload = Annotated[
+    list[KnowledgeDocumentCreate],
+    Body(min_length=1),
+]
 
 
 @router.post("/documents", status_code=201)
@@ -18,6 +23,15 @@ async def create_document(
     service: KnowledgeIngestionService = Depends(get_knowledge_ingestion_service),
 ) -> dict[str, list[UUID]]:
     document_ids = await service.ingest_many(payload)
+    return {"document_ids": document_ids}
+
+
+@router.put("/documents")
+async def replace_documents(
+    payload: KnowledgeDocumentsPayload,
+    service: KnowledgeIngestionService = Depends(get_knowledge_ingestion_service),
+) -> dict[str, list[UUID]]:
+    document_ids = await service.replace_all(payload)
     return {"document_ids": document_ids}
 
 

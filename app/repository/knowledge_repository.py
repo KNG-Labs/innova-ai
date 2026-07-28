@@ -26,6 +26,10 @@ class KnowledgeRepository:
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
 
+    async def delete_all_documents(self) -> None:
+        await self._session.execute(delete(KnowledgeDocument))
+        await self._session.flush()
+
     async def add_chunks(
         self,
         *,

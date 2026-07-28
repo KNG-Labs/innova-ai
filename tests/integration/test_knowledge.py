@@ -69,3 +69,29 @@ async def test_ingest_and_list_via_api(client):
     listed = await client.get("/knowledge/documents")
     titles = [d["title"] for d in listed.json()]
     assert {"Camry", "RAV4"} <= set(titles)
+
+
+async def test_replace_all_documents_via_api(client):
+    created = await client.post(
+        "/knowledge/documents",
+        json=[
+            {"title": "Старый документ", "content": "Устаревшая информация."},
+        ],
+    )
+    assert created.status_code == 201
+
+    replaced = await client.put(
+        "/knowledge/documents",
+        json=[
+            {"title": "Новый документ", "content": "Актуальная информация."},
+        ],
+    )
+    assert replaced.status_code == 200
+    assert len(replaced.json()["document_ids"]) == 1
+
+    listed = await client.get("/knowledge/documents")
+    assert listed.status_code == 200
+    assert [document["title"] for document in listed.json()] == ["Новый документ"]
+
+    empty = await client.put("/knowledge/documents", json=[])
+    assert empty.status_code == 422
