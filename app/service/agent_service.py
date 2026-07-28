@@ -2,7 +2,7 @@ import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.client.ag2_agent_client import Ag2AgentClient
+from app.client.ag2_agent_client import LLMClient
 from app.client.queue_client import QueueClient
 from app.repository import LeadRepository
 from app.repository.dialog_session_repository import DialogSessionRepository
@@ -14,6 +14,7 @@ from app.schemas.agent_schema import (
     ContactPreference,
     DialogState,
     AgentDecision,
+    LeadIntentStatus,
 )
 from app.service.business_service import MessageNormalizer
 from app.service.knowledge_retrieval_service import (
@@ -28,6 +29,11 @@ from app.service.state_machine import (
     merge_contact,
     compute_missing_fields,
     should_opt_out_after_contact_refusals,
+    has_confirmed_lead_intent,
+    has_explicit_lead_request,
+    is_information_question,
+    is_unknown_qualification_answer,
+    next_expected_qualification_field,
 )
 
 _logger = logging.getLogger(__name__)
@@ -38,7 +44,7 @@ class AgentService:
         self,
         *,
         db_session: AsyncSession,
-        llm_client: Ag2AgentClient,
+        llm_client: LLMClient,
         normalizer: MessageNormalizer,
         queue_client: QueueClient,
         delivery_provider: str,
@@ -98,8 +104,13 @@ class AgentService:
 
         # Вызов AG2
         # RAG: retrieved context перед LLM
-        retrieved = await self._retrieval.retrieve(content)
-        retrieved_context = format_chunks_for_prompt(retrieved)
+        retrieved = await self._retrieval.retrieve(
+            content,
+            last_source_id=session.last_rag_source_id,
+            last_source_title=session.last_rag_source_title,
+            history=history,
+        )
+        retrieved_context = format_chunks_for_prompt(retrieved.chunks)
 
         decision: AgentDecision = await self._llm_client.decide(
             user_message=content,
@@ -110,12 +121,94 @@ class AgentService:
             page_title=request.page_title,
             missing_fields=current_missing_fields,
             contact_opt_out=contact_opt_out,
+            lead_intent_confirmation_pending=(session.lead_intent_confirmation_pending),
         )
 
-        # Слить данные ДО решения о переходе (backend - источник истины)
-        merged_qual = apply_qualification_patch(
-            qualification_data, decision.qualification_patch
+        proposed_qualification_patch = dict(decision.qualification_patch)
+        if (
+            current_state == DialogState.QUALIFICATION
+            and session.expected_qualification_field is not None
+            and is_unknown_qualification_answer(content)
+        ):
+            proposed_qualification_patch[session.expected_qualification_field] = (
+                "не указано"
+            )
+
+        decision_for_transition = decision.model_copy(
+            update={"qualification_patch": proposed_qualification_patch}
         )
+        lead_intent_confirmed = has_confirmed_lead_intent(
+            current_state=current_state,
+            user_message=content,
+            decision=decision_for_transition,
+            expected_qualification_field=session.expected_qualification_field,
+            lead_intent_confirmation_pending=(session.lead_intent_confirmation_pending),
+        )
+        inline_qualification_faq = (
+            current_state == DialogState.QUALIFICATION
+            and retrieved.source_id is not None
+            and is_information_question(content)
+            and not has_explicit_lead_request(content)
+            and not is_contact_valid(decision.extracted_contact)
+        )
+        rejected_qualification_start = (
+            current_state in {DialogState.GREETING, DialogState.FAQ}
+            and decision.next_state == DialogState.QUALIFICATION
+            and not lead_intent_confirmed
+        )
+        if rejected_qualification_start:
+            decision = await self._llm_client.decide(
+                user_message=content,
+                history=history,
+                current_state=current_state.value,
+                qualification_data=qualification_data,
+                retrieved_context=retrieved_context,
+                page_title=request.page_title,
+                missing_fields=current_missing_fields,
+                contact_opt_out=contact_opt_out,
+                lead_intent_confirmation_pending=(
+                    session.lead_intent_confirmation_pending
+                ),
+                force_lead_intent_confirmation=True,
+            )
+            if (
+                decision.next_state != DialogState.FAQ
+                or decision.lead_intent_status != LeadIntentStatus.NEEDS_CONFIRMATION
+                or decision.qualification_patch
+            ):
+                decision = AgentDecision(
+                    answer=(
+                        "Уточните, пожалуйста: хотите, чтобы я помог подобрать "
+                        "автомобиль для покупки?"
+                    ),
+                    intent="general",
+                    next_state=DialogState.FAQ,
+                    qualification_patch={},
+                    missing_fields=current_missing_fields,
+                    lead_ready=False,
+                    lead_intent_status=LeadIntentStatus.NEEDS_CONFIRMATION,
+                )
+            proposed_qualification_patch = {}
+            lead_intent_confirmed = False
+            inline_qualification_faq = False
+
+        if inline_qualification_faq:
+            expected_field = session.expected_qualification_field
+            qualification_patch = (
+                {
+                    expected_field: proposed_qualification_patch[expected_field],
+                }
+                if expected_field is not None
+                and expected_field in proposed_qualification_patch
+                else {}
+            )
+        elif rejected_qualification_start:
+            qualification_patch = {}
+        else:
+            qualification_patch = proposed_qualification_patch
+
+        # Слить данные ДО решения о переходе (backend - источник истины)
+        merged_qual = apply_qualification_patch(qualification_data, qualification_patch)
         merged_contact = merge_contact(current_contact, decision.extracted_contact)
         final_contact = merged_contact if merged_contact else None
 
@@ -125,6 +218,7 @@ class AgentService:
             decision,
             merged_qual,
             final_contact,
+            lead_intent_confirmed=lead_intent_confirmed,
         )
 
         contact_refusals = session.contact_refusals
@@ -151,6 +245,29 @@ class AgentService:
         elif contact_opt_out:
             next_state = DialogState.FAQ
 
+        lead_intent_confirmation_pending = (
+            decision.lead_intent_status == LeadIntentStatus.NEEDS_CONFIRMATION
+            and next_state == DialogState.FAQ
+        )
+
+        if inline_qualification_faq:
+            next_state = DialogState.QUALIFICATION
+        expected_qualification_field = next_expected_qualification_field(
+            next_state,
+            merged_qual,
+        )
+
+        last_rag_source_id = (
+            retrieved.source_id
+            if retrieved.source_id is not None
+            else session.last_rag_source_id
+        )
+        last_rag_source_title = (
+            retrieved.source_title
+            if retrieved.source_id is not None
+            else session.last_rag_source_title
+        )
+
         # Сохранение ответа ассистента
         assistant_message = await self._messages.create(
             session_id=session.id,
@@ -169,6 +286,10 @@ class AgentService:
             state=next_state.value,
             contact_refusals=contact_refusals,
             contact_opt_out=contact_opt_out,
+            lead_intent_confirmation_pending=lead_intent_confirmation_pending,
+            last_rag_source_id=last_rag_source_id,
+            last_rag_source_title=last_rag_source_title,
+            expected_qualification_field=expected_qualification_field,
             close=is_closing,
         )
 

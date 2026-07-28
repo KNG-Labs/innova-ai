@@ -1,13 +1,75 @@
 import pytest
 
 from app.client.ag2_agent_client import FakeAg2AgentClient, AgentDecision
+from app.client.retrieval_planner_client import (
+    FakeRetrievalPlannerClient,
+    RetrievalMode,
+    RetrievalPlan,
+)
 from app.domain import MISSING_ALL
 from app.schemas import DialogState
+from app.schemas.agent_schema import LeadIntentStatus
 from main import app
 from uuid import UUID, uuid4
 from app.models import DialogSession
 
 pytestmark = pytest.mark.integration
+
+
+@pytest.mark.parametrize(
+    ("alias", "alias_id"),
+    [("trade-in", "latin"), ("трейд-ин", "hyphen"), ("трейдин", "phonetic")],
+)
+@pytest.mark.asyncio
+async def test_trade_in_aliases_retrieve_same_source(
+    client,
+    alias: str,
+    alias_id: str,
+) -> None:
+    captured_contexts: list[str] = []
+
+    class _CapturingClient(FakeAg2AgentClient):
+        async def decide(self, *args, retrieved_context="", **kwargs):
+            captured_contexts.append(retrieved_context)
+            return await super().decide(
+                *args,
+                retrieved_context=retrieved_context,
+                **kwargs,
+            )
+
+    knowledge = await client.post(
+        "/knowledge/documents",
+        json=[
+            {
+                "title": "Программа Trade-in",
+                "content": (
+                    "Trade-in, также называемый «трейд-ин» или «трейдин», — "
+                    "это зачёт старого автомобиля при покупке нового."
+                ),
+            }
+        ],
+    )
+    assert knowledge.status_code == 201
+    app.state.llm_client = _CapturingClient(
+        responses=[
+            AgentDecision(
+                answer="Trade-in — зачёт старого автомобиля.",
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+            )
+        ]
+    )
+
+    response = await client.post(
+        "/message",
+        json={"anonymous_id": f"alias-{alias_id}", "content": alias},
+    )
+
+    assert response.status_code == 200
+    assert "[Источник: Программа Trade-in]" in captured_contexts[0]
 
 
 @pytest.mark.asyncio
@@ -75,7 +137,7 @@ async def test_post_message_creates_anonymous_user_session_and_messages(client) 
 async def test_post_message_continues_existing_dialog_session(client) -> None:
     """session_id сохраняется между сообщениями.
 
-    Сценарий из двух ходов: приветствие (GREETING -> QUALIFICATION),
+    Сценарий из двух ходов: явный lead intent (GREETING -> QUALIFICATION),
     затем явный запрос заявки (QUALIFICATION -> CONTACT_CAPTURE).
     """
 
@@ -105,7 +167,7 @@ async def test_post_message_continues_existing_dialog_session(client) -> None:
         json={
             "anonymous_id": "test-user-2",
             "channel": "website",
-            "content": "Привет",
+            "content": "Хочу купить автомобиль",
         },
     )
 
@@ -148,7 +210,7 @@ async def test_post_message_continues_existing_dialog_session(client) -> None:
         "assistant",
     ]
 
-    assert messages[0]["content"] == "Привет"
+    assert messages[0]["content"] == "Хочу купить автомобиль"
     assert messages[2]["content"] == "Хочу оставить заявку"
 
 
@@ -455,13 +517,13 @@ async def test_closed_session_sets_closed_at_and_next_message_starts_new_session
         ]
     )
 
-    # Ход 1: GREETING -> QUALIFICATION
+    # Ход 1: подтверждённый lead intent, GREETING -> QUALIFICATION
     first = await client.post(
         "/message",
         json={
             "anonymous_id": "close-user-1",
             "channel": "website",
-            "content": "Привет",
+            "content": "Хочу купить автомобиль",
         },
     )
     assert first.status_code == 200
@@ -571,7 +633,7 @@ async def test_two_explicit_contact_refusals_opt_out_without_closing_session(
             AgentDecision(
                 answer="Camry стоит от 2 800 000 рублей.",
                 intent="pricing",
-                next_state=DialogState.QUALIFICATION,
+                next_state=DialogState.FAQ,
                 qualification_patch={},
                 missing_fields=["contact"],
                 lead_ready=False,
@@ -801,7 +863,7 @@ async def test_qualification_patch_null_removes_saved_field(client) -> None:
         "/message",
         json={
             "anonymous_id": "qualification-patch-user",
-            "content": "Хочу Toyota Camry",
+            "content": "Хочу купить Toyota Camry",
         },
     )
     assert first.status_code == 200
@@ -822,3 +884,1144 @@ async def test_qualification_patch_null_removes_saved_field(client) -> None:
     lead = await client.get(f"/leads/{second.json()['lead_id']}")
     assert lead.status_code == 200
     assert "car_model" not in lead.json()["qualification"]
+
+
+@pytest.mark.asyncio
+async def test_faq_during_qualification_preserves_data_and_can_resume(client) -> None:
+    captured_states: list[str] = []
+    captured_qualification: list[dict] = []
+    captured_contexts: list[str] = []
+
+    class _CapturingClient(FakeAg2AgentClient):
+        async def decide(
+            self,
+            *args,
+            current_state,
+            qualification_data,
+            retrieved_context="",
+            **kwargs,
+        ):
+            captured_states.append(current_state)
+            captured_qualification.append(dict(qualification_data))
+            captured_contexts.append(retrieved_context)
+            return await super().decide(
+                *args,
+                current_state=current_state,
+                qualification_data=qualification_data,
+                retrieved_context=retrieved_context,
+                **kwargs,
+            )
+
+    knowledge = await client.post(
+        "/knowledge/documents",
+        json=[
+            {
+                "title": "Программа Trade-in",
+                "content": (
+                    "Оценка автомобиля по программе trade-in бесплатна "
+                    "и занимает 30–40 минут."
+                ),
+            }
+        ],
+    )
+    assert knowledge.status_code == 201
+
+    app.state.llm_client = _CapturingClient(
+        responses=[
+            AgentDecision(
+                answer="Какой бюджет вы рассматриваете?",
+                intent="lead_request",
+                next_state=DialogState.QUALIFICATION,
+                qualification_patch={"car_model": "Toyota Camry"},
+                missing_fields=["budget", "purchase_type", "contact"],
+                lead_ready=False,
+            ),
+            AgentDecision(
+                answer="Оценка по trade-in бесплатна и занимает 30–40 минут.",
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=["budget", "purchase_type", "contact"],
+                lead_ready=False,
+            ),
+            AgentDecision(
+                answer="Хорошо. Какой бюджет вы рассматриваете?",
+                intent="lead_request",
+                next_state=DialogState.QUALIFICATION,
+                qualification_patch={},
+                missing_fields=["budget", "purchase_type", "contact"],
+                lead_ready=False,
+            ),
+        ]
+    )
+
+    first = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "qualification-faq-user",
+            "content": "Хочу купить Toyota Camry",
+        },
+    )
+    session_id = first.json()["session_id"]
+
+    faq = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "qualification-faq-user",
+            "session_id": session_id,
+            "content": "А какие условия trade-in?",
+        },
+    )
+
+    resumed = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "qualification-faq-user",
+            "session_id": session_id,
+            "content": "Продолжим подбор",
+        },
+    )
+
+    assert faq.json()["state"] == "QUALIFICATION"
+    assert faq.json()["answer"].startswith("Оценка по trade-in")
+    assert resumed.json()["state"] == "QUALIFICATION"
+    assert captured_states == ["GREETING", "QUALIFICATION", "QUALIFICATION"]
+    assert captured_qualification[1] == {"car_model": "Toyota Camry"}
+    assert captured_qualification[2] == {"car_model": "Toyota Camry"}
+    assert "[Источник: Программа Trade-in]" in captured_contexts[1]
+
+    lead = await client.get(f"/leads/{faq.json()['lead_id']}")
+    assert lead.status_code == 200
+    assert lead.json()["qualification"] == {"car_model": "Toyota Camry"}
+
+    session_maker = app.state.db_session_maker
+    async with session_maker() as db:
+        row = await db.get(DialogSession, UUID(session_id))
+        assert row is not None
+        assert row.expected_qualification_field == "budget"
+        assert row.last_rag_source_title == "Программа Trade-in"
+
+
+@pytest.mark.asyncio
+async def test_trade_in_follow_up_does_not_send_credit_context_to_llm(client) -> None:
+    captured_contexts: list[str] = []
+
+    class _TradeInEmbedding:
+        async def embed(self, texts):
+            embeddings = []
+            for text in texts:
+                normalized = text.casefold()
+                if "trade" in normalized or "трей" in normalized:
+                    vector = [1.0, 0.0]
+                elif "кредит" in normalized:
+                    vector = [0.0, 1.0]
+                else:
+                    vector = [0.6, 0.8]
+                embeddings.append(vector + [0.0] * 1534)
+            return embeddings
+
+    class _CapturingClient(FakeAg2AgentClient):
+        async def decide(self, *args, retrieved_context="", **kwargs):
+            captured_contexts.append(retrieved_context)
+            return await super().decide(
+                *args,
+                retrieved_context=retrieved_context,
+                **kwargs,
+            )
+
+    app.state.embedding_client = _TradeInEmbedding()
+    app.state.retrieval_planner_client = FakeRetrievalPlannerClient(
+        [
+            RetrievalPlan(
+                mode=RetrievalMode.LAST_SOURCE,
+                query="Условия программы Trade-in",
+            ),
+            RetrievalPlan(
+                mode=RetrievalMode.LAST_SOURCE,
+                query="Условия программы Trade-in",
+            ),
+            RetrievalPlan(
+                mode=RetrievalMode.LAST_SOURCE,
+                query="Подробности программы Trade-in",
+            ),
+        ]
+    )
+    knowledge = await client.post(
+        "/knowledge/documents",
+        json=[
+            {
+                "title": "Программа Trade-in",
+                "content": (
+                    "Оценка автомобиля по программе trade-in бесплатна. "
+                    "Для оценки нужны ПТС, СТС и паспорт собственника."
+                ),
+            },
+            {
+                "title": "Кредитование и финансирование",
+                "content": (
+                    "Автокредит оформляется через банки-партнёры. "
+                    "Первоначальный взнос — от 10%."
+                ),
+            },
+        ],
+    )
+    assert knowledge.status_code == 201
+
+    app.state.llm_client = _CapturingClient(
+        responses=[
+            AgentDecision(
+                answer="Trade-in позволяет сдать автомобиль в зачёт нового.",
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+            ),
+            AgentDecision(
+                answer="Оценка бесплатна; нужны ПТС, СТС и паспорт собственника.",
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+            ),
+            AgentDecision(
+                answer="Оценка бесплатна и занимает 30–40 минут.",
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+            ),
+            AgentDecision(
+                answer="Для оценки нужны ПТС или ЭПТС, СТС и паспорт.",
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+            ),
+        ]
+    )
+
+    first = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "trade-in-follow-up-user",
+            "content": "Расскажи про треййдин",
+        },
+    )
+    second = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "trade-in-follow-up-user",
+            "session_id": first.json()["session_id"],
+            "content": "А условия",
+        },
+    )
+    third = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "trade-in-follow-up-user",
+            "session_id": first.json()["session_id"],
+            "content": "Условия",
+        },
+    )
+    fourth = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "trade-in-follow-up-user",
+            "session_id": first.json()["session_id"],
+            "content": "Подробнее",
+        },
+    )
+
+    assert second.status_code == 200
+    assert "кредит" not in second.json()["answer"].casefold()
+    assert third.json()["answer"].startswith("Оценка бесплатна")
+    assert fourth.json()["answer"].startswith("Для оценки нужны")
+    for context in captured_contexts[1:]:
+        assert "[Источник: Программа Trade-in]" in context
+        assert "Кредитование и финансирование" not in context
+
+
+@pytest.mark.asyncio
+async def test_explicit_credit_topic_replaces_saved_trade_in_source(client) -> None:
+    embedding_calls: list[list[str]] = []
+    captured_contexts: list[str] = []
+
+    class _TopicEmbedding:
+        async def embed(self, texts):
+            embedding_calls.append(list(texts))
+            embeddings = []
+            for text in texts:
+                normalized = text.casefold()
+                if "trade" in normalized or "трей" in normalized:
+                    vector = [1.0, 0.0]
+                elif "кредит" in normalized:
+                    vector = [0.0, 1.0]
+                else:
+                    vector = [0.0, 0.0]
+                embeddings.append(vector + [0.0] * 1534)
+            return embeddings
+
+    class _CapturingClient(FakeAg2AgentClient):
+        async def decide(self, *args, retrieved_context="", **kwargs):
+            captured_contexts.append(retrieved_context)
+            return await super().decide(
+                *args,
+                retrieved_context=retrieved_context,
+                **kwargs,
+            )
+
+    app.state.embedding_client = _TopicEmbedding()
+    knowledge = await client.post(
+        "/knowledge/documents",
+        json=[
+            {
+                "title": "Программа Trade-in",
+                "content": "Trade-in включает бесплатную оценку автомобиля.",
+            },
+            {
+                "title": "Кредитование и финансирование",
+                "content": "Автокредит доступен через банки-партнёры.",
+            },
+        ],
+    )
+    assert knowledge.status_code == 201
+
+    app.state.llm_client = _CapturingClient(
+        responses=[
+            AgentDecision(
+                answer="Trade-in — зачёт старого автомобиля.",
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+            ),
+            AgentDecision(
+                answer="Кредит оформляется через банки-партнёры.",
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+            ),
+        ]
+    )
+
+    first = await client.post(
+        "/message",
+        json={"anonymous_id": "topic-switch-user", "content": "Trade-in"},
+    )
+    second = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "topic-switch-user",
+            "session_id": first.json()["session_id"],
+            "content": "Кредит",
+        },
+    )
+
+    assert second.status_code == 200
+    assert embedding_calls[-1] == ["Кредит"]
+    assert "[Источник: Кредитование и финансирование]" in captured_contexts[1]
+    assert "Программа Trade-in" not in captured_contexts[1]
+
+    session_maker = app.state.db_session_maker
+    async with session_maker() as db:
+        row = await db.get(DialogSession, UUID(first.json()["session_id"]))
+        assert row is not None
+        assert row.last_rag_source_title == "Кредитование и финансирование"
+
+
+@pytest.mark.asyncio
+async def test_low_relevance_keeps_previous_confirmed_source(client) -> None:
+    captured_contexts: list[str] = []
+
+    class _Embedding:
+        async def embed(self, texts):
+            embeddings = []
+            for text in texts:
+                normalized = text.casefold()
+                if "trade" in normalized:
+                    vector = [1.0, 0.0, 0.0]
+                else:
+                    vector = [0.0, 0.0, 1.0]
+                embeddings.append(vector + [0.0] * 1533)
+            return embeddings
+
+    class _CapturingClient(FakeAg2AgentClient):
+        async def decide(self, *args, retrieved_context="", **kwargs):
+            captured_contexts.append(retrieved_context)
+            return await super().decide(
+                *args,
+                retrieved_context=retrieved_context,
+                **kwargs,
+            )
+
+    app.state.embedding_client = _Embedding()
+    app.state.retrieval_planner_client = FakeRetrievalPlannerClient(
+        [RetrievalPlan.none()]
+    )
+    knowledge = await client.post(
+        "/knowledge/documents",
+        json=[
+            {
+                "title": "Программа Trade-in",
+                "content": "Trade-in включает бесплатную оценку автомобиля.",
+            }
+        ],
+    )
+    assert knowledge.status_code == 201
+    app.state.llm_client = _CapturingClient(
+        responses=[
+            AgentDecision(
+                answer="Оценка бесплатна.",
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+            ),
+            AgentDecision(
+                answer="Точной информации нет.",
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+            ),
+        ]
+    )
+
+    first = await client.post(
+        "/message",
+        json={"anonymous_id": "low-score-source-user", "content": "Trade-in"},
+    )
+    second = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "low-score-source-user",
+            "session_id": first.json()["session_id"],
+            "content": "Как приготовить борщ?",
+        },
+    )
+
+    assert second.status_code == 200
+    assert captured_contexts[1] == ""
+    session_maker = app.state.db_session_maker
+    async with session_maker() as db:
+        row = await db.get(DialogSession, UUID(first.json()["session_id"]))
+        assert row is not None
+        assert row.last_rag_source_title == "Программа Trade-in"
+
+
+@pytest.mark.asyncio
+async def test_rag_source_is_not_shared_between_users_or_channels(client) -> None:
+    captured_contexts: list[str] = []
+
+    class _Embedding:
+        async def embed(self, texts):
+            embeddings = []
+            for text in texts:
+                vector = [1.0, 0.0] if "trade" in text.casefold() else [0.0, 1.0]
+                embeddings.append(vector + [0.0] * 1534)
+            return embeddings
+
+    class _CapturingClient(FakeAg2AgentClient):
+        async def decide(self, *args, retrieved_context="", **kwargs):
+            captured_contexts.append(retrieved_context)
+            return await super().decide(
+                *args,
+                retrieved_context=retrieved_context,
+                **kwargs,
+            )
+
+    app.state.embedding_client = _Embedding()
+    knowledge = await client.post(
+        "/knowledge/documents",
+        json=[
+            {
+                "title": "Программа Trade-in",
+                "content": "Trade-in включает бесплатную оценку автомобиля.",
+            }
+        ],
+    )
+    assert knowledge.status_code == 201
+    app.state.llm_client = _CapturingClient(
+        responses=[
+            AgentDecision(
+                answer="Оценка бесплатна.",
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+            ),
+            AgentDecision(
+                answer="Нужно уточнить тему.",
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+            ),
+            AgentDecision(
+                answer="Нужно уточнить тему.",
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+            ),
+        ]
+    )
+
+    await client.post(
+        "/message",
+        json={
+            "anonymous_id": "isolated-source",
+            "channel": "website",
+            "content": "Trade-in",
+        },
+    )
+    await client.post(
+        "/message",
+        json={
+            "anonymous_id": "another-user",
+            "channel": "website",
+            "content": "А условия какие?",
+        },
+    )
+    await client.post(
+        "/message",
+        json={
+            "anonymous_id": "isolated-source",
+            "channel": "telegram",
+            "content": "А условия какие?",
+        },
+    )
+
+    assert "[Источник: Программа Trade-in]" in captured_contexts[0]
+    assert captured_contexts[1:] == ["", ""]
+
+
+@pytest.mark.asyncio
+async def test_credit_offer_confirmation_retrieves_credit_and_keeps_original_yes(
+    client,
+) -> None:
+    captured_user_messages: list[str] = []
+    captured_contexts: list[str] = []
+
+    class _CreditEmbedding:
+        async def embed(self, texts):
+            embeddings = []
+            for text in texts:
+                vector = [0.0] * 1536
+                vector[0 if "кредит" in text.casefold() else 1] = 1.0
+                embeddings.append(vector)
+            return embeddings
+
+    class _CapturingClient(FakeAg2AgentClient):
+        async def decide(
+            self,
+            *args,
+            user_message,
+            retrieved_context="",
+            **kwargs,
+        ):
+            captured_user_messages.append(user_message)
+            captured_contexts.append(retrieved_context)
+            return await super().decide(
+                *args,
+                user_message=user_message,
+                retrieved_context=retrieved_context,
+                **kwargs,
+            )
+
+    app.state.embedding_client = _CreditEmbedding()
+    app.state.retrieval_planner_client = FakeRetrievalPlannerClient(
+        [
+            RetrievalPlan(
+                mode=RetrievalMode.LAST_SOURCE,
+                query="Условия автокредитования",
+            )
+        ]
+    )
+    knowledge = await client.post(
+        "/knowledge/documents",
+        json=[
+            {
+                "title": "Кредитование и финансирование",
+                "content": (
+                    "Автокредит оформляется через банки-партнёры на срок "
+                    "от 1 до 7 лет с первоначальным взносом от 10%."
+                ),
+            }
+        ],
+    )
+    assert knowledge.status_code == 201
+
+    app.state.llm_client = _CapturingClient(
+        responses=[
+            AgentDecision(
+                answer=(
+                    "Автокредит — это банковское финансирование покупки. "
+                    "Могу рассказать подробнее об условиях автокредита."
+                ),
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+            ),
+            AgentDecision(
+                answer="Срок — от 1 до 7 лет, первоначальный взнос — от 10%.",
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+            ),
+        ]
+    )
+
+    first = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "credit-confirmation-user",
+            "content": "Кредит что такое?",
+        },
+    )
+    second = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "credit-confirmation-user",
+            "session_id": first.json()["session_id"],
+            "content": "Да",
+        },
+    )
+
+    assert second.status_code == 200
+    assert captured_user_messages == ["Кредит что такое?", "Да"]
+    assert "[Источник: Кредитование и финансирование]" in captured_contexts[1]
+    assert "бюджет" not in second.json()["answer"].casefold()
+    assert second.json()["state"] == "FAQ"
+
+    session_maker = app.state.db_session_maker
+    async with session_maker() as db:
+        row = await db.get(DialogSession, UUID(first.json()["session_id"]))
+        assert row is not None
+        assert row.last_rag_source_title == "Кредитование и финансирование"
+
+
+@pytest.mark.asyncio
+async def test_credit_word_cannot_start_qualification_from_faq(client) -> None:
+    knowledge = await client.post(
+        "/knowledge/documents",
+        json=[
+            {
+                "title": "Кредитование и финансирование",
+                "content": "Автокредит оформляется через банки-партнёры.",
+            }
+        ],
+    )
+    assert knowledge.status_code == 201
+    app.state.llm_client = FakeAg2AgentClient(
+        responses=[
+            AgentDecision(
+                answer="Чем могу помочь?",
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+            ),
+            AgentDecision(
+                answer="Автокредит оформляется через банки-партнёры.",
+                intent="lead_request",
+                next_state=DialogState.QUALIFICATION,
+                qualification_patch={"purchase_type": "кредит"},
+                missing_fields=["car_model", "budget", "contact"],
+                lead_ready=False,
+            ),
+        ]
+    )
+
+    first = await client.post(
+        "/message",
+        json={"anonymous_id": "credit-word-guard", "content": "Здравствуйте"},
+    )
+    second = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "credit-word-guard",
+            "session_id": first.json()["session_id"],
+            "content": "Кредит",
+        },
+    )
+
+    assert second.status_code == 200
+    assert second.json()["state"] == "FAQ"
+    lead = await client.get(f"/leads/{second.json()['lead_id']}")
+    assert lead.status_code == 200
+    assert lead.json()["qualification"] == {}
+
+
+@pytest.mark.asyncio
+async def test_ambiguous_model_and_service_requests_set_confirmation_pending(
+    client,
+) -> None:
+    captured_contexts: list[str] = []
+
+    class _TopicEmbedding:
+        async def embed(self, texts):
+            embeddings = []
+            for text in texts:
+                normalized = text.casefold()
+                vector = [0.0, 1.0] if "кредит" in normalized else [1.0, 0.0]
+                embeddings.append(vector + [0.0] * 1534)
+            return embeddings
+
+    class _CapturingClient(FakeAg2AgentClient):
+        async def decide(self, *args, retrieved_context="", **kwargs):
+            captured_contexts.append(retrieved_context)
+            return await super().decide(
+                *args,
+                retrieved_context=retrieved_context,
+                **kwargs,
+            )
+
+    app.state.embedding_client = _TopicEmbedding()
+    knowledge = await client.post(
+        "/knowledge/documents",
+        json=[
+            {
+                "title": "Автомобили Skoda",
+                "content": "Skoda Kodiaq — семейный кроссовер с полным приводом.",
+            },
+            {
+                "title": "Кредитование",
+                "content": "Автокредит оформляется через банки-партнёры.",
+            },
+        ],
+    )
+    assert knowledge.status_code == 201
+    app.state.llm_client = _CapturingClient(
+        responses=[
+            AgentDecision(
+                answer=(
+                    "Skoda Kodiaq — семейный кроссовер с полным приводом. "
+                    "Хотите, чтобы я помог подобрать Skoda для покупки?"
+                ),
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+                lead_intent_status=LeadIntentStatus.NEEDS_CONFIRMATION,
+            ),
+            AgentDecision(
+                answer=(
+                    "Skoda Kodiaq — семейный кроссовер с полным приводом. "
+                    "Хотите, чтобы я помог подобрать Skoda для покупки?"
+                ),
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+                lead_intent_status=LeadIntentStatus.NEEDS_CONFIRMATION,
+            ),
+            AgentDecision(
+                answer=(
+                    "Кредит доступен через банки-партнёры. "
+                    "Хотите, чтобы я помог оформить покупку в кредит?"
+                ),
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+                lead_intent_status=LeadIntentStatus.NEEDS_CONFIRMATION,
+            ),
+        ]
+    )
+
+    for index, message in enumerate(("Skoda", "хочу Skoda", "нужен кредит")):
+        response = await client.post(
+            "/message",
+            json={
+                "anonymous_id": f"ambiguous-intent-{index}",
+                "content": message,
+            },
+        )
+
+        assert response.status_code == 200
+        assert response.json()["state"] == "FAQ"
+        assert response.json()["answer"].count("?") == 1
+        lead = await client.get(f"/leads/{response.json()['lead_id']}")
+        assert lead.json()["qualification"] == {}
+        async with app.state.db_session_maker() as db:
+            row = await db.get(DialogSession, UUID(response.json()["session_id"]))
+            assert row is not None
+            assert row.lead_intent_confirmation_pending is True
+
+    assert all("[Источник:" in context for context in captured_contexts)
+
+
+@pytest.mark.asyncio
+async def test_yes_after_purchase_confirmation_starts_qualification_and_restores_topic(
+    client,
+) -> None:
+    captured_pending: list[bool] = []
+
+    class _CapturingClient(FakeAg2AgentClient):
+        async def decide(
+            self,
+            *args,
+            lead_intent_confirmation_pending=False,
+            **kwargs,
+        ):
+            captured_pending.append(lead_intent_confirmation_pending)
+            return await super().decide(
+                *args,
+                lead_intent_confirmation_pending=(lead_intent_confirmation_pending),
+                **kwargs,
+            )
+
+    knowledge = await client.post(
+        "/knowledge/documents",
+        json=[
+            {
+                "title": "Автомобили Skoda",
+                "content": "Skoda Kodiaq — семейный кроссовер.",
+            }
+        ],
+    )
+    assert knowledge.status_code == 201
+    app.state.retrieval_planner_client = FakeRetrievalPlannerClient(
+        [RetrievalPlan.none()]
+    )
+    app.state.llm_client = _CapturingClient(
+        responses=[
+            AgentDecision(
+                answer=(
+                    "Skoda Kodiaq — семейный кроссовер. "
+                    "Хотите, чтобы я помог подобрать Skoda для покупки?"
+                ),
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+                lead_intent_status=LeadIntentStatus.NEEDS_CONFIRMATION,
+            ),
+            AgentDecision(
+                answer="Отлично. Какой бюджет вы рассматриваете?",
+                intent="lead_request",
+                next_state=DialogState.QUALIFICATION,
+                qualification_patch={"car_model": "Skoda"},
+                missing_fields=["budget", "purchase_type", "contact"],
+                lead_ready=False,
+                lead_intent_status=LeadIntentStatus.CONFIRMED,
+            ),
+        ]
+    )
+
+    first = await client.post(
+        "/message",
+        json={"anonymous_id": "pending-confirmation-user", "content": "Skoda"},
+    )
+    second = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "pending-confirmation-user",
+            "session_id": first.json()["session_id"],
+            "content": "Да",
+        },
+    )
+
+    assert first.json()["state"] == "FAQ"
+    assert second.json()["state"] == "QUALIFICATION"
+    assert captured_pending == [False, True]
+    lead = await client.get(f"/leads/{second.json()['lead_id']}")
+    assert lead.json()["qualification"] == {"car_model": "Skoda"}
+    async with app.state.db_session_maker() as db:
+        row = await db.get(DialogSession, UUID(first.json()["session_id"]))
+        assert row is not None
+        assert row.lead_intent_confirmation_pending is False
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("non_confirmation", "status"),
+    [
+        ("Нет, просто смотрю", LeadIntentStatus.DECLINED),
+        ("А какие часы работы?", LeadIntentStatus.ABSENT),
+    ],
+)
+async def test_nonconfirming_turn_clears_pending_and_later_yes_stays_faq(
+    client,
+    non_confirmation: str,
+    status: LeadIntentStatus,
+) -> None:
+    captured_pending: list[bool] = []
+
+    class _CapturingClient(FakeAg2AgentClient):
+        async def decide(
+            self,
+            *args,
+            lead_intent_confirmation_pending=False,
+            **kwargs,
+        ):
+            captured_pending.append(lead_intent_confirmation_pending)
+            return await super().decide(
+                *args,
+                lead_intent_confirmation_pending=(lead_intent_confirmation_pending),
+                **kwargs,
+            )
+
+    knowledge = await client.post(
+        "/knowledge/documents",
+        json=[
+            {
+                "title": "Автомобили Skoda",
+                "content": "Skoda Kodiaq — семейный кроссовер.",
+            }
+        ],
+    )
+    assert knowledge.status_code == 201
+    app.state.retrieval_planner_client = FakeRetrievalPlannerClient(
+        [RetrievalPlan.none(), RetrievalPlan.none()]
+    )
+    app.state.llm_client = _CapturingClient(
+        responses=[
+            AgentDecision(
+                answer="Хотите, чтобы я помог подобрать Skoda для покупки?",
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+                lead_intent_status=LeadIntentStatus.NEEDS_CONFIRMATION,
+            ),
+            AgentDecision(
+                answer="Хорошо, обращайтесь, если появятся вопросы.",
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+                lead_intent_status=status,
+            ),
+            AgentDecision(
+                answer="Что именно вас интересует?",
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+            ),
+        ]
+    )
+
+    first = await client.post(
+        "/message",
+        json={"anonymous_id": "declined-intent-user", "content": "Skoda"},
+    )
+    await client.post(
+        "/message",
+        json={
+            "anonymous_id": "declined-intent-user",
+            "session_id": first.json()["session_id"],
+            "content": non_confirmation,
+        },
+    )
+    late_yes = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "declined-intent-user",
+            "session_id": first.json()["session_id"],
+            "content": "Да",
+        },
+    )
+
+    assert late_yes.json()["state"] == "FAQ"
+    assert captured_pending == [False, True, False]
+    lead = await client.get(f"/leads/{late_yes.json()['lead_id']}")
+    assert lead.json()["qualification"] == {}
+
+
+@pytest.mark.asyncio
+async def test_rejected_qualification_start_gets_one_corrective_retry(client) -> None:
+    correction_flags: list[bool] = []
+
+    class _CapturingClient(FakeAg2AgentClient):
+        async def decide(
+            self,
+            *args,
+            force_lead_intent_confirmation=False,
+            **kwargs,
+        ):
+            correction_flags.append(force_lead_intent_confirmation)
+            return await super().decide(
+                *args,
+                force_lead_intent_confirmation=force_lead_intent_confirmation,
+                **kwargs,
+            )
+
+    app.state.llm_client = _CapturingClient(
+        responses=[
+            AgentDecision(
+                answer="Начнём подбор.",
+                intent="lead_request",
+                next_state=DialogState.QUALIFICATION,
+                qualification_patch={"car_model": "Skoda"},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+            ),
+            AgentDecision(
+                answer="Хотите, чтобы я помог подобрать Skoda для покупки?",
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+                lead_intent_status=LeadIntentStatus.NEEDS_CONFIRMATION,
+            ),
+        ]
+    )
+
+    response = await client.post(
+        "/message",
+        json={"anonymous_id": "corrected-intent-user", "content": "Skoda"},
+    )
+
+    assert response.json()["state"] == "FAQ"
+    assert correction_flags == [False, True]
+    lead = await client.get(f"/leads/{response.json()['lead_id']}")
+    assert lead.json()["qualification"] == {}
+
+
+@pytest.mark.asyncio
+async def test_repeated_bad_qualification_uses_safe_fallback(client) -> None:
+    invalid = AgentDecision(
+        answer="Начнём подбор.",
+        intent="lead_request",
+        next_state=DialogState.QUALIFICATION,
+        qualification_patch={"car_model": "Skoda"},
+        missing_fields=MISSING_ALL,
+        lead_ready=False,
+    )
+    app.state.llm_client = FakeAg2AgentClient(responses=[invalid, invalid])
+
+    response = await client.post(
+        "/message",
+        json={"anonymous_id": "fallback-intent-user", "content": "Skoda"},
+    )
+
+    assert response.json()["state"] == "FAQ"
+    assert response.json()["answer"] == (
+        "Уточните, пожалуйста: хотите, чтобы я помог подобрать автомобиль для покупки?"
+    )
+    lead = await client.get(f"/leads/{response.json()['lead_id']}")
+    assert lead.json()["qualification"] == {}
+
+
+@pytest.mark.asyncio
+async def test_intent_confirmation_pending_is_isolated_by_user_and_channel(
+    client,
+) -> None:
+    captured_pending: list[bool] = []
+
+    class _CapturingClient(FakeAg2AgentClient):
+        async def decide(
+            self,
+            *args,
+            lead_intent_confirmation_pending=False,
+            **kwargs,
+        ):
+            captured_pending.append(lead_intent_confirmation_pending)
+            return await super().decide(
+                *args,
+                lead_intent_confirmation_pending=(lead_intent_confirmation_pending),
+                **kwargs,
+            )
+
+    app.state.llm_client = _CapturingClient(
+        responses=[
+            AgentDecision(
+                answer="Хотите, чтобы я помог подобрать Skoda для покупки?",
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+                lead_intent_status=LeadIntentStatus.NEEDS_CONFIRMATION,
+            ),
+            AgentDecision(
+                answer="Что именно вас интересует?",
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+            ),
+            AgentDecision(
+                answer="Что именно вас интересует?",
+                intent="general",
+                next_state=DialogState.FAQ,
+                qualification_patch={},
+                missing_fields=MISSING_ALL,
+                lead_ready=False,
+            ),
+        ]
+    )
+
+    owner = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "pending-owner",
+            "channel": "website",
+            "content": "Skoda",
+        },
+    )
+    another_user = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "pending-other",
+            "channel": "website",
+            "content": "Да",
+        },
+    )
+    another_channel = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "pending-owner",
+            "channel": "telegram",
+            "content": "Да",
+        },
+    )
+
+    assert captured_pending == [False, False, False]
+    assert another_user.json()["state"] == "FAQ"
+    assert another_channel.json()["state"] == "FAQ"
+    async with app.state.db_session_maker() as db:
+        owner_row = await db.get(DialogSession, UUID(owner.json()["session_id"]))
+        other_user_row = await db.get(
+            DialogSession,
+            UUID(another_user.json()["session_id"]),
+        )
+        other_channel_row = await db.get(
+            DialogSession,
+            UUID(another_channel.json()["session_id"]),
+        )
+        assert owner_row is not None
+        assert other_user_row is not None
+        assert other_channel_row is not None
+        assert owner_row.lead_intent_confirmation_pending is True
+        assert other_user_row.lead_intent_confirmation_pending is False
+        assert other_channel_row.lead_intent_confirmation_pending is False

@@ -48,6 +48,15 @@ class ContactPreference(StrEnum):
     RESUME = "resume"
 
 
+class LeadIntentStatus(StrEnum):
+    """Статус намерения купить, предложенный AI-слоем."""
+
+    ABSENT = "absent"
+    NEEDS_CONFIRMATION = "needs_confirmation"
+    CONFIRMED = "confirmed"
+    DECLINED = "declined"
+
+
 class AgentMessageRequest(BaseModel):
     """Публичный request для POST /message.
 
@@ -136,6 +145,7 @@ class AgentDecision(BaseModel):
     extracted_contact: dict[str, str | None] | None = None
     lead_summary: str | None = None
     contact_preference: ContactPreference = ContactPreference.NONE
+    lead_intent_status: LeadIntentStatus = LeadIntentStatus.ABSENT
 
     @field_validator("qualification_patch", mode="before")
     @classmethod

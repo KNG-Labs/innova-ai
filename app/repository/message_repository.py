@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import case, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Message
@@ -68,7 +68,10 @@ class MessageRepository:
         stmt = (
             select(Message)
             .where(Message.session_id == session_id, Message.deleted_at.is_(None))
-            .order_by(Message.created_at.desc())
+            .order_by(
+                Message.created_at.desc(),
+                case((Message.role == "assistant", 1), else_=0).desc(),
+            )
             .limit(limit)
         )
 

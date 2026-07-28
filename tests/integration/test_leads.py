@@ -28,7 +28,7 @@ async def test_get_leads_lists_lead_and_detail_shows_qualification(client) -> No
         json={
             "anonymous_id": "lead-read-user",
             "channel": "website",
-            "content": "Нужна Toyota Camry",
+            "content": "Хочу купить Toyota Camry",
         },
     )
     assert msg.status_code == 200
