@@ -6,6 +6,7 @@ from fastapi import FastAPI, Request, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.client.embedding_client import build_embedding_client
+from app.client.retrieval_planner_client import RetrievalPlannerClient
 from app.service.knowledge_ingestion_service import KnowledgeIngestionService
 from app.service.knowledge_retrieval_service import KnowledgeRetrievalService
 from app.client.ag2_agent_client import LLMClient
@@ -53,6 +54,7 @@ async def init_app_state(app: FastAPI) -> None:
 
     llm_provider = os.getenv("LLM_PROVIDER", "stub").strip().lower()
     llm_client: LLMClient
+    retrieval_planner: RetrievalPlannerClient
 
     if llm_provider == "ag2":
         api_key = os.getenv("OPENROUTER_API_KEY", "").strip()
@@ -61,17 +63,26 @@ async def init_app_state(app: FastAPI) -> None:
         ).strip()
         model = os.getenv("AG2_MODEL", "openai/gpt-oss-120b:free").strip()
         from app.client.ag2_agent_client import Ag2AgentClient
+        from app.client.retrieval_planner_client import Ag2RetrievalPlannerClient
 
         llm_client = Ag2AgentClient(model=model, api_key=api_key, base_url=base_url)
+        retrieval_planner = Ag2RetrievalPlannerClient(
+            model=model,
+            api_key=api_key,
+            base_url=base_url,
+        )
 
     elif llm_provider == "stub":
         from app.client.ag2_agent_client import FakeAg2AgentClient
+        from app.client.retrieval_planner_client import FakeRetrievalPlannerClient
 
         llm_client = FakeAg2AgentClient()
+        retrieval_planner = FakeRetrievalPlannerClient()
     else:
         raise RuntimeError(f"Unsupported LLM_PROVIDER: {llm_provider}")
 
     app.state.llm_client = llm_client
+    app.state.retrieval_planner_client = retrieval_planner
 
     app.state.delivery_provider = get_delivery_provider()
     app.state.crm_client = build_crm_client(http_client)
@@ -112,7 +123,8 @@ async def get_agent_service(
     retrieval = KnowledgeRetrievalService(
         db_session=db_session,
         embedding_client=request.app.state.embedding_client,
-        top_k=int(os.getenv("RAG_TOP_K", "3")),
+        retrieval_planner=request.app.state.retrieval_planner_client,
+        top_k=int(os.getenv("RAG_TOP_K", "5")),
         min_score=float(os.getenv("RAG_MIN_SCORE", "0.2")),
     )
     return AgentService(

@@ -46,6 +46,24 @@ class DialogSession(SoftDeleteMixin, Base):
         default=False,
         server_default="false",
     )
+    lead_intent_confirmation_pending: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default="false",
+    )
+    last_rag_source_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("knowledge_documents.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    last_rag_source_title: Mapped[str | None] = mapped_column(
+        String(512),
+        nullable=True,
+    )
+    expected_qualification_field: Mapped[str | None] = mapped_column(
+        String(64),
+        nullable=True,
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

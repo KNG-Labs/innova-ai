@@ -65,7 +65,11 @@ async def test_full_lead_flow_reaches_lead_ready(client) -> None:
     # Ход 1
     r1 = await client.post(
         "/message",
-        json={"anonymous_id": anon_id, "channel": "website", "content": "Здравствуйте"},
+        json={
+            "anonymous_id": anon_id,
+            "channel": "website",
+            "content": "Хочу купить Toyota Camry",
+        },
     )
     assert r1.status_code == 200
     d1 = r1.json()

@@ -54,15 +54,25 @@ def _case(evaluation_type: str, **values: object) -> LoadedCase:
 def test_golden_datasets_have_expected_coverage() -> None:
     cases = load_cases(_DATASETS)
 
-    assert len(cases) == 160
+    assert len(cases) == 220
     assert sum(case.evaluation_type == "retrieval" for case in cases) == 100
-    assert sum(case.evaluation_type == "generation" for case in cases) == 48
+    assert sum(case.evaluation_type == "generation" for case in cases) == 108
     assert sum(case.evaluation_type == "business" for case in cases) == 12
     assert {case.example.split for case in cases} == {
         "calibration",
         "test",
         "regression",
     }
+    retrieval_calibration_questions = {
+        case.example.question
+        for case in cases
+        if case.evaluation_type == "retrieval" and case.example.split == "calibration"
+    }
+    generation_questions = {
+        case.example.question for case in cases if case.evaluation_type == "generation"
+    }
+    assert len(retrieval_calibration_questions) == 60
+    assert retrieval_calibration_questions <= generation_questions
 
 
 def test_manifest_covers_and_hashes_the_entire_corpus() -> None:
@@ -74,7 +84,10 @@ def test_manifest_covers_and_hashes_the_entire_corpus() -> None:
 
     assert len(title_to_id) == len(source_documents) == 50
     assert len(set(title_to_id.values())) == 50
-    assert title_to_id["Автомобили в наличии"] == "vehicle_inventory"
+    assert (
+        title_to_id["Автомобили в наличии, актуальные предложения"]
+        == "vehicle_inventory"
+    )
     assert relevance_ids <= set(title_to_id.values())
 
 

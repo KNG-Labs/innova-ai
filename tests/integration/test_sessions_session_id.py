@@ -16,7 +16,7 @@ async def test_get_session_returns_session_details(client) -> None:
         json={
             "anonymous_id": "test-user-3",
             "channel": "website",
-            "content": "Нужна консультация",
+            "content": "Хочу купить автомобиль",
         },
     )
 
