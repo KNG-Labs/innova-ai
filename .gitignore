@@ -17,9 +17,8 @@ __pycache__/
 htmlcov/
 .coverage
 
-# Одноразовые evaluation reports; зафиксированные baseline хранятся в baselines/
-evals/reports/latest*.json
-evals/reports/runs/
+evals/reports/*
+!evals/reports/.gitkeep
 
 # IDE
 .idea/
