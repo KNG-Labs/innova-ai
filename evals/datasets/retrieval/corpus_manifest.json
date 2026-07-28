@@ -1,7 +1,7 @@
 {
   "schema_version": "2.0",
   "source": "docs/RAG/Данные для RAG.txt",
-  "source_sha256": "fcfbe7b3e4081bc276651fb1cb3d6b1dc101ec8eaeaca1c66390ff659ab444b0",
+  "source_sha256": "c384052c2c67e751b9f5421f8692f8401ef5c44b25d4aeee196ed86490be4177",
   "id_policy": "Stable semantic document ID; chunk ID is document ID plus zero-based chunk index.",
   "documents": [
     {
@@ -31,7 +31,7 @@
     {
       "id": "trade_in_program",
       "title": "Программа Trade-in",
-      "content_sha256": "a82dae0ce96c6240425306561c89c742335e1d207e8e6bc091da4131fec2646f",
+      "content_sha256": "10aceedf360dcbbc2f4810c1c235458476ea3f724ca3ee1ab08e71c748af365b",
       "chunk_ids": [
         "trade_in_program#0"
       ]
@@ -79,10 +79,11 @@
     },
     {
       "id": "vehicle_inventory",
-      "title": "Автомобили в наличии",
-      "content_sha256": "a64a61464af0976472aa9fe8a19cc6899c9497fc32a6318324b52aa6a350dec4",
+      "title": "Автомобили в наличии, актуальные предложения",
+      "content_sha256": "990d4aa80d8a71a85d09aa3c06462d943e8ac5504f27671bc0961c0c8b6e80b0",
       "chunk_ids": [
-        "vehicle_inventory#0"
+        "vehicle_inventory#0",
+        "vehicle_inventory#1"
       ]
     },
     {
