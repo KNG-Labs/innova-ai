@@ -5,6 +5,7 @@ import re
 from typing import Protocol, runtime_checkable
 
 from app.domain import EMBEDDING_DIM
+from app.privacy import PiiSanitizer
 
 
 @runtime_checkable
@@ -41,6 +42,8 @@ class OpenRouterEmbeddingClient(EmbeddingClient):
         self._model = model
 
     async def embed(self, texts: list[str]) -> list[list[float]]:
+        # Последний fail-closed барьер непосредственно перед HTTP-запросом.
+        PiiSanitizer.ensure_safe(texts)
         resp = await self._client.embeddings.create(model=self._model, input=texts)
         return [d.embedding for d in resp.data]
 

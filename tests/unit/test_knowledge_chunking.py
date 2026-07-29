@@ -57,3 +57,39 @@ async def test_document_title_is_included_in_embedding_but_not_stored_content():
 
     assert embedding.texts == ["Программа Trade-in\nОценка автомобиля бесплатна."]
     assert repository.saved["chunks"] == ["Оценка автомобиля бесплатна."]
+
+
+@pytest.mark.asyncio
+async def test_knowledge_embedding_payload_is_sanitized_but_chunks_stay_local():
+    class _Embedding:
+        def __init__(self):
+            self.texts = []
+
+        async def embed(self, texts):
+            self.texts = texts
+            return [[0.0] * 1536 for _ in texts]
+
+    class _Repository:
+        def __init__(self):
+            self.saved = None
+
+        async def add_chunks(self, **kwargs):
+            self.saved = kwargs
+
+    embedding = _Embedding()
+    repository = _Repository()
+    service = KnowledgeIngestionService(
+        SimpleNamespace(),  # type: ignore[arg-type]
+        embedding,
+    )
+    service._repo = repository
+    document_id = uuid4()
+    title = "Контакты +7 (999) 123-45-67"
+    content = "Пишите user@example.com или звоните +79991234567."
+
+    await service._index_document(document_id, title, content)
+
+    assert embedding.texts == [
+        "Контакты [PHONE_1]\nПишите [EMAIL_1] или звоните [PHONE_1]."
+    ]
+    assert repository.saved["chunks"] == [content]
