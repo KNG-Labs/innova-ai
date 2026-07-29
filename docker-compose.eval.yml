@@ -36,8 +36,9 @@ services:
       LEAD_DELIVERY_PROVIDER: disabled
       LLM_PROVIDER: ${LLM_PROVIDER:-stub}
       EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-fake}
-      RAG_TOP_K: ${RAG_TOP_K:-3}
+      RAG_TOP_K: ${RAG_TOP_K:-10}
       RAG_MIN_SCORE: ${RAG_MIN_SCORE:-0.2}
+      EVAL_CAPTURE_TOKEN_USAGE: "1"
     ports:
       - "${EVAL_API_PORT:-8001}:8000"
     depends_on:
@@ -58,9 +59,11 @@ services:
       retries: 20
 
   eval-runner:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.eval
     user: "${EVAL_UID:-1000}:${EVAL_GID:-1000}"
-    env_file: .env
+    env_file: ${EVAL_ENV_FILE:-.env}
     environment:
       EVAL_DATABASE_URL: postgresql+asyncpg://innova:innova@eval-db:5432/innova_ai_eval
       INNOVA_EVAL_API_URL: http://eval-api:8000
@@ -68,28 +71,35 @@ services:
       EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-fake}
       EVAL_GIT_COMMIT: ${EVAL_GIT_COMMIT:-}
       EVAL_GIT_DIRTY: ${EVAL_GIT_DIRTY:-}
+      EVAL_CAPTURE_TOKEN_USAGE: "1"
+      EVAL_JUDGE_MODEL: ${EVAL_JUDGE_MODEL:-}
+      DEEPEVAL_DISABLE_DOTENV: "1"
+      DEEPEVAL_NO_INSPECT_PROMPT: "1"
+      DEEPEVAL_TELEMETRY_OPT_OUT: "YES"
+      CONFIDENT_API_KEY: ""
     command:
       - python
       - -m
       - evals.runners.run
       - --repetitions
-      - ${EVAL_REPETITIONS:-3}
+      - ${EVAL_REPETITIONS:-1}
       - --split
       - test
       - --split
       - regression
       - --top-k
-      - ${RAG_TOP_K:-3}
+      - ${RAG_TOP_K:-10}
       - --min-score
       - ${RAG_MIN_SCORE:-0.2}
-      - --output
-      - /app/evals/reports/baselines/${EVAL_REPORT_NAME:-baseline}.json
+      - --results-dir
+      - /app/evals/reports/runs/${EVAL_REPORT_NAME:-baseline}
     depends_on:
       eval-api:
         condition: service_healthy
     volumes:
       - ./docs/RAG:/app/docs/RAG:ro
-      - ./evals:/app/evals
+      - ./evals/datasets:/app/evals/datasets:ro
+      - ./evals/reports:/app/evals/reports
 
 volumes:
   eval-pgdata:
