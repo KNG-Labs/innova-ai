@@ -170,6 +170,24 @@ class PredictionFields(BaseModel):
     contact: str | dict[str, str | None] | None = None
 
 
+class TranscriptTurn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    role: Literal["user", "assistant"]
+    content: str
+    assistant_message_id: str | None = None
+
+
+class TokenUsage(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    prompt_tokens: int = Field(ge=0)
+    completion_tokens: int = Field(ge=0)
+    total_tokens: int = Field(ge=0)
+    calls: int = Field(default=0, ge=0)
+    complete: bool = True
+
+
 class EvaluationPrediction(BaseModel):
     """Normalized output contract consumed by evaluation runners."""
 
@@ -183,3 +201,6 @@ class EvaluationPrediction(BaseModel):
     state: str | None = None
     missing_fields: list[str] | None = None
     latency_ms: float | None = Field(default=None, ge=0)
+    retrieval_context: list[str] = Field(default_factory=list)
+    transcript: list[TranscriptTurn] = Field(default_factory=list)
+    turn_token_usage: list[TokenUsage | None] = Field(default_factory=list)

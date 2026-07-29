@@ -19,6 +19,10 @@ TEST_ENV = {
     "LEAD_WEBHOOK_URL": "",
     "TELEGRAM_BOT_TOKEN": "",
     "REDIS_URL": "",
+    "DEEPEVAL_DISABLE_DOTENV": "1",
+    "DEEPEVAL_TELEMETRY_OPT_OUT": "YES",
+    "DEEPEVAL_CACHE_FOLDER": "/tmp/innova-deepeval-test-cache",
+    "CONFIDENT_API_KEY": "",
 }
 
 # Keep test imports hermetic: main.py loads .env at import time.

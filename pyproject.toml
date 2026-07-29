@@ -21,7 +21,11 @@ dependencies = [
 ]
 
 [dependency-groups]
+eval = [
+    "deepeval==4.1.4",
+]
 dev = [
+    { include-group = "eval" },
     "mypy>=1.20.1",
     "pydantic>=2.13.3",
     "pytest>=9.0.3",
