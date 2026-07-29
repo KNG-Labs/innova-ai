@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.git/
+.gitignore
+.github/
+.env
+.env.*
+tests/
+docs/
+scripts/
+evals/reports/runs/
+*.md
+repomix-output.xml

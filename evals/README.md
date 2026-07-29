@@ -1,157 +1,118 @@
-# Evaluation Innova AI
+# DeepEval evaluation suite
 
-Наборы в `evals/datasets/` проверяют:
+`evals/` использует `deepeval==4.1.4` как локальный dataset/runner/metric
+движок. Никакие результаты не отправляются в Confident AI:
+`DEEPEVAL_DISABLE_DOTENV=1`, `DEEPEVAL_TELEMETRY_OPT_OUT=YES` и пустой
+`CONFIDENT_API_KEY` задаются самим eval-пакетом и отдельным runner image.
 
-- `retrieval` — поиск документов;
-- `generation` — содержание ответа агента;
-- `business` — состояние диалога и поля лида.
+## Datasets
 
-## Датасеты
+В `evals/datasets/` находятся DeepEval-native JSON-массивы:
 
-Каждый кейс содержит уникальный `id`, категорию, вопрос и назначение выборки:
+- 100 retrieval `Golden`;
+- 108 generation `Golden`;
+- 12 business `ConversationalGolden`.
 
-- `calibration` — подбор параметров поиска;
-- `test` — итоговая оценка;
-- `regression` — критические сценарии.
-
-Для `retrieval` и `generation` поле `answerable` указывает, есть ли ответ в базе
-знаний. `relevance` связывает документы с оценкой важности от 1 до 3.
-
-Generation-кейсы содержат обязательные факты `required_facts` и запрещённые
-утверждения `forbidden_claims`. Допустимые текстовые варианты факта разделяются
-через `||`:
-
-```json
-{
-  "id": "gen_reg_hours_01",
-  "split": "regression",
-  "category": "hours",
-  "question": "До скольки вы работаете?",
-  "answerable": true,
-  "relevance": {"dealer_hours": 3},
-  "required_facts": ["21:00 || девяти вечера"],
-  "forbidden_claims": ["работаете круглосуточно"]
-}
-```
-
-Business-кейсы поддерживают `setup_messages`, `expected_intent`,
-`expected_state`, `expected_missing_fields`, `expected_fields`,
-`expected_behavior` и `expected_max_questions`.
-
-## Корпус
-
-`evals/datasets/retrieval/corpus_manifest.json` содержит стабильные ID документов,
-контрольные суммы SHA-256 и ID фрагментов.
-
-Runner принимает БД с суффиксом `_eval` или `_test`, очищает knowledge-таблицы и
-загружает корпус из `docs/RAG/Данные для RAG.txt`. Рабочую БД использовать нельзя.
-Корпус и retrieval подготавливаются один раз на весь запуск.
-
-## Запуск
-
-Изолированный запуск всех метрик:
-
-```bash
-cp .env.example .env
-EVAL_REPORT_NAME=before-rag \
-  docker compose -f docker-compose.eval.yml up --build \
-  --abort-on-container-exit --exit-code-from eval-runner eval-runner
-docker compose -f docker-compose.eval.yml down
-```
-
-По умолчанию Compose использует `stub` LLM и `fake` embeddings. Для измерения
-реальной модели задайте `LLM_PROVIDER=ag2`, модель и ключ провайдера в `.env`.
-Compose поднимает
-отдельную БД `innova_ai_eval`, применяет миграции и запускает API. Каталог
-`docs/RAG` монтируется в runner только для чтения. Runner проверяет файл
-`Данные для RAG.txt` по manifest и загружает его через штатный ingestion-сервис.
-Отчёт сохраняется в `evals/reports/baselines/` на хосте. Для полного удаления
-eval-БД выполните `docker compose -f docker-compose.eval.yml down -v`.
-В контейнер можно передать `EVAL_GIT_COMMIT` и `EVAL_GIT_DIRTY`; без них Git-поля
-отчёта будут пустыми, поскольку каталог `.git` не попадает в образ.
-Если UID/GID локального пользователя отличаются от `1000:1000`, передайте
-`EVAL_UID` и `EVAL_GID`, чтобы файлы отчёта принадлежали вам.
-
-Проверить датасеты:
+Стабильный ID, `split`, `category`, relevance, обязательные факты, запрещённые
+утверждения и business expectations сохранены в `additional_metadata`.
+Валидатор также проверяет уникальность ID и type-specific контракт:
 
 ```bash
 uv run python -m evals.runners.evaluate --dataset evals/datasets
 ```
 
-Проверить только retrieval без API:
-
-```bash
-EVAL_DATABASE_URL=postgresql+asyncpg://innova:innova@localhost:5433/innova_ai_eval \
-  uv run python -m evals.runners.run --evaluation-type retrieval
-```
-
-Запустить `test` и `regression` через API:
-
-```bash
-EVAL_DATABASE_URL=postgresql+asyncpg://innova:innova@localhost:5433/innova_ai_eval \
-INNOVA_EVAL_API_URL=http://localhost:8001 \
-  uv run python -m evals.runners.run \
-  --repetitions 3 \
-  --split test --split regression \
-  --output evals/reports/baselines/baseline.json
-```
-
-API и runner должны использовать одинаковые eval-БД, embedding-модель,
-`RAG_TOP_K` и `RAG_MIN_SCORE`.
+Frozen corpus и его стабильные document IDs зафиксированы в
+`evals/datasets/retrieval/corpus_manifest.json`. Runner может очищать и
+загружать knowledge-таблицы только в БД с именем, заканчивающимся на `_eval`
+или `_test`.
 
 ## Метрики
 
-### RetrievalRecall@K
+Retrieval фиксирован на `K=10`:
 
-Доля релевантных документов, найденных среди первых `K` результатов. Диапазон
-от 0 до 1. Больше — лучше.
+- `retrieval_recall@10`;
+- `retrieval_mrr@10`;
+- `context_precision@10`;
+- `abstention_accuracy@10`.
 
-### MRR@K
+Они детерминированно используют уникальные document IDs и relevance labels.
 
-Обратная позиция первого релевантного документа. Если он первый, значение равно
-1; если второй — 0.5. Больше — лучше.
+Judge-метрики:
 
-### ContextPrecision@K
+- `required_fact_coverage`;
+- `forbidden_claim_rate`;
+- `business_dialogue_success`.
 
-Доля релевантных документов среди результатов, переданных агенту. Показывает,
-насколько контекст очищен от лишней информации. Больше — лучше.
+`RequiredFactCoverage` и `ForbiddenClaimRate` делают по одному structured
+judge-вызову на кейс. `BusinessDialogueSuccess` объединяет semantic verdict по
+полному transcript с точными проверками state, intent, missing fields и полей
+лида. Перед judge-вызовом transcript проходит существующую PII-защиту; контакты
+проверяются только локальным guardrail.
 
-### AbstentionAccuracy@K
+Восьмая метрика — `average_agent_token_usage`. Она включает только AG2 main
+agent и retrieval planner, суммируется на API eval-кейс и не включает judge или
+embeddings. При отсутствующем `message_metadata.eval_token_usage` кейс
+исключается из среднего, а результат помечается `incomplete`.
 
-Доля запросов без ответа в базе знаний, для которых retrieval не вернул
-документы. Больше — лучше.
+## Judge
 
-### RequiredFactCoverage
+Обязательные переменные для semantic eval:
 
-Доля обязательных фактов, найденных в ответе. Проверка выполняется по текстовым
-вариантам из `required_facts`. Больше — лучше.
+```text
+EVAL_JUDGE_MODEL
+OPENROUTER_API_KEY
+OPENROUTER_BASE_URL  # optional, default: https://openrouter.ai/api/v1
+```
 
-### ForbiddenClaimRate
+Judge использует temperature `0` и OpenRouter structured JSON output. Если
+`EVAL_JUDGE_MODEL` совпадает с `AG2_MODEL`, runner пишет предупреждение и
+`self_judge: true` в manifest. Флаг `--require-independent-judge` превращает
+совпадение в ошибку.
 
-Доля размеченных запрещённых формулировок, найденных в ответе. Проверка
-выполняется по текстовым вариантам из `forbidden_claims`; альтернативы
-разделяются через `||`. Меньше — лучше. Метрика не распознаёт неразмеченные
-перефразирования.
+## Запуск
 
-### BusinessDialogueSuccess
+Все типы, один прогон:
 
-Доля business-кейсов, в которых одновременно выполнены все ожидания по ответу,
-числу вопросов, intent, состоянию диалога, недостающим полям и данным лида.
-Больше — лучше.
+```bash
+EVAL_REPORT_NAME=real-baseline-v4 \
+docker compose --env-file .env -f docker-compose.eval.yml up --build \
+--force-recreate --abort-on-container-exit \
+--exit-code-from eval-runner eval-runner
+```
 
-## Отчёт
+Фильтры `--evaluation-type` и `--split` можно повторять. Дополнительные прогоны
+задаются явно через `--repetitions`; default равен `1`. `--top-k` допускает
+только `10`, чтобы конфигурация retrieval и формулы отчёта не расходились.
 
-`value` содержит среднее значение метрики, `n` — количество уникальных
-оценённых кейсов. Для повторных запусков `observation_n` содержит число
-измерений с учётом повторов, а `run_stddev` — разброс результатов между ними.
-Поля `prediction_count` и `prediction_observation_count` используют ту же
-семантику для полученных predictions.
-Retrieval выполняется один раз, поэтому его метрики всегда имеют `runs=1`;
-повторения применяются только к generation и business-вызовам через API.
+Default output:
 
-Отдельно сохраняется latency: среднее значение, p50 и p95. Latency не входит в
-оценку качества.
+```text
+evals/reports/runs/<timestamp>-<commit>/
+```
 
-Отчёт также содержит Git commit, хэши датасетов и корпуса, модели, параметры
-поиска, длительность запуска и predictions. Без `--output` файлы сохраняются в
-`evals/reports/runs/`.
+Каталог содержит:
+
+- DeepEval JSON test runs с per-case scores, reasons и transcripts;
+- DeepEval Markdown dashboards;
+- `summary.json`;
+- `predictions.json`;
+- `manifest.json` с Git SHA, hashes, моделями, RAG-параметрами, `self_judge` и
+  token breakdown.
+
+## Docker Compose
+
+`docker-compose.eval.yml` использует отдельный `Dockerfile.eval`; production
+image по-прежнему собирается без eval dependency group. Datasets и `docs/RAG`
+монтируются read-only, reports — отдельно на запись. Runtime secrets не
+копируются в image.
+
+Compose запускается только с безопасной eval-БД:
+
+```bash
+docker compose -f docker-compose.eval.yml up --build \
+  --abort-on-container-exit --exit-code-from eval-runner eval-runner
+docker compose -f docker-compose.eval.yml down
+```
+
+Не используйте `down -v` для production Compose. Реальные judge-evals не входят
+в CI; unit-тесты используют fake structured judge.

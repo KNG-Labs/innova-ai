@@ -9,6 +9,12 @@ from typing import Protocol, runtime_checkable
 from app.schemas.agent_schema import DialogState, AgentDecision
 from app.domain import QUALIFICATION_FIELDS, MISSING_ALL
 from app.privacy import PiiSanitizer
+from app.client.token_usage import (
+    AgentTokenUsage,
+    capture_token_usage_enabled,
+    normalize_actual_usage,
+    usage_delta,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -196,6 +202,12 @@ class Ag2AgentClient(LLMClient):
             llm_config=llm_config,
             human_input_mode="NEVER",
         )
+        self._last_token_usage: AgentTokenUsage | None = None
+
+    def consume_last_token_usage(self) -> AgentTokenUsage | None:
+        usage = self._last_token_usage
+        self._last_token_usage = None
+        return usage
 
     async def decide(
         self,
@@ -229,6 +241,13 @@ class Ag2AgentClient(LLMClient):
         full_message = f"{context}\n\nСообщение пользователя: {user_message}"
         messages = history + [{"role": "user", "content": full_message}]
 
+        capture_usage = capture_token_usage_enabled()
+        self._last_token_usage = None
+        before_usage = (
+            normalize_actual_usage(self._agent.get_actual_usage())
+            if capture_usage
+            else None
+        )
         try:
             # Последний fail-closed барьер непосредственно перед AG2/OpenRouter.
             PiiSanitizer.ensure_safe(messages)
@@ -239,6 +258,12 @@ class Ag2AgentClient(LLMClient):
         except Exception as exc:  # noqa: BLE001 — любой сбой провайдера = fallback, не 500
             logger.warning("AG2 call failed (%s): %r", type(exc).__name__, exc)
             return _FALLBACK_DECISION
+        finally:
+            if capture_usage:
+                delta = usage_delta(before_usage, self._agent.get_actual_usage())
+                self._last_token_usage = delta or AgentTokenUsage(
+                    calls=1, complete=False
+                )
 
         return _parse_reply(reply)
 

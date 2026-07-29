@@ -11,7 +11,7 @@ from app.schemas import DialogState
 from app.schemas.agent_schema import LeadIntentStatus
 from main import app
 from uuid import UUID, uuid4
-from app.models import DialogSession, Lead
+from app.models import DialogSession, Lead, Message
 
 pytestmark = pytest.mark.integration
 
@@ -923,7 +923,11 @@ async def test_mixed_contact_is_sanitized_for_llm_history_and_embeddings(
 
 
 @pytest.mark.asyncio
-async def test_contact_only_message_skips_all_external_ai_calls(client) -> None:
+async def test_contact_only_message_skips_all_external_ai_calls(
+    client, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("EVAL_CAPTURE_TOKEN_USAGE", "1")
+
     class _CapturingEmbedding:
         def __init__(self) -> None:
             self.calls: list[list[str]] = []
@@ -965,6 +969,35 @@ async def test_contact_only_message_skips_all_external_ai_calls(client) -> None:
     assert embedding.calls == []
 
     async with app.state.db_session_maker() as db:
+        assistant_message = await db.get(
+            Message, UUID(response.json()["assistant_message_id"])
+        )
+        assert assistant_message is not None
+        assert assistant_message.message_metadata == {
+            "eval_token_usage": {
+                "prompt_tokens": 0,
+                "completion_tokens": 0,
+                "total_tokens": 0,
+                "calls": 0,
+                "complete": True,
+                "components": {
+                    "retrieval_planner": {
+                        "prompt_tokens": 0,
+                        "completion_tokens": 0,
+                        "total_tokens": 0,
+                        "calls": 0,
+                        "complete": True,
+                    },
+                    "agent": {
+                        "prompt_tokens": 0,
+                        "completion_tokens": 0,
+                        "total_tokens": 0,
+                        "calls": 0,
+                        "complete": True,
+                    },
+                },
+            }
+        }
         lead = await db.get(Lead, UUID(response.json()["lead_id"]))
         assert lead is not None
         assert lead.contact == {

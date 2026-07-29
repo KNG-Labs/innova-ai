@@ -17,8 +17,10 @@ __pycache__/
 htmlcov/
 .coverage
 
-evals/reports/*
-!evals/reports/.gitkeep
+# DeepEval
+**/.deepeval/
+/evals/reports/runs/**/deepeval/
+
 
 # IDE
 .idea/

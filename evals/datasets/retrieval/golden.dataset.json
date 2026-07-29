@@ -1,10 +1,8 @@
-{
-  "schema_version": "2.0",
-  "name": "innova_retrieval_golden_v2",
-  "evaluation_type": "retrieval",
-  "description": "100 frozen retrieval cases migrated from the original graded golden dataset.",
-  "cases": [
-    {
+[
+  {
+    "input": "По какому графику работает автосалон?",
+    "name": "ret_cal_hours_01",
+    "additional_metadata": {
       "id": "ret_cal_hours_01",
       "split": "calibration",
       "category": "hours",
@@ -13,8 +11,12 @@
       "relevance": {
         "dealer_hours": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "До скольки отдел продаж принимает клиентов?",
+    "name": "ret_cal_hours_02",
+    "additional_metadata": {
       "id": "ret_cal_hours_02",
       "split": "calibration",
       "category": "hours",
@@ -23,8 +25,12 @@
       "relevance": {
         "dealer_hours": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Когда работает сервис в воскресенье?",
+    "name": "ret_cal_hours_03",
+    "additional_metadata": {
       "id": "ret_cal_hours_03",
       "split": "calibration",
       "category": "hours",
@@ -33,8 +39,12 @@
       "relevance": {
         "dealer_hours": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Что нужно взять с собой на тест-драйв?",
+    "name": "ret_cal_test_drive_01",
+    "additional_metadata": {
       "id": "ret_cal_test_drive_01",
       "split": "calibration",
       "category": "test_drive",
@@ -43,8 +53,12 @@
       "relevance": {
         "test_drive": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Сколько длится обычный тест-драйв?",
+    "name": "ret_cal_test_drive_02",
+    "additional_metadata": {
       "id": "ret_cal_test_drive_02",
       "split": "calibration",
       "category": "test_drive",
@@ -53,8 +67,12 @@
       "relevance": {
         "test_drive": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Можно взять машину на тест на сутки?",
+    "name": "ret_cal_test_drive_03",
+    "additional_metadata": {
       "id": "ret_cal_test_drive_03",
       "split": "calibration",
       "category": "test_drive",
@@ -63,8 +81,12 @@
       "relevance": {
         "test_drive": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Какой минимальный первый взнос по кредиту?",
+    "name": "ret_cal_credit_01",
+    "additional_metadata": {
       "id": "ret_cal_credit_01",
       "split": "calibration",
       "category": "credit",
@@ -73,8 +95,12 @@
       "relevance": {
         "credit_financing": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "На какой срок можно оформить автокредит?",
+    "name": "ret_cal_credit_02",
+    "additional_metadata": {
       "id": "ret_cal_credit_02",
       "split": "calibration",
       "category": "credit",
@@ -83,8 +109,12 @@
       "relevance": {
         "credit_financing": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Сколько ждать решение банка по автокредиту?",
+    "name": "ret_cal_credit_03",
+    "additional_metadata": {
       "id": "ret_cal_credit_03",
       "split": "calibration",
       "category": "credit",
@@ -93,8 +123,12 @@
       "relevance": {
         "credit_financing": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Можно ли оформить кредит прямо в салоне?",
+    "name": "ret_cal_credit_04",
+    "additional_metadata": {
       "id": "ret_cal_credit_04",
       "split": "calibration",
       "category": "credit",
@@ -103,8 +137,12 @@
       "relevance": {
         "credit_financing": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Какие два основных документа нужны для заявки на кредит?",
+    "name": "ret_cal_credit_docs_01",
+    "additional_metadata": {
       "id": "ret_cal_credit_docs_01",
       "split": "calibration",
       "category": "credit",
@@ -114,8 +152,12 @@
         "credit_documents": 3,
         "credit_financing": 2
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Может ли банк попросить подтверждение дохода?",
+    "name": "ret_cal_credit_docs_02",
+    "additional_metadata": {
       "id": "ret_cal_credit_docs_02",
       "split": "calibration",
       "category": "credit",
@@ -124,8 +166,12 @@
       "relevance": {
         "credit_documents": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Можно ли досрочно закрыть автокредит?",
+    "name": "ret_cal_credit_early_01",
+    "additional_metadata": {
       "id": "ret_cal_credit_early_01",
       "split": "calibration",
       "category": "credit",
@@ -134,8 +180,12 @@
       "relevance": {
         "early_loan_repayment": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Есть рассрочка от самого автосалона?",
+    "name": "ret_cal_installment_01",
+    "additional_metadata": {
       "id": "ret_cal_installment_01",
       "split": "calibration",
       "category": "finance",
@@ -145,8 +195,12 @@
         "installment": 3,
         "credit_financing": 1
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Можно оформить машину в лизинг на физлицо?",
+    "name": "ret_cal_leasing_person_01",
+    "additional_metadata": {
       "id": "ret_cal_leasing_person_01",
       "split": "calibration",
       "category": "leasing",
@@ -156,8 +210,12 @@
         "personal_leasing": 3,
         "corporate_leasing": 1
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Вы работаете с корпоративными автопарками?",
+    "name": "ret_cal_leasing_company_01",
+    "additional_metadata": {
       "id": "ret_cal_leasing_company_01",
       "split": "calibration",
       "category": "leasing",
@@ -166,8 +224,12 @@
       "relevance": {
         "corporate_leasing": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Что такое trade-in в вашем салоне?",
+    "name": "ret_cal_tradein_01",
+    "additional_metadata": {
       "id": "ret_cal_tradein_01",
       "split": "calibration",
       "category": "trade_in",
@@ -177,8 +239,12 @@
         "trade_in_program": 3,
         "vehicle_buyout": 1
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Какие документы нужны для оценки по трейд-ин?",
+    "name": "ret_cal_tradein_02",
+    "additional_metadata": {
       "id": "ret_cal_tradein_02",
       "split": "calibration",
       "category": "trade_in",
@@ -187,8 +253,12 @@
       "relevance": {
         "trade_in_program": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Берёте ли в trade-in машину старше 15 лет?",
+    "name": "ret_cal_tradein_03",
+    "additional_metadata": {
       "id": "ret_cal_tradein_03",
       "split": "calibration",
       "category": "trade_in",
@@ -197,8 +267,12 @@
       "relevance": {
         "trade_in_program": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Можно просто продать вам машину и ничего не покупать?",
+    "name": "ret_cal_buyout_01",
+    "additional_metadata": {
       "id": "ret_cal_buyout_01",
       "split": "calibration",
       "category": "trade_in",
@@ -208,8 +282,12 @@
         "vehicle_buyout": 3,
         "trade_in_program": 1
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Какие бренды сейчас представлены в наличии?",
+    "name": "ret_cal_stock_01",
+    "additional_metadata": {
       "id": "ret_cal_stock_01",
       "split": "calibration",
       "category": "inventory",
@@ -218,8 +296,12 @@
       "relevance": {
         "vehicle_inventory": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Что можно купить прямо сейчас, если не рассматривать Toyota?",
+    "name": "ret_cal_stock_02",
+    "additional_metadata": {
       "id": "ret_cal_stock_02",
       "split": "calibration",
       "category": "inventory",
@@ -231,8 +313,12 @@
         "kia_rio": 1,
         "hyundai_creta": 1
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Перечисли все доступные сейчас модели",
+    "name": "ret_cal_stock_03",
+    "additional_metadata": {
       "id": "ret_cal_stock_03",
       "split": "calibration",
       "category": "inventory",
@@ -241,8 +327,12 @@
       "relevance": {
         "vehicle_inventory": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Какие машины можно привезти под заказ?",
+    "name": "ret_cal_order_01",
+    "additional_metadata": {
       "id": "ret_cal_order_01",
       "split": "calibration",
       "category": "inventory",
@@ -251,8 +341,12 @@
       "relevance": {
         "vehicle_order": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Сколько обычно ждать заказной автомобиль?",
+    "name": "ret_cal_order_02",
+    "additional_metadata": {
       "id": "ret_cal_order_02",
       "split": "calibration",
       "category": "inventory",
@@ -261,8 +355,12 @@
       "relevance": {
         "vehicle_order": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Гарантируется ли указанный на сайте цвет машины?",
+    "name": "ret_cal_freshness_01",
+    "additional_metadata": {
       "id": "ret_cal_freshness_01",
       "split": "calibration",
       "category": "inventory",
@@ -272,8 +370,12 @@
         "price_and_inventory_freshness": 3,
         "vehicle_inventory": 2
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "На сколько можно забронировать автомобиль?",
+    "name": "ret_cal_booking_01",
+    "additional_metadata": {
       "id": "ret_cal_booking_01",
       "split": "calibration",
       "category": "booking",
@@ -282,8 +384,12 @@
       "relevance": {
         "vehicle_booking": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Сколько нужно внести для брони?",
+    "name": "ret_cal_booking_02",
+    "additional_metadata": {
       "id": "ret_cal_booking_02",
       "split": "calibration",
       "category": "booking",
@@ -292,8 +398,12 @@
       "relevance": {
         "vehicle_booking": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Как отменить бронь и когда вернут деньги?",
+    "name": "ret_cal_cancel_01",
+    "additional_metadata": {
       "id": "ret_cal_cancel_01",
       "split": "calibration",
       "category": "booking",
@@ -302,8 +412,12 @@
       "relevance": {
         "booking_cancellation": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Какими способами можно оплатить автомобиль?",
+    "name": "ret_cal_payment_01",
+    "additional_metadata": {
       "id": "ret_cal_payment_01",
       "split": "calibration",
       "category": "payment",
@@ -312,8 +426,12 @@
       "relevance": {
         "payment_methods": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Можно расплатиться евро?",
+    "name": "ret_cal_payment_02",
+    "additional_metadata": {
       "id": "ret_cal_payment_02",
       "split": "calibration",
       "category": "payment",
@@ -322,8 +440,12 @@
       "relevance": {
         "payment_methods": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Можно оформить ОСАГО при покупке?",
+    "name": "ret_cal_osago_01",
+    "additional_metadata": {
       "id": "ret_cal_osago_01",
       "split": "calibration",
       "category": "insurance",
@@ -332,8 +454,12 @@
       "relevance": {
         "osago_insurance": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "От чего защищает КАСКО?",
+    "name": "ret_cal_kasko_01",
+    "additional_metadata": {
       "id": "ret_cal_kasko_01",
       "split": "calibration",
       "category": "insurance",
@@ -342,8 +468,12 @@
       "relevance": {
         "kasko_insurance": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Есть гарантия на новую машину?",
+    "name": "ret_cal_warranty_new_01",
+    "additional_metadata": {
       "id": "ret_cal_warranty_new_01",
       "split": "calibration",
       "category": "warranty",
@@ -352,8 +482,12 @@
       "relevance": {
         "new_vehicle_warranty": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Какая гарантия на машину с пробегом?",
+    "name": "ret_cal_warranty_used_01",
+    "additional_metadata": {
       "id": "ret_cal_warranty_used_01",
       "split": "calibration",
       "category": "warranty",
@@ -362,8 +496,12 @@
       "relevance": {
         "used_vehicle_warranty": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Как проверяются автомобили с пробегом?",
+    "name": "ret_cal_used_01",
+    "additional_metadata": {
       "id": "ret_cal_used_01",
       "split": "calibration",
       "category": "used_cars",
@@ -372,8 +510,12 @@
       "relevance": {
         "used_vehicles": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Можно у вас пройти плановое ТО?",
+    "name": "ret_cal_service_01",
+    "additional_metadata": {
       "id": "ret_cal_service_01",
       "split": "calibration",
       "category": "service",
@@ -382,8 +524,12 @@
       "relevance": {
         "maintenance": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Делаете кузовной ремонт после ДТП?",
+    "name": "ret_cal_body_01",
+    "additional_metadata": {
       "id": "ret_cal_body_01",
       "split": "calibration",
       "category": "service",
@@ -392,8 +538,12 @@
       "relevance": {
         "body_repair": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Можно оставить у вас зимние колёса на хранение?",
+    "name": "ret_cal_tires_01",
+    "additional_metadata": {
       "id": "ret_cal_tires_01",
       "split": "calibration",
       "category": "service",
@@ -402,8 +552,12 @@
       "relevance": {
         "tire_service": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Сколько стоит доставка машины по городу?",
+    "name": "ret_cal_delivery_01",
+    "additional_metadata": {
       "id": "ret_cal_delivery_01",
       "split": "calibration",
       "category": "delivery",
@@ -412,8 +566,12 @@
       "relevance": {
         "vehicle_delivery": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Что нужно физлицу для покупки машины?",
+    "name": "ret_cal_purchase_docs_01",
+    "additional_metadata": {
       "id": "ret_cal_purchase_docs_01",
       "split": "calibration",
       "category": "documents",
@@ -422,8 +580,12 @@
       "relevance": {
         "purchase_documents": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Какие документы нужны для постановки на учёт?",
+    "name": "ret_cal_registration_01",
+    "additional_metadata": {
       "id": "ret_cal_registration_01",
       "split": "calibration",
       "category": "documents",
@@ -432,8 +594,12 @@
       "relevance": {
         "vehicle_registration": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Можно купить автомобиль дистанционно?",
+    "name": "ret_cal_remote_01",
+    "additional_metadata": {
       "id": "ret_cal_remote_01",
       "split": "calibration",
       "category": "remote_purchase",
@@ -442,8 +608,12 @@
       "relevance": {
         "remote_purchase": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Можно установить видеорегистратор до выдачи?",
+    "name": "ret_cal_accessories_01",
+    "additional_metadata": {
       "id": "ret_cal_accessories_01",
       "split": "calibration",
       "category": "accessories",
@@ -452,8 +622,12 @@
       "relevance": {
         "accessories": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Что входит в помощь на дороге?",
+    "name": "ret_cal_road_01",
+    "additional_metadata": {
       "id": "ret_cal_road_01",
       "split": "calibration",
       "category": "service",
@@ -462,8 +636,12 @@
       "relevance": {
         "roadside_assistance": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Есть зарядка для электромобиля?",
+    "name": "ret_cal_charge_01",
+    "additional_metadata": {
       "id": "ret_cal_charge_01",
       "split": "calibration",
       "category": "electric",
@@ -472,8 +650,12 @@
       "relevance": {
         "ev_charging": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Сколько стоит Toyota Camry?",
+    "name": "ret_cal_camry_01",
+    "additional_metadata": {
       "id": "ret_cal_camry_01",
       "split": "calibration",
       "category": "model",
@@ -482,8 +664,12 @@
       "relevance": {
         "toyota_camry": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Какая Camry самая дешёвая?",
+    "name": "ret_cal_camry_02",
+    "additional_metadata": {
       "id": "ret_cal_camry_02",
       "split": "calibration",
       "category": "model",
@@ -492,8 +678,12 @@
       "relevance": {
         "toyota_camry": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Какой диапазон цен у Hyundai Creta?",
+    "name": "ret_cal_creta_01",
+    "additional_metadata": {
       "id": "ret_cal_creta_01",
       "split": "calibration",
       "category": "model",
@@ -502,8 +692,12 @@
       "relevance": {
         "hyundai_creta": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Какой запас хода у Tesla Model Y?",
+    "name": "ret_cal_tesla_01",
+    "additional_metadata": {
       "id": "ret_cal_tesla_01",
       "split": "calibration",
       "category": "model",
@@ -512,16 +706,24 @@
       "relevance": {
         "tesla_model_y": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Можно оплатить у вас штраф ГИБДД?",
+    "name": "ret_cal_rio_01",
+    "additional_metadata": {
       "id": "ret_cal_rio_01",
       "split": "calibration",
       "category": "out_of_scope",
       "question": "Можно оплатить у вас штраф ГИБДД?",
       "answerable": false,
       "relevance": {}
-    },
-    {
+    }
+  },
+  {
+    "input": "Подойдёт ли Prado для бездорожья и прицепа?",
+    "name": "ret_cal_prado_01",
+    "additional_metadata": {
       "id": "ret_cal_prado_01",
       "split": "calibration",
       "category": "model",
@@ -530,72 +732,108 @@
       "relevance": {
         "toyota_land_cruiser_prado": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Помогаете получить водительские права?",
+    "name": "ret_cal_haval_01",
+    "additional_metadata": {
       "id": "ret_cal_haval_01",
       "split": "calibration",
       "category": "out_of_scope",
       "question": "Помогаете получить водительские права?",
       "answerable": false,
       "relevance": {}
-    },
-    {
+    }
+  },
+  {
+    "input": "Можно арендовать машину на неделю?",
+    "name": "ret_cal_geely_01",
+    "additional_metadata": {
       "id": "ret_cal_geely_01",
       "split": "calibration",
       "category": "out_of_scope",
       "question": "Можно арендовать машину на неделю?",
       "answerable": false,
       "relevance": {}
-    },
-    {
+    }
+  },
+  {
+    "input": "Где находится ближайшая заправка?",
+    "name": "ret_cal_vesta_01",
+    "additional_metadata": {
       "id": "ret_cal_vesta_01",
       "split": "calibration",
       "category": "out_of_scope",
       "question": "Где находится ближайшая заправка?",
       "answerable": false,
       "relevance": {}
-    },
-    {
+    }
+  },
+  {
+    "input": "Как оспорить виновность в ДТП?",
+    "name": "ret_cal_kodiaq_01",
+    "additional_metadata": {
       "id": "ret_cal_kodiaq_01",
       "split": "calibration",
       "category": "out_of_scope",
       "question": "Как оспорить виновность в ДТП?",
       "answerable": false,
       "relevance": {}
-    },
-    {
+    }
+  },
+  {
+    "input": "Продаёте запчасти для грузовиков?",
+    "name": "ret_cal_duster_01",
+    "additional_metadata": {
       "id": "ret_cal_duster_01",
       "split": "calibration",
       "category": "out_of_scope",
       "question": "Продаёте запчасти для грузовиков?",
       "answerable": false,
       "relevance": {}
-    },
-    {
+    }
+  },
+  {
+    "input": "Сколько стоит билет на городской автобус?",
+    "name": "ret_cal_bmw_01",
+    "additional_metadata": {
       "id": "ret_cal_bmw_01",
       "split": "calibration",
       "category": "out_of_scope",
       "question": "Сколько стоит билет на городской автобус?",
       "answerable": false,
       "relevance": {}
-    },
-    {
+    }
+  },
+  {
+    "input": "Как приготовить борщ?",
+    "name": "ret_cal_negative_01",
+    "additional_metadata": {
       "id": "ret_cal_negative_01",
       "split": "calibration",
       "category": "out_of_scope",
       "question": "Как приготовить борщ?",
       "answerable": false,
       "relevance": {}
-    },
-    {
+    }
+  },
+  {
+    "input": "Какая завтра будет погода?",
+    "name": "ret_cal_negative_02",
+    "additional_metadata": {
       "id": "ret_cal_negative_02",
       "split": "calibration",
       "category": "out_of_scope",
       "question": "Какая завтра будет погода?",
       "answerable": false,
       "relevance": {}
-    },
-    {
+    }
+  },
+  {
+    "input": "По какому номеру позвонить в отдел продаж?",
+    "name": "ret_test_hours_01",
+    "additional_metadata": {
       "id": "ret_test_hours_01",
       "split": "test",
       "category": "hours",
@@ -604,8 +842,12 @@
       "relevance": {
         "dealer_hours": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Как записаться на визит в салон?",
+    "name": "ret_test_hours_02",
+    "additional_metadata": {
       "id": "ret_test_hours_02",
       "split": "test",
       "category": "hours",
@@ -614,8 +856,12 @@
       "relevance": {
         "dealer_hours": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Нужно ли платить за пробную поездку?",
+    "name": "ret_test_drive_01",
+    "additional_metadata": {
       "id": "ret_test_drive_01",
       "split": "test",
       "category": "test_drive",
@@ -624,8 +870,12 @@
       "relevance": {
         "test_drive": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Что принести для оформления машины в кредит?",
+    "name": "ret_test_credit_01",
+    "additional_metadata": {
       "id": "ret_test_credit_01",
       "split": "test",
       "category": "credit",
@@ -635,8 +885,12 @@
         "credit_documents": 3,
         "credit_financing": 2
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Хочу платить за машину ежемесячно несколько лет",
+    "name": "ret_test_credit_02",
+    "additional_metadata": {
       "id": "ret_test_credit_02",
       "split": "test",
       "category": "credit",
@@ -646,8 +900,12 @@
         "credit_financing": 3,
         "installment": 2
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Чем ваша рассрочка отличается от кредита?",
+    "name": "ret_test_installment_01",
+    "additional_metadata": {
       "id": "ret_test_installment_01",
       "split": "test",
       "category": "finance",
@@ -657,8 +915,12 @@
         "installment": 3,
         "credit_financing": 2
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Сколько времени занимает оценка старого авто?",
+    "name": "ret_test_tradein_01",
+    "additional_metadata": {
       "id": "ret_test_tradein_01",
       "split": "test",
       "category": "trade_in",
@@ -668,8 +930,12 @@
         "trade_in_program": 3,
         "vehicle_buyout": 1
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Купите мою машину без обмена на новую?",
+    "name": "ret_test_buyout_01",
+    "additional_metadata": {
       "id": "ret_test_buyout_01",
       "split": "test",
       "category": "trade_in",
@@ -679,8 +945,12 @@
         "vehicle_buyout": 3,
         "trade_in_program": 1
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Покрывается ли гарантией подержанный автомобиль?",
+    "name": "ret_test_used_warranty_01",
+    "additional_metadata": {
       "id": "ret_test_used_warranty_01",
       "split": "test",
       "category": "warranty",
@@ -690,8 +960,12 @@
         "used_vehicle_warranty": 3,
         "used_vehicles": 1
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "BMW X3 уже есть на площадке или её надо ждать?",
+    "name": "ret_test_inventory_order_01",
+    "additional_metadata": {
       "id": "ret_test_inventory_order_01",
       "split": "test",
       "category": "inventory",
@@ -702,8 +976,12 @@
         "bmw_x3": 2,
         "vehicle_inventory": 2
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Не предлагайте Тойоту. Есть Kia или Hyundai?",
+    "name": "ret_test_inventory_alt_01",
+    "additional_metadata": {
       "id": "ret_test_inventory_alt_01",
       "split": "test",
       "category": "inventory",
@@ -714,8 +992,12 @@
         "kia_rio": 2,
         "hyundai_creta": 2
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Когда бронь начинает действовать?",
+    "name": "ret_test_booking_01",
+    "additional_metadata": {
       "id": "ret_test_booking_01",
       "split": "test",
       "category": "booking",
@@ -724,8 +1006,12 @@
       "relevance": {
         "vehicle_booking": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Через сколько банк вернёт платёж за отменённую бронь?",
+    "name": "ret_test_cancel_01",
+    "additional_metadata": {
       "id": "ret_test_cancel_01",
       "split": "test",
       "category": "booking",
@@ -734,8 +1020,12 @@
       "relevance": {
         "booking_cancellation": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Почему большая оплата картой может не пройти?",
+    "name": "ret_test_payment_01",
+    "additional_metadata": {
       "id": "ret_test_payment_01",
       "split": "test",
       "category": "payment",
@@ -744,8 +1034,12 @@
       "relevance": {
         "payment_methods": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Я ИП, могу взять несколько машин в лизинг?",
+    "name": "ret_test_leasing_01",
+    "additional_metadata": {
       "id": "ret_test_leasing_01",
       "split": "test",
       "category": "leasing",
@@ -754,8 +1048,12 @@
       "relevance": {
         "corporate_leasing": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "От чего зависит цена ОСАГО?",
+    "name": "ret_test_osago_01",
+    "additional_metadata": {
       "id": "ret_test_osago_01",
       "split": "test",
       "category": "insurance",
@@ -764,8 +1062,12 @@
       "relevance": {
         "osago_insurance": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Обязательно ли КАСКО при покупке в кредит?",
+    "name": "ret_test_kasko_credit_01",
+    "additional_metadata": {
       "id": "ret_test_kasko_credit_01",
       "split": "test",
       "category": "insurance",
@@ -775,8 +1077,12 @@
         "kasko_insurance": 3,
         "credit_financing": 1
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Как записаться на замену масла?",
+    "name": "ret_test_service_01",
+    "additional_metadata": {
       "id": "ret_test_service_01",
       "split": "test",
       "category": "service",
@@ -786,8 +1092,12 @@
         "maintenance": 3,
         "dealer_hours": 1
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Заводская гарантия оплатит ремонт после аварии?",
+    "name": "ret_test_warranty_01",
+    "additional_metadata": {
       "id": "ret_test_warranty_01",
       "split": "test",
       "category": "warranty",
@@ -797,8 +1107,12 @@
         "new_vehicle_warranty": 3,
         "body_repair": 1
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Доставляете машину в другой город?",
+    "name": "ret_test_delivery_01",
+    "additional_metadata": {
       "id": "ret_test_delivery_01",
       "split": "test",
       "category": "delivery",
@@ -807,8 +1121,12 @@
       "relevance": {
         "vehicle_delivery": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Можно посмотреть машину по видео и оформить договор удалённо?",
+    "name": "ret_test_remote_01",
+    "additional_metadata": {
       "id": "ret_test_remote_01",
       "split": "test",
       "category": "remote_purchase",
@@ -817,8 +1135,12 @@
       "relevance": {
         "remote_purchase": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Нужен ли полис для регистрации автомобиля?",
+    "name": "ret_test_registration_01",
+    "additional_metadata": {
       "id": "ret_test_registration_01",
       "split": "test",
       "category": "documents",
@@ -828,8 +1150,12 @@
         "vehicle_registration": 3,
         "osago_insurance": 1
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Какой объём багажника у Kia Sportage?",
+    "name": "ret_test_sportage_01",
+    "additional_metadata": {
       "id": "ret_test_sportage_01",
       "split": "test",
       "category": "model",
@@ -838,8 +1164,12 @@
       "relevance": {
         "kia_sportage": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Бывает Hyundai Tucson гибридным?",
+    "name": "ret_test_tucson_01",
+    "additional_metadata": {
       "id": "ret_test_tucson_01",
       "split": "test",
       "category": "model",
@@ -848,56 +1178,84 @@
       "relevance": {
         "hyundai_tucson": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Можно оформить у вас ипотеку на квартиру?",
+    "name": "ret_test_chery_01",
+    "additional_metadata": {
       "id": "ret_test_chery_01",
       "split": "test",
       "category": "out_of_scope",
       "question": "Можно оформить у вас ипотеку на квартиру?",
       "answerable": false,
       "relevance": {}
-    },
-    {
+    }
+  },
+  {
+    "input": "Можно застраховать через вас квартиру?",
+    "name": "ret_test_audi_01",
+    "additional_metadata": {
       "id": "ret_test_audi_01",
       "split": "test",
       "category": "out_of_scope",
       "question": "Можно застраховать через вас квартиру?",
       "answerable": false,
       "relevance": {}
-    },
-    {
+    }
+  },
+  {
+    "input": "Какой сегодня курс евро?",
+    "name": "ret_test_mercedes_01",
+    "additional_metadata": {
       "id": "ret_test_mercedes_01",
       "split": "test",
       "category": "out_of_scope",
       "question": "Какой сегодня курс евро?",
       "answerable": false,
       "relevance": {}
-    },
-    {
+    }
+  },
+  {
+    "input": "Можно купить у вас велосипед?",
+    "name": "ret_test_mazda_01",
+    "additional_metadata": {
       "id": "ret_test_mazda_01",
       "split": "test",
       "category": "out_of_scope",
       "question": "Можно купить у вас велосипед?",
       "answerable": false,
       "relevance": {}
-    },
-    {
+    }
+  },
+  {
+    "input": "Посоветуй хороший отель в центре города",
+    "name": "ret_test_negative_01",
+    "additional_metadata": {
       "id": "ret_test_negative_01",
       "split": "test",
       "category": "out_of_scope",
       "question": "Посоветуй хороший отель в центре города",
       "answerable": false,
       "relevance": {}
-    },
-    {
+    }
+  },
+  {
+    "input": "Как лечить сильную головную боль?",
+    "name": "ret_test_negative_02",
+    "additional_metadata": {
       "id": "ret_test_negative_02",
       "split": "test",
       "category": "out_of_scope",
       "question": "Как лечить сильную головную боль?",
       "answerable": false,
       "relevance": {}
-    },
-    {
+    }
+  },
+  {
+    "input": "Время",
+    "name": "ret_reg_time_01",
+    "additional_metadata": {
       "id": "ret_reg_time_01",
       "split": "regression",
       "category": "hours",
@@ -906,8 +1264,12 @@
       "relevance": {
         "dealer_hours": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Часы",
+    "name": "ret_reg_hours_01",
+    "additional_metadata": {
       "id": "ret_reg_hours_01",
       "split": "regression",
       "category": "hours",
@@ -916,8 +1278,12 @@
       "relevance": {
         "dealer_hours": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Какие марки есть?",
+    "name": "ret_reg_brands_01",
+    "additional_metadata": {
       "id": "ret_reg_brands_01",
       "split": "regression",
       "category": "inventory",
@@ -926,8 +1292,12 @@
       "relevance": {
         "vehicle_inventory": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Хочу другую, не Toyota",
+    "name": "ret_reg_not_toyota_01",
+    "additional_metadata": {
       "id": "ret_reg_not_toyota_01",
       "split": "regression",
       "category": "inventory",
@@ -939,8 +1309,12 @@
         "kia_rio": 1,
         "hyundai_creta": 1
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Можно купить автомобиль в кредит?",
+    "name": "ret_reg_credit_01",
+    "additional_metadata": {
       "id": "ret_reg_credit_01",
       "split": "regression",
       "category": "credit",
@@ -949,8 +1323,12 @@
       "relevance": {
         "credit_financing": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "У вас есть trade-in?",
+    "name": "ret_reg_tradein_01",
+    "additional_metadata": {
       "id": "ret_reg_tradein_01",
       "split": "regression",
       "category": "trade_in",
@@ -959,8 +1337,12 @@
       "relevance": {
         "trade_in_program": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "До скольки вы работаете?",
+    "name": "ret_reg_close_time_01",
+    "additional_metadata": {
       "id": "ret_reg_close_time_01",
       "split": "regression",
       "category": "hours",
@@ -969,8 +1351,12 @@
       "relevance": {
         "dealer_hours": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Какие автомобили сейчас в наличии?",
+    "name": "ret_reg_inventory_01",
+    "additional_metadata": {
       "id": "ret_reg_inventory_01",
       "split": "regression",
       "category": "inventory",
@@ -979,8 +1365,12 @@
       "relevance": {
         "vehicle_inventory": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Какой взнос нужен для кредита?",
+    "name": "ret_reg_credit_downpayment_01",
+    "additional_metadata": {
       "id": "ret_reg_credit_downpayment_01",
       "split": "regression",
       "category": "credit",
@@ -989,8 +1379,12 @@
       "relevance": {
         "credit_financing": 3
       }
-    },
-    {
+    }
+  },
+  {
+    "input": "Хочу сдать старую машину в зачёт новой",
+    "name": "ret_reg_tradein_oldcar_01",
+    "additional_metadata": {
       "id": "ret_reg_tradein_oldcar_01",
       "split": "regression",
       "category": "trade_in",
@@ -1000,5 +1394,5 @@
         "trade_in_program": 3
       }
     }
-  ]
-}
+  }
+]

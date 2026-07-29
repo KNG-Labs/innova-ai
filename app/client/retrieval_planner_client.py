@@ -16,6 +16,12 @@ from pydantic import (
 )
 
 from app.client.ag2_agent_client import _AG2_TIMEOUT_S
+from app.client.token_usage import (
+    AgentTokenUsage,
+    capture_token_usage_enabled,
+    normalize_actual_usage,
+    usage_delta,
+)
 from app.privacy import PiiSanitizer
 
 logger = logging.getLogger(__name__)
@@ -109,6 +115,12 @@ class Ag2RetrievalPlannerClient(RetrievalPlannerClient):
             llm_config=llm_config,
             human_input_mode="NEVER",
         )
+        self._last_token_usage: AgentTokenUsage | None = None
+
+    def consume_last_token_usage(self) -> AgentTokenUsage | None:
+        usage = self._last_token_usage
+        self._last_token_usage = None
+        return usage
 
     async def plan(
         self,
@@ -128,6 +140,13 @@ class Ag2RetrievalPlannerClient(RetrievalPlannerClient):
                 "content": json.dumps(backend_context, ensure_ascii=False),
             }
         ]
+        capture_usage = capture_token_usage_enabled()
+        self._last_token_usage = None
+        before_usage = (
+            normalize_actual_usage(self._agent.get_actual_usage())
+            if capture_usage
+            else None
+        )
         try:
             # Последний fail-closed барьер непосредственно перед AG2/OpenRouter.
             PiiSanitizer.ensure_safe(messages)
@@ -142,6 +161,12 @@ class Ag2RetrievalPlannerClient(RetrievalPlannerClient):
                 exc,
             )
             return RetrievalPlan.none()
+        finally:
+            if capture_usage:
+                delta = usage_delta(before_usage, self._agent.get_actual_usage())
+                self._last_token_usage = delta or AgentTokenUsage(
+                    calls=1, complete=False
+                )
         return _parse_retrieval_plan(reply)
 
 

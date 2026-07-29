@@ -10,6 +10,7 @@ from app.client.retrieval_planner_client import (
     RetrievalPlan,
     RetrievalPlannerClient,
 )
+from app.client.token_usage import AgentTokenUsage, consume_token_usage
 from app.privacy import PrivacyBoundaryError, PiiSanitizer
 from app.repository.knowledge_repository import KnowledgeRepository
 from app.schemas.knowledge_schema import RetrievedChunk
@@ -41,6 +42,9 @@ class KnowledgeRetrievalService:
         self._planner = retrieval_planner
         self._top_k = top_k
         self._min_score = min_score
+
+    def consume_planner_token_usage(self) -> AgentTokenUsage | None:
+        return consume_token_usage(self._planner)
 
     async def retrieve(
         self,
