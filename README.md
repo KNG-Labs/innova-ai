@@ -7,6 +7,49 @@ Innova AI — диалоговый сервис лидогенерации. По
 получает релевантный контекст через pgvector и передаёт готовые лиды отдельному
 фоновому обработчику через Redis.
 
+## Возможности
+
+- диалог через `POST /message`;
+- анонимные пользователи и активные диалоговые сессии;
+- сохранение сообщений пользователя и ассистента;
+- управляемая backend-кодом машина состояний;
+- квалификация по `car_model`, `budget` и `purchase_type`;
+- сбор контакта через `phone`, `email` или `telegram`;
+- статусы лида `draft`, `ready`, `delivered` и `delivery_failed`;
+- семантический поиск с продолжением темы внутри диалоговой сессии;
+- AG2 через OpenRouter с безопасным fallback;
+- локальное распознавание телефона, email и Telegram username;
+- стабильные токены вместо реальных контактов во всех AI-payload;
+- обработка сообщений только с контактом без вызова LLM, planner и embeddings;
+- проверка payload перед HTTP-запросами в OpenRouter;
+- асинхронная доставка лидов через Redis и отдельный worker;
+- режимы доставки AmoCRM, webhook, fake и disabled;
+- API для чтения сессий, сообщений, лидов и базы знаний;
+- встраиваемый JavaScript-виджет и демонстрационная страница.
+
+## Диаграммы
+
+[Sequence](docs/diagrams/current/Sequence.puml)
+
+[Component](docs/diagrams/current/Components.puml)
+
+[ER-диаграмма](docs/diagrams/current/ER.puml)
+
+## Технологии
+
+- Python 3.13
+- FastAPI и Pydantic
+- SQLAlchemy asyncio и asyncpg
+- PostgreSQL 17 с pgvector
+- Alembic
+- Redis
+- AG2 (AutoGen) через OpenRouter
+- httpx
+- pytest, Ruff и mypy
+- uv
+
+PostgreSQL является источником истины для пользователей, сессий, сообщений, лидов и документов базы знаний. Redis используется только как очередь доставки лидов.
+
 ## Путь сообщения и защита персональных данных
 
 Упрощённый путь пользовательского сообщения:
@@ -32,49 +75,6 @@ Innova AI — диалоговый сервис лидогенерации. По
 Готовый lead
   → Redis → delivery worker → AmoCRM / webhook / fake adapter
 ```
-
-## Диаграммы
-
-[Sequence](docs/diagrams/current/Sequence.puml)
-
-[Component](docs/diagrams/current/Components.puml)
-
-[ER-диаграмма](docs/diagrams/current/ER.puml)
-
-## Возможности
-
-- диалог через `POST /message`;
-- анонимные пользователи и активные диалоговые сессии;
-- сохранение сообщений пользователя и ассистента;
-- управляемая backend-кодом машина состояний;
-- квалификация по `car_model`, `budget` и `purchase_type`;
-- сбор контакта через `phone`, `email` или `telegram`;
-- статусы лида `draft`, `ready`, `delivered` и `delivery_failed`;
-- семантический поиск с продолжением темы внутри диалоговой сессии;
-- AG2 через OpenRouter с безопасным fallback;
-- локальное распознавание телефона, email и Telegram username;
-- стабильные токены вместо реальных контактов во всех AI-payload;
-- обработка сообщений только с контактом без вызова LLM, planner и embeddings;
-- проверка payload перед HTTP-запросами в OpenRouter;
-- асинхронная доставка лидов через Redis и отдельный worker;
-- режимы доставки AmoCRM, webhook, fake и disabled;
-- API для чтения сессий, сообщений, лидов и базы знаний;
-- встраиваемый JavaScript-виджет и демонстрационная страница.
-
-## Технологии
-
-- Python 3.13
-- FastAPI и Pydantic
-- SQLAlchemy asyncio и asyncpg
-- PostgreSQL 17 с pgvector
-- Alembic
-- Redis
-- AG2 (AutoGen) через OpenRouter
-- httpx
-- pytest, Ruff и mypy
-- uv
-
-PostgreSQL является источником истины для пользователей, сессий, сообщений, лидов и документов базы знаний. Redis используется только как очередь доставки лидов.
 
 ## Состояния диалога
 
@@ -465,8 +465,47 @@ AG2 → лид → очередь Redis → фоновый обработчик 
 ## Оценка качества
 
 Версионируемые наборы в `evals/datasets/` проверяют поиск документов, качество
-ответов и сценарии работы с диалогом. Проверить их структуру без запуска
-приложения:
+ответов и сценарии работы с диалогом. Evaluation suite построен на
+[DeepEval](https://deepeval.com/): фреймворк хранит golden cases, запускает
+метрики для каждого кейса и формирует JSON отчёты и Markdown дашборды.
+Результаты прогонов сохраняются в `evals/reports/runs/`.
+
+Для semantic-метрик применяется подход **LLM-as-a-Judge**: отдельная LLM с
+temperature `0` получает ответ или полный transcript и возвращает
+структурированный verdict. Такой judge оценивает полноту обязательных фактов,
+наличие запрещённых утверждений и качество бизнес-диалога там, где сравнения
+строк недостаточно. Judge не заменяет детерминированные проверки: retrieval
+метрики вычисляются по document ID и relevance labels, а состояние диалога,
+intent, недостающие поля, поля лида и контакты дополнительно проверяются
+локальными guardrails. В manifest фиксируются модели, хеши dataset и corpus,
+RAG-параметры и признак `self_judge`; для основного baseline agent и judge
+разделены.
+
+### Текущий baseline
+
+Последний сохранённый прогон:
+[real-baseline-v4](evals/reports/runs/real-baseline-v4).
+Он выполнен 29 июля 2026 года на 100 кейсах (`test` и `regression`) с agent
+`openai/gpt-5.6-luna`, независимым judge `openai/gpt-5.6-luna-pro` и одним
+повтором.
+
+| Метрика |       Результат | n | Направление и смысл                      |
+|---|----------------:|---:|------------------------------------------|
+| `retrieval_recall@10` | 0.7255 (72.55%) | 34 | доля найденных релевантных документов    |
+| `retrieval_mrr@10` | 0.8824 (88.24%) | 34 | позиция первого релевантного документа   |
+| `context_precision@10` | 0.8824 (88.24%) | 34 | точность контекста в top-10              |
+| `abstention_accuracy@10` | 0.1667 (16.67%) | 6 |  корректный отказ при отсутствии ответа в базе |
+| `required_fact_coverage` |   0.85 (85.00%) | 40 | полнота обязательных фактов, LLM-as-a-Judge |
+| `forbidden_claim_rate` |  0.0909 (9.09%) | 44 | доля запрещённых утверждений, LLM-as-a-Judge |
+| `business_dialogue_success` | 0.3333 (33.33%) | 12 | semantic verdict и локальные guardrails  |
+| `average_agent_token_usage` |            3021 | 60 | среднее число токенов agent на eval-кейс |
+
+Результаты LLM-as-a-Judge зависят от выбранной модели, prompt и набора данных.
+Один повтор показывает baseline, но не разброс; для сравнения изменений следует
+использовать одинаковые модели и dataset/corpus hashes и запускать несколько
+повторов через `--repetitions`.
+
+Проверить структуру наборов без запуска приложения:
 
 ```bash
 uv run python -m evals.runners.evaluate --dataset evals/datasets
@@ -477,14 +516,11 @@ uv run python -m evals.runners.evaluate --dataset evals/datasets
 Рекомендуемый изолированный запуск:
 
 ```bash
-EVAL_REPORT_NAME=before-rag \
+EVAL_REPORT_NAME=real-baseline-v<№> \
   docker compose -f docker-compose.eval.yml up --build \
   --abort-on-container-exit --exit-code-from eval-runner eval-runner
 docker compose -f docker-compose.eval.yml down
 ```
-
-Подробный протокол запуска, устройство наборов, отчёты и определения метрик
-описаны в `evals/README.md`.
 
 ## Известные ограничения
 
