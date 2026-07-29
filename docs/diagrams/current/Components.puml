@@ -1,79 +1,65 @@
 @startuml Current_Components
 
-left to right direction
+top to bottom direction
 skinparam componentStyle rectangle
+skinparam linetype polyline
 skinparam shadowing false
+skinparam noteBackgroundColor #E8F5E9
+skinparam noteBorderColor #4F7F52
+skinparam nodesep 70
+skinparam ranksep 55
 
-title Innova AI - Current Components
+title Innova AI — упрощённая компонентная схема
 
-note as CurrentNote
-  CURRENT STATE
-  Соответствует реализованному коду
-  текущей версии репозитория.
+actor "Пользователь" as User
+component "Каналы\nWeb / Telegram / API" as Channels
+component "FastAPI" as API
+
+component "Диалоговое ядро\nAgentService\nState Machine\nKnowledge Services" as Core
+
+component "PiiSanitizer\nLLM / planner / embeddings" as PrivacyAI
+
+database "PostgreSQL + pgvector\nдиалоги, лиды, база знаний" as PostgreSQL
+cloud "OpenRouter" as OpenRouter
+
+queue "Redis\nready lead queue" as Redis
+component "Delivery Worker" as Delivery
+cloud "AmoCRM / webhook /\nfake adapter" as CRM
+
+User -down-> Channels
+Channels -down-> API : сообщение
+API -down-> Core : POST /message\nи knowledge API
+
+Core -left-> PrivacyAI : очистка входа\nAI-операции
+PrivacyAI -down-> OpenRouter : после\nensure_safe()
+
+Core -right-> PostgreSQL : локальные\nданные
+
+Core -down-> Redis : готовый\nlead
+Redis -down-> Delivery : job
+Delivery -down-> CRM : реальный контакт\n+ безопасный summary
+Delivery -right-> PostgreSQL : lead и статус\nдоставки
+
+note left of PrivacyAI #FFEBEE
+  Телефон, email и Telegram username
+  заменяются стабильными токенами.
+
+  Заголовки и chunks базы знаний
+  очищаются до embeddings.
+
+  Перед каждым HTTP-запросом действует
+  fail-closed проверка.
 end note
 
-actor "Посетитель сайта" as User
+note right of Core
+  Только контакт:
+  OpenRouter полностью пропускается,
+  ответ строится локально.
+end note
 
-package "Входной канал" {
-  component "Web widget\nstatic/widget.js" as Widget
-  component "FastAPI\nmain.py + routers" as API
-}
-
-package "Диалог и лиды" {
-  component "AgentService" as AgentService
-  component "SessionService" as SessionService
-  component "LeadService" as LeadService
-  component "State Machine" as StateMachine
-}
-
-package "AI и база знаний" {
-  component "AG2 / Fake AG2\nAgent Client" as AgentClient
-  component "KnowledgeIngestionService" as Ingestion
-  component "KnowledgeRetrievalService" as Retrieval
-  component "Embedding Client\nfake / OpenRouter" as Embeddings
-}
-
-package "Асинхронная доставка" {
-  queue "Redis\nlead_delivery queue" as Redis
-  component "Lead Delivery Worker" as Worker
-  component "LeadDeliveryService" as DeliveryService
-  component "CRM Client\nAmoCRM / webhook / fake" as CrmClient
-}
-
-database "PostgreSQL 17 + pgvector\nusers, sessions, messages, leads, knowledge" as PostgreSQL
-cloud "OpenRouter" as OpenRouter
-cloud "AmoCRM" as AmoCRM
-cloud "Webhook endpoint" as Webhook
-
-User --> Widget
-Widget --> API : POST /message
-
-API --> AgentService : message route
-API --> SessionService : session routes
-API --> LeadService : lead read routes
-API --> Ingestion : knowledge routes
-API --> DeliveryService : manual /deliver
-
-AgentService --> StateMachine : validate transition
-AgentService --> AgentClient : decide(history, context)
-AgentService --> Retrieval : retrieve(message)
-AgentService --> PostgreSQL : users, sessions, messages, leads
-
-SessionService --> PostgreSQL
-LeadService --> PostgreSQL
-Ingestion --> Embeddings
-Ingestion --> PostgreSQL : documents and chunks
-Retrieval --> Embeddings
-Retrieval --> PostgreSQL : pgvector search
-AgentClient ..> OpenRouter : LLM_PROVIDER=ag2
-Embeddings ..> OpenRouter : EMBEDDING_PROVIDER=openrouter
-
-AgentService --> Redis : enqueue ready lead
-Redis --> Worker : BRPOP
-Worker --> DeliveryService
-DeliveryService --> PostgreSQL : lead and delivery status
-DeliveryService --> CrmClient
-CrmClient --> AmoCRM : provider=amocrm
-CrmClient --> Webhook : provider=webhook
+note right of PostgreSQL #FFF8E1
+  Raw-сообщения и реальные lead.contact
+  остаются локально.
+end note
 
 @enduml

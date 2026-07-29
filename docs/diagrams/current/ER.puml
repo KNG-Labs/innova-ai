@@ -1,70 +1,128 @@
-@startuml
+@startuml Current_ER
 
 top to bottom direction
-skinparam linetype ortho
+skinparam linetype polyline
+skinparam shadowing false
+skinparam noteBackgroundColor #E8F5E9
+skinparam noteBorderColor #4F7F52
+skinparam nodesep 85
+skinparam ranksep 90
+skinparam classAttributeIconSize 0
+
+title Innova AI — текущая ER-модель и локальное хранение ПД
 
 class alembic_version {
    version_num: varchar(32)
 }
+
+class users {
+   id: uuid
+   anonymous_id: varchar(128)
+   channel: varchar(32)
+   created_at: timestamptz
+   updated_at: timestamptz
+   deleted_at: timestamptz?
+}
+
 class dialog_sessions {
+   id: uuid
    user_id: uuid
    state: varchar(32)
-   created_at: timestamp with time zone
-   updated_at: timestamp with time zone
-   closed_at: timestamp with time zone
-   contact_attempts: integer
-   deleted_at: timestamp with time zone
-   id: uuid
+   contact_refusals: integer
+   contact_opt_out: boolean
+   lead_intent_confirmation_pending: boolean
+   last_rag_source_id: uuid?
+   last_rag_source_title: varchar(512)?
+   expected_qualification_field: varchar(64)?
+   created_at: timestamptz
+   updated_at: timestamptz
+   closed_at: timestamptz?
+   deleted_at: timestamptz?
 }
+
+class messages {
+   id: uuid
+   session_id: uuid
+   role: varchar(32)
+   content: text
+   message_metadata: jsonb?
+   created_at: timestamptz
+   deleted_at: timestamptz?
+}
+
+class leads {
+   id: uuid
+   user_id: uuid
+   session_id: uuid
+   status: varchar(32)
+   contact: jsonb?
+   qualification: jsonb?
+   summary: text?
+   last_delivery_error: text?
+   created_at: timestamptz
+   updated_at: timestamptz
+   deleted_at: timestamptz?
+}
+
+class knowledge_documents {
+   id: uuid
+   title: varchar(512)
+   source: varchar(128)
+   content: text
+   created_at: timestamptz
+}
+
 class knowledge_chunks {
+   id: uuid
    document_id: uuid
    chunk_index: integer
    content: text
    embedding: vector(1536)
-   created_at: timestamp with time zone
-   id: uuid
-}
-class knowledge_documents {
-   title: varchar(512)
-   source: varchar(128)
-   content: text
-   created_at: timestamp with time zone
-   id: uuid
-}
-class leads {
-   user_id: uuid
-   session_id: uuid
-   status: varchar(32)
-   contact: jsonb
-   qualification: jsonb
-   summary: text
-   created_at: timestamp with time zone
-   updated_at: timestamp with time zone
-   deleted_at: timestamp with time zone
-   last_delivery_error: text
-   id: uuid
-}
-class messages {
-   session_id: uuid
-   role: varchar(32)
-   content: text
-   message_metadata: jsonb
-   created_at: timestamp with time zone
-   deleted_at: timestamp with time zone
-   id: uuid
-}
-class users {
-   anonymous_id: varchar(128)
-   channel: varchar(32)
-   created_at: timestamp with time zone
-   updated_at: timestamp with time zone
-   deleted_at: timestamp with time zone
-   id: uuid
+   created_at: timestamptz
 }
 
-dialog_sessions      -[#595959,plain]-^  users               : "user_id:id"
-knowledge_chunks     -[#595959,plain]-^  knowledge_documents : "document_id:id"
-leads                -[#595959,plain]-^  dialog_sessions     : "session_id:id"
-leads                -[#595959,plain]-^  users               : "user_id:id"
-messages             -[#595959,plain]-^  dialog_sessions     : "session_id:id"
+users               "1" -down-  "0..*" dialog_sessions    : user_id
+users               "1" -left-  "0..*" leads              : user_id
+dialog_sessions     "1" -down-  "0..*" messages           : session_id
+dialog_sessions     "1" -left-  "0..1" leads              : session_id
+knowledge_documents "1" -down-  "0..*" knowledge_chunks   : document_id
+knowledge_documents "0..1" -left- "0..*" dialog_sessions  : last_rag_source_id
+
+users -[hidden]right- alembic_version
+leads -[hidden]right- messages
+messages -[hidden]right- knowledge_chunks
+
+note right of messages #FFF8E1
+  content пользовательского сообщения
+  может содержать raw ПД и остаётся локально.
+  Перед повторным использованием история
+  снова проходит через PiiSanitizer.
+end note
+
+note right of leads #FFF8E1
+  contact хранит реальные phone / email /
+  Telegram username только локально.
+
+  summary обязан быть очищен от контактов
+  перед INSERT / UPDATE.
+
+  session_id имеет UNIQUE constraint:
+  одна сессия — не более одного лида.
+end note
+
+note right of knowledge_documents
+  dialog_sessions.last_rag_source_id
+  ссылается на knowledge_documents.id
+  с ON DELETE SET NULL.
+
+  last_rag_source_* поддерживает контекстный
+  retrieval между репликами.
+end note
+
+note bottom of users
+  Частичный unique index:
+  (channel, anonymous_id)
+  WHERE deleted_at IS NULL.
+end note
+
 @enduml
