@@ -11,7 +11,7 @@ from app.schemas import DialogState
 from app.schemas.agent_schema import LeadIntentStatus
 from main import app
 from uuid import UUID, uuid4
-from app.models import DialogSession
+from app.models import DialogSession, Lead
 
 pytestmark = pytest.mark.integration
 
@@ -832,8 +832,146 @@ async def test_post_message_threads_missing_fields_to_llm(client) -> None:
     )
 
     assert second_response.status_code == 200
-    assert captured[0] == MISSING_ALL
+    assert captured[0] == ["car_model", "budget", "purchase_type"]
     assert captured[1] == ["budget", "purchase_type"]
+
+
+@pytest.mark.asyncio
+async def test_mixed_contact_is_sanitized_for_llm_history_and_embeddings(
+    client,
+) -> None:
+    llm_calls: list[dict] = []
+
+    class _CapturingEmbedding:
+        def __init__(self) -> None:
+            self.calls: list[list[str]] = []
+
+        async def embed(self, texts):
+            self.calls.append(texts)
+            return [[0.0] * 1536 for _ in texts]
+
+    class _CapturingClient(FakeAg2AgentClient):
+        async def decide(self, *args, **kwargs):
+            llm_calls.append(kwargs)
+            return await super().decide(*args, **kwargs)
+
+    embedding = _CapturingEmbedding()
+    app.state.embedding_client = embedding
+    app.state.llm_client = _CapturingClient(
+        responses=[
+            AgentDecision(
+                answer="Какой бюджет вы рассматриваете?",
+                intent="lead_request",
+                next_state=DialogState.QUALIFICATION,
+                qualification_patch={"car_model": "Toyota Camry"},
+                extracted_contact={"phone": "+70000000000"},
+                missing_fields=["budget", "purchase_type"],
+                lead_ready=False,
+                lead_summary=("Позвонить +79991234567 или написать user@example.com"),
+            ),
+            AgentDecision(
+                answer="Уточните бюджет.",
+                intent="lead_request",
+                next_state=DialogState.QUALIFICATION,
+                qualification_patch={},
+                missing_fields=["budget", "purchase_type"],
+                lead_ready=False,
+            ),
+        ]
+    )
+
+    first = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "pii-mixed-user",
+            "content": (
+                "Хочу купить Camry, телефон +7 (999) 123-45-67, email User@Example.COM"
+            ),
+        },
+    )
+    assert first.status_code == 200
+
+    second = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "pii-mixed-user",
+            "session_id": first.json()["session_id"],
+            "content": "Что ещё нужно уточнить?",
+        },
+    )
+    assert second.status_code == 200
+
+    outbound = repr({"llm": llm_calls, "embedding": embedding.calls})
+    assert "+79991234567" not in outbound
+    assert "999) 123-45-67" not in outbound
+    assert "user@example.com" not in outbound.casefold()
+    assert "[PHONE_1]" in outbound
+    assert "[EMAIL_1]" in outbound
+    assert "[PHONE_1]" in repr(llm_calls[1]["history"])
+    assert "[EMAIL_1]" in repr(llm_calls[1]["history"])
+
+    async with app.state.db_session_maker() as db:
+        lead = await db.get(Lead, UUID(first.json()["lead_id"]))
+        assert lead is not None
+        assert lead.contact == {
+            "phone": "+79991234567",
+            "email": "user@example.com",
+        }
+        assert lead.summary is not None
+        assert "+79991234567" not in lead.summary
+        assert "user@example.com" not in lead.summary
+
+
+@pytest.mark.asyncio
+async def test_contact_only_message_skips_all_external_ai_calls(client) -> None:
+    class _CapturingEmbedding:
+        def __init__(self) -> None:
+            self.calls: list[list[str]] = []
+
+        async def embed(self, texts):
+            self.calls.append(texts)
+            return [[0.0] * 1536 for _ in texts]
+
+    class _CapturingClient(FakeAg2AgentClient):
+        def __init__(self) -> None:
+            super().__init__()
+            self.calls: list[dict] = []
+
+        async def decide(self, *args, **kwargs):
+            self.calls.append(kwargs)
+            return await super().decide(*args, **kwargs)
+
+    embedding = _CapturingEmbedding()
+    llm = _CapturingClient()
+    planner = FakeRetrievalPlannerClient()
+    app.state.embedding_client = embedding
+    app.state.llm_client = llm
+    app.state.retrieval_planner_client = planner
+
+    response = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "pii-contact-only-user",
+            "content": (
+                "Мой телефон +79991234567, email user@example.com, Telegram @ivan_auto"
+            ),
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["answer"].startswith("Спасибо, контакт сохранён.")
+    assert llm.calls == []
+    assert planner.calls == []
+    assert embedding.calls == []
+
+    async with app.state.db_session_maker() as db:
+        lead = await db.get(Lead, UUID(response.json()["lead_id"]))
+        assert lead is not None
+        assert lead.contact == {
+            "phone": "+79991234567",
+            "email": "user@example.com",
+            "telegram": "@ivan_auto",
+        }
 
 
 @pytest.mark.asyncio

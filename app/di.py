@@ -17,6 +17,7 @@ from app.client.delivery_factory import (
 )
 from app.db.session import create_engine as create_db_engine
 from app.db.session import create_session_maker
+from app.privacy import initialize_pii_analyzer
 from app.service.agent_service import AgentService
 from app.service.business_service import MessageNormalizer
 from app.service.lead_delivery_service import LeadDeliveryService
@@ -25,6 +26,9 @@ from app.service.lead_service import LeadService
 
 
 async def init_app_state(app: FastAPI) -> None:
+    # Privacy boundary должна быть готова до создания внешних клиентов.
+    initialize_pii_analyzer()
+
     # Fail fast: AG2 cannot operate without an API key.
     if (
         os.getenv("LLM_PROVIDER", "stub").strip().lower() == "ag2"

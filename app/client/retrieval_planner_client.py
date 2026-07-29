@@ -16,6 +16,7 @@ from pydantic import (
 )
 
 from app.client.ag2_agent_client import _AG2_TIMEOUT_S
+from app.privacy import PiiSanitizer
 
 logger = logging.getLogger(__name__)
 
@@ -128,6 +129,8 @@ class Ag2RetrievalPlannerClient(RetrievalPlannerClient):
             }
         ]
         try:
+            # Последний fail-closed барьер непосредственно перед AG2/OpenRouter.
+            PiiSanitizer.ensure_safe(messages)
             reply = await asyncio.wait_for(
                 self._agent.a_generate_reply(messages=messages),
                 timeout=_AG2_TIMEOUT_S,

@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.client.embedding_client import EmbeddingClient
+from app.privacy import PiiSanitizer
 from app.repository.knowledge_repository import KnowledgeRepository
 from app.schemas.knowledge_schema import (
     KnowledgeDocumentCreate,
@@ -86,10 +87,13 @@ class KnowledgeIngestionService:
         chunks = chunk_text(content)
         if not chunks:
             return
+        pii = PiiSanitizer()
+        safe_title = pii.sanitize_text(title).text
+        safe_chunks = [pii.sanitize_text(chunk).text for chunk in chunks]
         # Заголовок — сильный тематический сигнал, но в хранимом content его
         # не дублируем: prompt получает title как отдельный источник.
         embeddings = await self._embedding.embed(
-            [f"{title}\n{chunk}" for chunk in chunks]
+            [f"{safe_title}\n{chunk}" for chunk in safe_chunks]
         )
         await self._repo.add_chunks(
             document_id=document_id, chunks=chunks, embeddings=embeddings

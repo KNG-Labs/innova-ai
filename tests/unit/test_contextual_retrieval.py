@@ -9,6 +9,7 @@ from app.client.retrieval_planner_client import (
     RetrievalPlan,
     _parse_retrieval_plan,
 )
+from app.privacy import PiiAnalysisError, PiiSanitizer
 from app.schemas.knowledge_schema import RetrievedChunk
 from app.service.knowledge_retrieval_service import (
     KnowledgeRetrievalService,
@@ -296,6 +297,25 @@ async def test_planner_exception_skips_embeddings_and_search() -> None:
 
     assert result.source_id is None
     assert embedding.calls == []
+    assert repository.calls == []
+
+
+@pytest.mark.asyncio
+async def test_analyzer_failure_returns_empty_result_without_embedding_or_search(
+    monkeypatch,
+) -> None:
+    service, embedding, planner, repository = _retrieval([])
+
+    def _fail_analysis(self, text):
+        raise PiiAnalysisError("synthetic analyzer failure")
+
+    monkeypatch.setattr(PiiSanitizer, "find_entities", _fail_analysis)
+
+    result = await service.retrieve("Условия кредита")
+
+    assert result == result.__class__()
+    assert embedding.calls == []
+    assert planner.calls == []
     assert repository.calls == []
 
 

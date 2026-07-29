@@ -8,6 +8,8 @@ from app.repository import LeadRepository
 from app.repository.dialog_session_repository import DialogSessionRepository
 from app.repository.message_repository import MessageRepository
 from app.repository.user_repository import UserRepository
+from app.domain import REQUIRED_QUAL
+from app.privacy import PiiSanitizer
 from app.schemas.agent_schema import (
     AgentMessageRequest,
     AgentMessageResponse,
@@ -19,6 +21,7 @@ from app.schemas.agent_schema import (
 from app.service.business_service import MessageNormalizer
 from app.service.knowledge_retrieval_service import (
     KnowledgeRetrievalService,
+    RetrievalResult,
     format_chunks_for_prompt,
 )
 from app.service.state_machine import (
@@ -37,6 +40,18 @@ from app.service.state_machine import (
 )
 
 _logger = logging.getLogger(__name__)
+
+_CONTACT_SAVED_ANSWERS = {
+    "car_model": "Спасибо, контакт сохранён. Какой автомобиль или марка вас интересует?",
+    "budget": "Спасибо, контакт сохранён. Какой бюджет покупки вы рассматриваете?",
+    "purchase_type": (
+        "Спасибо, контакт сохранён. Какой способ покупки рассматриваете: "
+        "наличные, кредит или трейд-ин?"
+    ),
+}
+_CONTACT_READY_ANSWER = (
+    "Спасибо, контакт сохранён. Передаю заявку специалисту, который свяжется с вами."
+)
 
 
 class AgentService:
@@ -85,15 +100,38 @@ class AgentService:
         lead = await self._leads.get_by_session_id(session.id)
         qualification_data = lead.qualification if lead and lead.qualification else {}
         current_contact = lead.contact if lead and lead.contact else {}
-        current_missing_fields = compute_missing_fields(
-            qualification_data,
-            current_contact or None,
-        )
         contact_opt_out = session.contact_opt_out
 
         # История для AG2 (последние 20 сообщений)
         history_rows = await self._messages.list_recent_messages(session.id, limit=20)
-        history = [{"role": m.role, "content": m.content} for m in history_rows]
+        pii = PiiSanitizer()
+        pii.seed_contacts(current_contact)
+        history = [
+            {
+                "role": message.role,
+                "content": pii.sanitize_text(message.content).text,
+            }
+            for message in history_rows
+        ]
+        sanitized_message = pii.sanitize_text(content)
+        sanitized_content = sanitized_message.text
+        local_contact: dict[str, str | None] = dict(sanitized_message.contacts)
+        contact_before_llm = merge_contact(current_contact, local_contact)
+        current_missing_fields = compute_missing_fields(
+            qualification_data,
+            contact_before_llm or None,
+        )
+        safe_qualification_data = pii.sanitize_value(qualification_data)
+        safe_page_title = (
+            pii.sanitize_text(request.page_title).text
+            if request.page_title is not None
+            else None
+        )
+        safe_last_source_title = (
+            pii.sanitize_text(session.last_rag_source_title).text
+            if session.last_rag_source_title is not None
+            else None
+        )
 
         # Сохранение входящего сообщения
         user_message = await self._messages.create(
@@ -102,27 +140,46 @@ class AgentService:
             content=content,
         )
 
-        # Вызов AG2
-        # RAG: retrieved context перед LLM
-        retrieved = await self._retrieval.retrieve(
-            content,
-            last_source_id=session.last_rag_source_id,
-            last_source_title=session.last_rag_source_title,
-            history=history,
-        )
-        retrieved_context = format_chunks_for_prompt(retrieved.chunks)
+        if sanitized_message.contact_only:
+            # Контакт уже извлечён локально: никакие внешние AI-вызовы не нужны.
+            retrieved = RetrievalResult()
+            retrieved_context = ""
+            decision = _contact_only_decision(
+                current_state=current_state,
+                qualification_data=qualification_data,
+                contact=contact_before_llm,
+                extracted_contact=local_contact,
+            )
+        else:
+            # RAG и LLM получают только локально очищенные данные.
+            retrieved = await self._retrieval.retrieve(
+                sanitized_content,
+                last_source_id=session.last_rag_source_id,
+                last_source_title=safe_last_source_title,
+                history=history,
+            )
+            retrieved_context = pii.sanitize_text(
+                format_chunks_for_prompt(retrieved.chunks)
+            ).text
 
-        decision: AgentDecision = await self._llm_client.decide(
-            user_message=content,
-            history=history,
-            current_state=current_state.value,
-            qualification_data=qualification_data,
-            retrieved_context=retrieved_context,
-            page_title=request.page_title,
-            missing_fields=current_missing_fields,
-            contact_opt_out=contact_opt_out,
-            lead_intent_confirmation_pending=(session.lead_intent_confirmation_pending),
-        )
+            decision = await self._llm_client.decide(
+                user_message=sanitized_content,
+                history=history,
+                current_state=current_state.value,
+                qualification_data=safe_qualification_data,
+                retrieved_context=retrieved_context,
+                page_title=safe_page_title,
+                missing_fields=current_missing_fields,
+                contact_opt_out=contact_opt_out,
+                lead_intent_confirmation_pending=(
+                    session.lead_intent_confirmation_pending
+                ),
+            )
+            decision = _apply_local_privacy_result(
+                decision,
+                pii=pii,
+                local_contact=local_contact,
+            )
 
         proposed_qualification_patch = dict(decision.qualification_patch)
         if (
@@ -158,18 +215,23 @@ class AgentService:
         )
         if rejected_qualification_start:
             decision = await self._llm_client.decide(
-                user_message=content,
+                user_message=sanitized_content,
                 history=history,
                 current_state=current_state.value,
-                qualification_data=qualification_data,
+                qualification_data=safe_qualification_data,
                 retrieved_context=retrieved_context,
-                page_title=request.page_title,
+                page_title=safe_page_title,
                 missing_fields=current_missing_fields,
                 contact_opt_out=contact_opt_out,
                 lead_intent_confirmation_pending=(
                     session.lead_intent_confirmation_pending
                 ),
                 force_lead_intent_confirmation=True,
+            )
+            decision = _apply_local_privacy_result(
+                decision,
+                pii=pii,
+                local_contact=local_contact,
             )
             if (
                 decision.next_state != DialogState.FAQ
@@ -293,13 +355,22 @@ class AgentService:
             close=is_closing,
         )
 
+        summary_source = (
+            decision.lead_summary
+            if decision.lead_summary is not None
+            else (lead.summary if lead is not None else None)
+        )
+        safe_summary = (
+            pii.sanitize_text(summary_source).text if summary_source else None
+        )
+
         # Создать или обновить draft лида
         lead = await self._leads.upsert_draft(
             user_id=user.id,
             session_id=session.id,
             qualification=merged_qual,
             contact=final_contact,
-            summary=decision.lead_summary,
+            summary=safe_summary,
         )
 
         became_ready = False
@@ -343,3 +414,62 @@ class AgentService:
             missing_fields=missing_fields,
             lead_id=lead_id,
         )
+
+
+def _apply_local_privacy_result(
+    decision: AgentDecision,
+    *,
+    pii: PiiSanitizer,
+    local_contact: dict[str, str | None],
+) -> AgentDecision:
+    """Не доверять LLM извлечение контактов и не сохранять raw PII из ответа."""
+    return decision.model_copy(
+        update={
+            "answer": pii.sanitize_text(decision.answer).text,
+            "extracted_contact": local_contact or None,
+            "lead_summary": (
+                pii.sanitize_text(decision.lead_summary).text
+                if decision.lead_summary
+                else None
+            ),
+        }
+    )
+
+
+def _contact_only_decision(
+    *,
+    current_state: DialogState,
+    qualification_data: dict[str, str],
+    contact: dict[str, str],
+    extracted_contact: dict[str, str | None],
+) -> AgentDecision:
+    """Детерминированный ответ без LLM для сообщения только с контактом."""
+    missing_qualification = [
+        field for field in REQUIRED_QUAL if not qualification_data.get(field)
+    ]
+    if not missing_qualification:
+        next_state = (
+            DialogState.LEAD_READY
+            if current_state == DialogState.CONTACT_CAPTURE
+            else DialogState.CONTACT_CAPTURE
+        )
+        answer = (
+            _CONTACT_READY_ANSWER
+            if not compute_missing_fields(qualification_data, contact)
+            else "Спасибо, контакт сохранён."
+        )
+    else:
+        next_state = DialogState.QUALIFICATION
+        answer = _CONTACT_SAVED_ANSWERS[missing_qualification[0]]
+
+    return AgentDecision(
+        answer=answer,
+        intent="lead_request",
+        next_state=next_state,
+        qualification_patch={},
+        extracted_contact=extracted_contact,
+        missing_fields=compute_missing_fields(qualification_data, contact),
+        lead_ready=not compute_missing_fields(qualification_data, contact),
+        lead_summary=None,
+        lead_intent_status=LeadIntentStatus.CONFIRMED,
+    )

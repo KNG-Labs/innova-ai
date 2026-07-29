@@ -10,6 +10,7 @@ from app.client.retrieval_planner_client import (
     RetrievalPlan,
     RetrievalPlannerClient,
 )
+from app.privacy import PrivacyBoundaryError, PiiSanitizer
 from app.repository.knowledge_repository import KnowledgeRepository
 from app.schemas.knowledge_schema import RetrievedChunk
 from app.service.retrieval_selector import RetrievalCandidate, select_source
@@ -49,18 +50,26 @@ class KnowledgeRetrievalService:
         last_source_title: str | None = None,
         history: list[dict] | None = None,
     ) -> RetrievalResult:
-        normalized_query = " ".join(query.split())
+        try:
+            pii = PiiSanitizer()
+            normalized_query = " ".join(pii.sanitize_text(query).text.split())
+            normalized_title = pii.sanitize_text(last_source_title or "").text.strip()
+            safe_history = pii.sanitize_value((history or [])[-6:])
+        except PrivacyBoundaryError:
+            logging.getLogger(__name__).warning(
+                "Retrieval blocked because local PII analysis failed"
+            )
+            return RetrievalResult()
         if not normalized_query:
             return RetrievalResult()
 
         plan = RetrievalPlan(mode=RetrievalMode.CURRENT, query=normalized_query)
-        normalized_title = (last_source_title or "").strip()
         if last_source_id is not None and normalized_title:
             try:
                 plan = await self._planner.plan(
                     current_message=normalized_query,
                     last_source_title=normalized_title,
-                    history=(history or [])[-6:],
+                    history=safe_history,
                 )
             except Exception as exc:  # noqa: BLE001 - retrieval must abstain safely
                 logging.getLogger(__name__).warning(
@@ -73,7 +82,14 @@ class KnowledgeRetrievalService:
         if plan.mode == RetrievalMode.NONE:
             return RetrievalResult()
 
-        [query_embedding] = await self._embedding.embed([plan.query])
+        try:
+            safe_plan_query = pii.sanitize_text(plan.query).text
+            [query_embedding] = await self._embedding.embed([safe_plan_query])
+        except PrivacyBoundaryError:
+            logging.getLogger(__name__).warning(
+                "Retrieval embedding blocked by privacy boundary"
+            )
+            return RetrievalResult()
         required_source_id = (
             last_source_id if plan.mode == RetrievalMode.LAST_SOURCE else None
         )
