@@ -1,0 +1,29 @@
+FROM ghcr.io/astral-sh/uv:python3.13-bookworm-slim AS builder
+
+WORKDIR /app
+
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
+
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-install-project --no-default-groups --group eval
+
+
+FROM python:3.13-slim-bookworm AS runtime
+
+WORKDIR /app
+
+COPY --from=builder /app/.venv /app/.venv
+COPY app ./app
+COPY evals ./evals
+COPY migrations ./migrations
+COPY alembic.ini main.py ./
+
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    DEEPEVAL_DISABLE_DOTENV=1 \
+    DEEPEVAL_NO_INSPECT_PROMPT=1 \
+    DEEPEVAL_TELEMETRY_OPT_OUT=YES
+
+CMD ["python", "-m", "evals.runners.run"]

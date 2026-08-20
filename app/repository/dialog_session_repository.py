@@ -92,12 +92,28 @@ class DialogSessionRepository:
         self,
         session_id: UUID,
         state: str,
-        contact_attempts: int | None = None,
+        contact_refusals: int | None = None,
+        contact_opt_out: bool | None = None,
+        lead_intent_confirmation_pending: bool | None = None,
+        last_rag_source_id: UUID | None = None,
+        last_rag_source_title: str | None = None,
+        expected_qualification_field: str | None = None,
         close: bool = False,
     ) -> None:
-        values: dict = {"state": state}
-        if contact_attempts is not None:
-            values["contact_attempts"] = contact_attempts
+        values: dict = {
+            "state": state,
+            "last_rag_source_id": last_rag_source_id,
+            "last_rag_source_title": last_rag_source_title,
+            "expected_qualification_field": expected_qualification_field,
+        }
+        if contact_refusals is not None:
+            values["contact_refusals"] = contact_refusals
+        if contact_opt_out is not None:
+            values["contact_opt_out"] = contact_opt_out
+        if lead_intent_confirmation_pending is not None:
+            values["lead_intent_confirmation_pending"] = (
+                lead_intent_confirmation_pending
+            )
         if close:
             values["closed_at"] = func.now()
         stmt = (

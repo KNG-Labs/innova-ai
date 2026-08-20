@@ -17,6 +17,11 @@ __pycache__/
 htmlcov/
 .coverage
 
+# DeepEval
+**/.deepeval/
+/evals/reports/runs/**/deepeval/
+
+
 # IDE
 .idea/
 .vscode/

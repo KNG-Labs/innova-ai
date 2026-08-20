@@ -13,13 +13,19 @@ dependencies = [
     "httpx>=0.28.1",
     "openai>=2.0.0",
     "pgvector>=0.4.2",
+    "phonenumbers>=9.0.10",
+    "presidio-analyzer>=2.2.359",
     "redis>=8.0.0",
     "sqlalchemy[asyncio]>=2.0.49",
     "uvicorn>=0.44.0",
 ]
 
 [dependency-groups]
+eval = [
+    "deepeval==4.1.4",
+]
 dev = [
+    { include-group = "eval" },
     "mypy>=1.20.1",
     "pydantic>=2.13.3",
     "pytest>=9.0.3",

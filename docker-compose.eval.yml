@@ -1,0 +1,105 @@
+name: innova-ai-eval
+
+services:
+  eval-db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: innova
+      POSTGRES_PASSWORD: innova
+      POSTGRES_DB: innova_ai_eval
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U innova -d innova_ai_eval"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    volumes:
+      - eval-pgdata:/var/lib/postgresql/data
+
+  eval-migrate:
+    build: .
+    command: alembic upgrade head
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://innova:innova@eval-db:5432/innova_ai_eval
+    depends_on:
+      eval-db:
+        condition: service_healthy
+    restart: "no"
+
+  eval-api:
+    build: .
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://innova:innova@eval-db:5432/innova_ai_eval
+      REDIS_URL: ""
+      LEAD_DELIVERY_PROVIDER: disabled
+      LLM_PROVIDER: ${LLM_PROVIDER:-stub}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-fake}
+      RAG_TOP_K: ${RAG_TOP_K:-10}
+      RAG_MIN_SCORE: ${RAG_MIN_SCORE:-0.2}
+      EVAL_CAPTURE_TOKEN_USAGE: "1"
+    ports:
+      - "${EVAL_API_PORT:-8001}:8000"
+    depends_on:
+      eval-db:
+        condition: service_healthy
+      eval-migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  eval-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.eval
+    user: "${EVAL_UID:-1000}:${EVAL_GID:-1000}"
+    env_file: ${EVAL_ENV_FILE:-.env}
+    environment:
+      EVAL_DATABASE_URL: postgresql+asyncpg://innova:innova@eval-db:5432/innova_ai_eval
+      INNOVA_EVAL_API_URL: http://eval-api:8000
+      LLM_PROVIDER: ${LLM_PROVIDER:-stub}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-fake}
+      EVAL_GIT_COMMIT: ${EVAL_GIT_COMMIT:-}
+      EVAL_GIT_DIRTY: ${EVAL_GIT_DIRTY:-}
+      EVAL_CAPTURE_TOKEN_USAGE: "1"
+      EVAL_JUDGE_MODEL: ${EVAL_JUDGE_MODEL:-}
+      DEEPEVAL_DISABLE_DOTENV: "1"
+      DEEPEVAL_NO_INSPECT_PROMPT: "1"
+      DEEPEVAL_TELEMETRY_OPT_OUT: "YES"
+      CONFIDENT_API_KEY: ""
+    command:
+      - python
+      - -m
+      - evals.runners.run
+      - --repetitions
+      - ${EVAL_REPETITIONS:-1}
+      - --split
+      - test
+      - --split
+      - regression
+      - --top-k
+      - ${RAG_TOP_K:-10}
+      - --min-score
+      - ${RAG_MIN_SCORE:-0.2}
+      - --results-dir
+      - /app/evals/reports/runs/${EVAL_REPORT_NAME:-baseline}
+    depends_on:
+      eval-api:
+        condition: service_healthy
+    volumes:
+      - ./docs/RAG:/app/docs/RAG:ro
+      - ./evals/datasets:/app/evals/datasets:ro
+      - ./evals/reports:/app/evals/reports
+
+volumes:
+  eval-pgdata:

@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.client.embedding_client import EmbeddingClient
+from app.privacy import PiiSanitizer
 from app.repository.knowledge_repository import KnowledgeRepository
 from app.schemas.knowledge_schema import (
     KnowledgeDocumentCreate,
@@ -39,7 +40,7 @@ class KnowledgeIngestionService:
         doc = await self._repo.create_document(
             title=payload.title, source=payload.source, content=payload.content
         )
-        await self._index_document(doc.id, payload.content)
+        await self._index_document(doc.id, payload.title, payload.content)
         await self._db.commit()
         return doc.id
 
@@ -49,10 +50,16 @@ class KnowledgeIngestionService:
             doc = await self._repo.create_document(
                 title=payload.title, source=payload.source, content=payload.content
             )
-            await self._index_document(doc.id, payload.content)
+            await self._index_document(doc.id, payload.title, payload.content)
             ids.append(doc.id)
         await self._db.commit()
         return ids
+
+    async def replace_all(self, payloads: list[KnowledgeDocumentCreate]) -> list[UUID]:
+        """Атомарно заменить весь корпус и его векторные чанки."""
+
+        await self._repo.delete_all_documents()
+        return await self.ingest_many(payloads)
 
     async def list_documents(self) -> list[KnowledgeDocumentListItem]:
         rows = await self._repo.list_documents()
@@ -67,15 +74,27 @@ class KnowledgeIngestionService:
         docs = await self._repo.list_documents()
         for doc in docs:
             await self._repo.delete_chunks_for_document(doc.id)
-            await self._index_document(doc.id, doc.content)
+            await self._index_document(doc.id, doc.title, doc.content)
         await self._db.commit()
         return len(docs)
 
-    async def _index_document(self, document_id: UUID, content: str) -> None:
+    async def _index_document(
+        self,
+        document_id: UUID,
+        title: str,
+        content: str,
+    ) -> None:
         chunks = chunk_text(content)
         if not chunks:
             return
-        embeddings = await self._embedding.embed(chunks)
+        pii = PiiSanitizer()
+        safe_title = pii.sanitize_text(title).text
+        safe_chunks = [pii.sanitize_text(chunk).text for chunk in chunks]
+        # Заголовок — сильный тематический сигнал, но в хранимом content его
+        # не дублируем: prompt получает title как отдельный источник.
+        embeddings = await self._embedding.embed(
+            [f"{safe_title}\n{chunk}" for chunk in safe_chunks]
+        )
         await self._repo.add_chunks(
             document_id=document_id, chunks=chunks, embeddings=embeddings
         )

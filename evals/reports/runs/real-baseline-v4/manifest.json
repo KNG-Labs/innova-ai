@@ -1,0 +1,78 @@
+{
+  "schema_version": "3.0",
+  "generated_at": "2026-07-29T19:36:16.215711+00:00",
+  "git": {
+    "commit": null,
+    "dirty": null
+  },
+  "dataset_sha256": "83cb6948864698875ff1347dac019e1c87e0505d187258a0f113cc9775b0d4e8",
+  "corpus_sha256": "c384052c2c67e751b9f5421f8692f8401ef5c44b25d4aeee196ed86490be4177",
+  "manifest_sha256": "c942dfe4bcd6a94276f014f65da62c0ac9f406fbd15488fda2de722aba95e0ea",
+  "models": {
+    "agent": "openai/gpt-5.6-luna",
+    "judge": "openai/gpt-5.6-luna-pro",
+    "embedding": "openai/text-embedding-3-small"
+  },
+  "self_judge": false,
+  "retrieval": {
+    "top_k": 10,
+    "min_score": 0.2
+  },
+  "repetitions": 1,
+  "selected_splits": [
+    "regression",
+    "test"
+  ],
+  "selected_evaluation_types": [
+    "business",
+    "generation",
+    "retrieval"
+  ],
+  "duration_seconds": 1052.66,
+  "operational": {
+    "token_usage": {
+      "average_agent_token_usage": {
+        "value": 3021.47,
+        "n": 60,
+        "expected_n": 60,
+        "incomplete": false,
+        "missing_usage_n": 0
+      },
+      "breakdown": {
+        "overall": {
+          "average_prompt_tokens_per_case": 2758.25,
+          "average_completion_tokens_per_case": 263.22,
+          "average_total_tokens_per_case": 3021.47,
+          "average_total_tokens_per_assistant_turn": 2517.89,
+          "case_n": 60,
+          "expected_case_n": 60,
+          "turn_n": 72,
+          "missing_usage_n": 0,
+          "incomplete": false
+        },
+        "generation": {
+          "average_prompt_tokens_per_case": 2257.9,
+          "average_completion_tokens_per_case": 200.98,
+          "average_total_tokens_per_case": 2458.88,
+          "average_total_tokens_per_assistant_turn": 2458.88,
+          "case_n": 48,
+          "expected_case_n": 48,
+          "turn_n": 48,
+          "missing_usage_n": 0,
+          "incomplete": false
+        },
+        "business": {
+          "average_prompt_tokens_per_case": 4759.67,
+          "average_completion_tokens_per_case": 512.17,
+          "average_total_tokens_per_case": 5271.83,
+          "average_total_tokens_per_assistant_turn": 2635.92,
+          "case_n": 12,
+          "expected_case_n": 12,
+          "turn_n": 24,
+          "missing_usage_n": 0,
+          "incomplete": false
+        }
+      }
+    }
+  }
+}

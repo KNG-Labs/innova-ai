@@ -4,7 +4,9 @@ import re
 
 
 class MessageNormalizer:
-    """Нормализует текст входящего пользовательского сообщения."""
+    """
+    Нормализует текст входящего пользовательского сообщения.
+    """
 
     @staticmethod
     def normalize(content: str) -> str:

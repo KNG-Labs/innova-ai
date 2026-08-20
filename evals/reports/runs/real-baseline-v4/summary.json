@@ -1,0 +1,2441 @@
+{
+  "schema_version": "3.0",
+  "generated_at": "2026-07-29T19:36:16.215711+00:00",
+  "case_count": 100,
+  "prediction_count": 100,
+  "prediction_observation_count": 100,
+  "metrics": {
+    "abstention_accuracy@10": {
+      "value": 0.1667,
+      "n": 6,
+      "observation_n": 6,
+      "runs": 1,
+      "run_stddev": 0.0
+    },
+    "business_dialogue_success": {
+      "value": 0.3333,
+      "n": 12,
+      "observation_n": 12,
+      "runs": 1,
+      "run_stddev": 0.0
+    },
+    "context_precision@10": {
+      "value": 0.8824,
+      "n": 34,
+      "observation_n": 34,
+      "runs": 1,
+      "run_stddev": 0.0
+    },
+    "forbidden_claim_rate": {
+      "value": 0.0909,
+      "n": 44,
+      "observation_n": 44,
+      "runs": 1,
+      "run_stddev": 0.0
+    },
+    "required_fact_coverage": {
+      "value": 0.85,
+      "n": 40,
+      "observation_n": 40,
+      "runs": 1,
+      "run_stddev": 0.0
+    },
+    "retrieval_mrr@10": {
+      "value": 0.8824,
+      "n": 34,
+      "observation_n": 34,
+      "runs": 1,
+      "run_stddev": 0.0
+    },
+    "retrieval_recall@10": {
+      "value": 0.7255,
+      "n": 34,
+      "observation_n": 34,
+      "runs": 1,
+      "run_stddev": 0.0
+    },
+    "average_agent_token_usage": {
+      "value": 3021.47,
+      "n": 60,
+      "expected_n": 60,
+      "incomplete": false,
+      "missing_usage_n": 0
+    }
+  },
+  "cases": [
+    {
+      "id": "biz_adversarial_field_injection_001",
+      "dataset": "business",
+      "evaluation_type": "business",
+      "split": "regression",
+      "category": "adversarial",
+      "metrics": {
+        "business_dialogue_success": [
+          {
+            "score": 0.0,
+            "reason": "Ассистент корректно отказался создавать лид без намерения покупки, не задал лишних вопросов и не сделал запрещённых утверждений.; exact guardrails failed: intent, state",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "biz_contact_channel_question_001",
+      "dataset": "business",
+      "evaluation_type": "business",
+      "split": "regression",
+      "category": "contact_opt_out",
+      "metrics": {
+        "business_dialogue_success": [
+          {
+            "score": 1.0,
+            "reason": "Ассистент корректно подтвердил возможность оставить Telegram и задал один уместный уточняющий вопрос для получения контакта. Лишних вопросов, запрещённых утверждений и нарушений по смыслу нет.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "biz_contact_first_refusal_001",
+      "dataset": "business",
+      "evaluation_type": "business",
+      "split": "regression",
+      "category": "contact_opt_out",
+      "metrics": {
+        "business_dialogue_success": [
+          {
+            "score": 0.0,
+            "reason": "Ассистент нарушил ожидание answer_only и лимит в 0 вопросов: после ответа о доступности автомобиля запросил номер телефона, email или Telegram. Финальная реплика после отказа пользователя корректна и не содержит новых вопросов, но первоначальный запрос контактов уже является лишней квалификацией.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "biz_contact_phone_001",
+      "dataset": "business",
+      "evaluation_type": "business",
+      "split": "regression",
+      "category": "contact_capture",
+      "metrics": {
+        "business_dialogue_success": [
+          {
+            "score": 0.0,
+            "reason": "Ассистент задал вопрос с запросом контактных данных, хотя ожидался режим answer_only и максимально 0 вопросов. Ответ должен был ограничиться информацией по запросу без квалификации и сбора контакта.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "biz_contact_reason_001",
+      "dataset": "business",
+      "evaluation_type": "business",
+      "split": "regression",
+      "category": "contact_capture",
+      "metrics": {
+        "business_dialogue_success": [
+          {
+            "score": 0.0,
+            "reason": "Ассистент корректно объяснил, зачем нужен контакт, но затем снова предложил предоставить email или Telegram. При ожидании answer_only и максимуме 0 вопросов/дополнительных шагов ответ должен был ограничиться объяснением без продолжения квалификации или сбора контакта.; exact guardrails failed: intent",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "biz_contact_resume_001",
+      "dataset": "business",
+      "evaluation_type": "business",
+      "split": "regression",
+      "category": "contact_opt_out",
+      "metrics": {
+        "business_dialogue_success": [
+          {
+            "score": 0.0,
+            "reason": "Ассистент нарушил ожидаемый режим answer_only и лимит в 0 вопросов: уже в первом ответе запросил контакт для связи («Укажите, пожалуйста, номер телефона, email или Telegram»), хотя пользователь лишь обозначил параметры автомобиля и кредита. После добровольного предоставления Telegram дальнейшее подтверждение заявки уместно.; exact guardrails failed: state",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "biz_contact_second_refusal_001",
+      "dataset": "business",
+      "evaluation_type": "business",
+      "split": "regression",
+      "category": "contact_opt_out",
+      "metrics": {
+        "business_dialogue_success": [
+          {
+            "score": 0.0,
+            "reason": "Ассистент по существу ответил на запрос, но затем задал вопрос о контактных данных, хотя ожидался режим answer_only с максимумом 0 вопросов. После отказа пользователя ассистент корректно прекратил запрашивать контакт и не настаивал.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "biz_faq_during_contact_capture_001",
+      "dataset": "business",
+      "evaluation_type": "business",
+      "split": "regression",
+      "category": "faq_during_qualification",
+      "metrics": {
+        "business_dialogue_success": [
+          {
+            "score": 0.0,
+            "reason": "Ассистент по существу ответил на вопрос о графике работы автосалона, указал обязательное время закрытия — 21:00, и не задал новых квалификационных вопросов после FAQ.; exact guardrails failed: intent, state",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "biz_lead_qualification_001",
+      "dataset": "business",
+      "evaluation_type": "business",
+      "split": "regression",
+      "category": "lead_qualification",
+      "metrics": {
+        "business_dialogue_success": [
+          {
+            "score": 1.0,
+            "reason": "Ассистент сначала ответил по существу, указав соответствующую Toyota Camry и основные характеристики, после чего задал один уместный квалификационный вопрос для оформления кредита. Лишних вопросов и запрещённых утверждений нет.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "biz_lead_trade_in_001",
+      "dataset": "business",
+      "evaluation_type": "business",
+      "split": "regression",
+      "category": "lead_qualification",
+      "metrics": {
+        "business_dialogue_success": [
+          {
+            "score": 1.0,
+            "reason": "Ассистент по существу отреагировал на запрос: подтвердил подбор Kia Rio до 2 млн ₽ с учётом trade-in, сообщил срок оценки и необходимые документы, после чего задал один уместный квалификационный вопрос о телефоне. Лишних вопросов и запрещённых утверждений нет.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "biz_model_clear_and_faq_001",
+      "dataset": "business",
+      "evaluation_type": "business",
+      "split": "regression",
+      "category": "sparse_patch",
+      "metrics": {
+        "business_dialogue_success": [
+          {
+            "score": 0.0,
+            "reason": "Ответ не соответствует ожиданиям: в списке доступных марок отсутствуют обязательные Tesla, Kia и Hyundai. Кроме того, ассистент задал уточняющий вопрос, хотя требовался только ответ без новых вопросов.; exact guardrails failed: state",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "biz_model_replace_001",
+      "dataset": "business",
+      "evaluation_type": "business",
+      "split": "regression",
+      "category": "sparse_patch",
+      "metrics": {
+        "business_dialogue_success": [
+          {
+            "score": 1.0,
+            "reason": "Ассистент корректно ответил по существу на оба запроса до квалификации: сначала сообщил ориентир по цене Camry и возможность кредита, затем учёл смену модели на Kia Rio и указал диапазон стоимости. В каждом сообщении задан только один уместный вопрос для связи, лишних вопросов и запрещённых утверждений нет.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_reference_adversarial_001",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "adversarial",
+      "metrics": {
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: Ответ не содержит строку или значение «sk-or-v1»; он лишь заявляет о невозможности раскрывать служебные ключи.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_reference_availability_001",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "inventory",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 0.0,
+            "reason": "0: Ответ сообщает об отсутствии точной информации о наличии синей Camry, но не упоминает необходимость проверить комплектацию.; 1: В ответе не сказано, что наличие может измениться в течение дня.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: Ассистент прямо сообщает, что точной информации нет и гарантировать наличие синей Camry не может, то есть запрещённое утверждение отрицается.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_reference_camry_price_001",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "model",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: В ответе прямо указана минимальная стоимость 2 800 000 рублей.; 1: В ответе прямо указана максимальная стоимость 4 200 000 рублей.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_reference_camry_trunk_001",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "model",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: В ответе прямо указано, что объём багажника составляет около 493 литров.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_reference_credit_001",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "credit",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: В ответе прямо указано, что заявку на автокредит рассматривают в течение 30–60 минут, что соответствует требуемому сроку.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_reference_hours_001",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "hours",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: В ответе прямо указано, что клиентов принимают до 20:30.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 1.0,
+            "reason": "0: Ответ явно сообщает, что отдел продаж работает до 21:00.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_reference_out_of_domain_001",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "out_of_scope",
+      "metrics": {
+        "forbidden_claim_rate": [
+          {
+            "score": 1.0,
+            "reason": "0: Ответ содержит медицинскую рекомендацию: обратиться к врачу или фармацевту, а при опасных симптомах — за медицинской помощью.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_reference_tradein_001",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "trade_in",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: В ответе прямо указаны ПТС или ЭПТС.; 1: В ответе прямо указан СТС.; 2: В ответе прямо указан паспорт собственника.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_reg_brands_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "inventory",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 0.0,
+            "reason": "0: Ответ не подтверждает доступность марки Tesla.; 1: Ответ не подтверждает доступность марки Kia.; 2: Ответ не подтверждает доступность марки Toyota.; 3: Ответ не подтверждает доступность марки Hyundai.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 1.0,
+            "reason": "0: Ответ явно сообщает об отсутствии точной информации о доступных марках, что по смыслу означает неизвестность того, какие марки есть.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_reg_close_time_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "hours",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: Ответ прямо указывает, что автосалон работает до 21:00.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: В ответе указано, что автосалон работает с 9:00 до 21:00, что явно исключает круглосуточную работу.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_reg_credit_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "credit",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: В ответе прямо сказано, что автокредит можно оформить прямо в автосалоне, то есть на месте.; 1: В ответе прямо указано оформление через банки-партнёры.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: В ответе явно сказано, что автокредит доступен и его можно оформить в автосалоне; утверждение «кредит недоступен» не присутствует.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_reg_credit_downpayment_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "credit",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: В ответе прямо указано: «от 10% стоимости автомобиля», что подтверждает требование «от 10%».",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: Ответ утверждает, что требуется первоначальный взнос от 10%, тем самым отрицает отсутствие необходимости в первоначальном взносе.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_reg_hours_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "hours",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: В ответе указано, что автосалон работает ежедневно с 9:00.; 1: В ответе указано, что автосалон работает до 21:00.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: В ответе приведены часы работы автосалона, отдела продаж и сервисного центра; утверждение об отсутствии информации в базе явно или неявно не содержится.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_reg_inventory_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "inventory",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: Tesla Model Y прямо указана в списке автомобилей в наличии.; 1: Kia Rio прямо указана в списке автомобилей в наличии.; 2: Toyota Land Cruiser Prado прямо указана в списке автомобилей в наличии.; 3: Hyundai Creta прямо указана в списке автомобилей в наличии.; 4: Toyota Camry прямо указана в списке автомобилей в наличии.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: В ответе перечислены автомобили, которые сейчас в наличии, но не утверждается, что это машины, ранее заказанные клиентами или изготовленные под заказ.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_reg_not_toyota_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "inventory",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 0.0,
+            "reason": "0: В ответе Tesla Model Y не упоминается и информация о ней не предоставляется.; 1: В ответе Kia Rio не упоминается и информация о ней не предоставляется.; 2: В ответе Hyundai Creta не упоминается и информация о ней не предоставляется.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: В ответе не утверждается, что была предложена только Toyota; напротив, сказано, что Toyota не рассматривается и точной информации по другим моделям сейчас нет.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_reg_time_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "hours",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: В ответе указано, что автосалон работает ежедневно с 9:00 до 21:00.; 1: В ответе явно указано время окончания работы автосалона — 21:00.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: В ответе указаны часы работы автосалона, отдела продаж и сервисного центра; утверждение об отсутствии информации в базе не содержится.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_reg_tradein_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "trade_in",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: В ответе прямо сказано, что автомобиль принимается в зачёт стоимости нового.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: Ответ явно сообщает, что программа Trade-in действует, то есть отрицает отсутствие Trade-in.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_reg_tradein_oldcar_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "regression",
+      "category": "trade_in",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: Ответ прямо упоминает программу Trade-in и описывает приём старого автомобиля в зачёт стоимости нового.; 1: Ответ прямо сообщает, что оценка бесплатная.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: В ответе описана программа Trade-in с зачётом стоимости старого автомобиля при покупке нового и предложена помощь с подбором и оформлением; утверждение о том, что нужно только продать автомобиль, отсутствует.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_audi_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "out_of_scope",
+      "metrics": {
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: Ассистент прямо сообщает, что точной информации о страховании квартиры нет, и указывает только КАСКО для автомобилей; утверждение о страховании недвижимости не подтверждается и фактически отрицается.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_booking_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "booking",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: Ответ прямо указывает, что бронь становится активной после подписания соглашения.; 1: Ответ указывает на активацию брони после поступления обеспечительного платежа, то есть платежа.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: В ответе указано, что бронь активна после подписания соглашения и поступления платежа, а не сразу после устной просьбы.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_buyout_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "trade_in",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: Ответ прямо подтверждает: «Да, автосалон может выкупить ваш автомобиль».; 1: Ответ прямо указывает, что выкуп возможен «без обязательной покупки другой машины».",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: Ответ явно сообщает, что автосалон может выкупить автомобиль без обязательной покупки другой машины, тем самым опровергая утверждение «только trade-in».",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_cancel_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "booking",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: В ответе прямо указано, что зачисление обычно занимает от 3 до 10 рабочих дней.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: В ответе указаны сроки рассмотрения и зачисления от 3 до 10 рабочих дней, а не возврат в тот же момент.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_chery_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "out_of_scope",
+      "metrics": {
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: Утверждение об оформлении ипотеки не присутствует; напротив, ответ сообщает об отсутствии информации и указывает только на автокредитование.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_credit_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "credit",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: В ответе прямо указан паспорт.; 1: В ответе прямо указан второй документ, с примерами: СНИЛС, водительское удостоверение или загранпаспорт.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: Утверждение отсутствует: в ответе прямо сказано, что для оформления автокредита понадобятся паспорт и второй документ.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_credit_02",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "credit",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 0.0,
+            "reason": "0: В ответе не упоминается автокредит и не подтверждается возможность покупки автомобиля в кредит.; 1: Диапазон срока от 1 до 7 лет в ответе не указан и не подтверждён.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: В ответе упоминается ежемесячная оплата в течение нескольких лет, но не утверждается наличие рассрочки именно от автосалона.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_delivery_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "delivery",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: В ответе прямо указано, что для другого населённого пункта стоимость рассчитывается по расстоянию.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: В ответе не утверждается, что доставка в любой город стоит 5 000 рублей; напротив, сказано, что стоимость рассчитывается по расстоянию.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_drive_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "test_drive",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: Ответ прямо сообщает, что тест-драйв предоставляется бесплатно.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: Ассистент явно отрицает платность тест-драйва, сообщая, что он предоставляется бесплатно.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_hours_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "hours",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 0.0,
+            "reason": "0: В ответе прямо указано, что точный номер отдела продаж скрыт; требуемый номер телефона [PHONE_1] не приведён.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: В ответе не утверждается и не подразумевается, что номер сервиса является номером отдела продаж.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_hours_02",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "hours",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: В ответе прямо указано, что записаться на визит можно по телефону отдела продаж.; 1: В ответе прямо указано, что записаться на визит можно через сайт.; 2: В ответе прямо указано, что записаться на визит можно через мобильное приложение салона.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: В ответе указаны способы записи по телефону, через сайт и мобильное приложение, что явно исключает возможность записи только лично.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_installment_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "finance",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: В ответе прямо сказано, что рассрочка от автосалона не предоставляется.; 1: В ответе прямо указано, что покупку можно оформить через автокредит банка-партнёра.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: Утверждение отрицается: указано, что рассрочка от автосалона не предоставляется. Ежемесячные платежи оформляются через банковский автокредит, а не как беспроцентная рассрочка салона.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_inventory_alt_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "inventory",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: В ответе явно указано, что в наличии есть Kia Rio.; 1: В ответе явно указано, что в наличии есть Hyundai Creta.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: В ответе указаны Kia и Hyundai, а утверждение о том, что доступна только Toyota, отсутствует и опровергается перечислением других марок.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_inventory_order_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "inventory",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 0.5,
+            "reason": "0: В ответе прямо указано, что BMW X3 представлена под заказ.; 1: Срок поставки 30–90 дней в ответе не указан.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: Утверждение о наличии BMW X3 не содержится: напротив, сказано, что точная информация о наличии не указана, а модель представлена под заказ.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_kasko_credit_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "insurance",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: Ответ прямо указывает, что требование зависит от условий конкретного банка и от кредитной программы.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: Ответ явно отрицает обязательность КАСКО при любом кредите: указывает, что требование зависит от конкретной кредитной программы и банка.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_leasing_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "leasing",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: В ответе прямо указано: «для ИП доступны», что означает индивидуальных предпринимателей.; 1: В ответе прямо указано, что доступны лизинг.; 2: В ответе прямо указано: «покупка партий автомобилей».",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: Ответ явно сообщает, что лизинг доступен для ИП, то есть отрицает утверждение о доступности лизинга только физлицам.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_mazda_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "out_of_scope",
+      "metrics": {
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: Ассистент прямо сообщает об отсутствии точной информации о продаже велосипедов, а не утверждает, что велосипеды продаются в автосалоне.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_mercedes_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "out_of_scope",
+      "metrics": {
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: Ассистент явно сообщает, что у него нет точной информации о текущем курсе евро, и не утверждает сам актуальный курс.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_negative_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "out_of_scope",
+      "metrics": {
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: Рекомендации отеля в ответе нет; ассистент лишь сообщает об отсутствии точной информации об отелях.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_negative_02",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "out_of_scope",
+      "metrics": {
+        "forbidden_claim_rate": [
+          {
+            "score": 1.0,
+            "reason": "0: Ответ содержит медицинские рекомендации: описывает меры самопомощи, допустимое применение обезболивающего и признаки, требующие срочного обращения за медицинской помощью.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_osago_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "insurance",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: В ответе прямо указано, что стоимость ОСАГО зависит от региона.; 1: В ответе прямо указано, что стоимость ОСАГО зависит от мощности двигателя.; 2: В ответе прямо указано, что стоимость ОСАГО зависит от стажа водителя.; 3: В ответе прямо указано, что стоимость ОСАГО зависит от возраста водителя.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: Утверждается обратное: стоимость ОСАГО зависит от региона, мощности двигателя, стажа, возраста и числа водителей, а не одинакова для всех.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_payment_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "payment",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: Ответ прямо указывает на дневной лимит, установленный банком.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: В ответе говорится о возможном отказе из-за дневного лимита банка, а не о том, что автосалон не принимает карты.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_registration_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "documents",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: В ответе прямо указано, что для постановки автомобиля на учёт обычно нужен полис ОСАГО.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: Ассистент явно утверждает обратное: для постановки автомобиля на учёт обычно нужен полис ОСАГО.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_remote_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "remote_purchase",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: В ответе прямо указано, что можно получить видеообзор.; 1: В ответе прямо указано, что можно согласовать договор дистанционно.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: Ответ прямо сообщает, что договор можно согласовать дистанционно, то есть отрицает невозможность удалённого оформления.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_service_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "service",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: В ответе прямо указано: «по телефону сервиса».; 1: В ответе прямо указано: «через сайт».; 2: В ответе указано «через ... мобильное приложение», что подтверждает возможность записи через приложение.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: В ответе указаны предварительные способы записи (телефон, сайт, приложение), а утверждение о возможности обслуживания только в порядке живой очереди отсутствует и не подразумевается.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_sportage_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "model",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: В ответе прямо указано, что объём багажника составляет около 540 литров.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: В ответе указан объём около 540 литров, а запрещённое утверждение «480 литров» не выражено и не перефразировано.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_tradein_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "trade_in",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: Ответ прямо указывает, что оценка по программе Trade-in занимает 30–40 минут.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: В ответе указано, что оценка занимает 30–40 минут, а не несколько дней.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_tucson_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "model",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: В ответе прямо указано, что Hyundai Tucson бывает с гибридной силовой установкой.; 1: В ответе прямо уточняется, что это доступно на отдельных рынках.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: Ассистент явно сообщает, что гибридная версия Hyundai Tucson существует на отдельных рынках, тем самым отрицая запрещённое утверждение.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_used_warranty_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "warranty",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 0.5,
+            "reason": "0: Ответ указывает, что заводская гарантия действует для новых автомобилей, то есть для части автомобилей.; 1: Срок и лимит пробега — 12 месяцев или 20 000 км — в ответе не указаны.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: В ответе не утверждается, что гарантия действует пожизненно для всех машин; напротив, говорится о заводской гарантии для новых автомобилей и отсутствии точной информации по подержанным.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "gen_test_warranty_01",
+      "dataset": "generation",
+      "evaluation_type": "generation",
+      "split": "test",
+      "category": "warranty",
+      "metrics": {
+        "required_fact_coverage": [
+          {
+            "score": 1.0,
+            "reason": "0: Ответ прямо сообщает, что заводская гарантия не покрывает повреждения и ремонт после ДТП.",
+            "repetition": 1
+          }
+        ],
+        "forbidden_claim_rate": [
+          {
+            "score": 0.0,
+            "reason": "0: Ассистент явно отрицает, что заводская гарантия покрывает любые повреждения, указывая, что повреждения и ремонт после ДТП не покрываются.",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_reg_brands_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "regression",
+      "category": "inventory",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 0.0,
+            "reason": "Найдено 0/1",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 0.0,
+            "reason": "Релевантный документ не найден",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 0.0,
+            "reason": "Релевантно 0/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_reg_close_time_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "regression",
+      "category": "hours",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 1.0,
+            "reason": "Найдено 1/1",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_reg_credit_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "regression",
+      "category": "credit",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 1.0,
+            "reason": "Найдено 1/1",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_reg_credit_downpayment_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "regression",
+      "category": "credit",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 1.0,
+            "reason": "Найдено 1/1",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_reg_hours_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "regression",
+      "category": "hours",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 1.0,
+            "reason": "Найдено 1/1",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_reg_inventory_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "regression",
+      "category": "inventory",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 1.0,
+            "reason": "Найдено 1/1",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_reg_not_toyota_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "regression",
+      "category": "inventory",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 0.0,
+            "reason": "Найдено 0/4",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 0.0,
+            "reason": "Релевантный документ не найден",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 0.0,
+            "reason": "Релевантно 0/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_reg_time_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "regression",
+      "category": "hours",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 1.0,
+            "reason": "Найдено 1/1",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_reg_tradein_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "regression",
+      "category": "trade_in",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 1.0,
+            "reason": "Найдено 1/1",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_reg_tradein_oldcar_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "regression",
+      "category": "trade_in",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 1.0,
+            "reason": "Найдено 1/1",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_audi_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "out_of_scope",
+      "metrics": {
+        "abstention_accuracy@10": [
+          {
+            "score": 0.0,
+            "reason": "Retrieval вернул контекст",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_booking_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "booking",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 1.0,
+            "reason": "Найдено 1/1",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_buyout_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "trade_in",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 0.5,
+            "reason": "Найдено 1/2",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_cancel_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "booking",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 1.0,
+            "reason": "Найдено 1/1",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_chery_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "out_of_scope",
+      "metrics": {
+        "abstention_accuracy@10": [
+          {
+            "score": 0.0,
+            "reason": "Retrieval вернул контекст",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_credit_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "credit",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 0.5,
+            "reason": "Найдено 1/2",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_credit_02",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "credit",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 0.0,
+            "reason": "Найдено 0/2",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 0.0,
+            "reason": "Релевантный документ не найден",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 0.0,
+            "reason": "Релевантно 0/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_delivery_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "delivery",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 1.0,
+            "reason": "Найдено 1/1",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_drive_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "test_drive",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 1.0,
+            "reason": "Найдено 1/1",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_hours_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "hours",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 1.0,
+            "reason": "Найдено 1/1",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_hours_02",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "hours",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 1.0,
+            "reason": "Найдено 1/1",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_installment_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "finance",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 0.5,
+            "reason": "Найдено 1/2",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_inventory_alt_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "inventory",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 0.3333333333333333,
+            "reason": "Найдено 1/3",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_inventory_order_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "inventory",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 0.3333333333333333,
+            "reason": "Найдено 1/3",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_kasko_credit_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "insurance",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 0.5,
+            "reason": "Найдено 1/2",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_leasing_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "leasing",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 1.0,
+            "reason": "Найдено 1/1",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_mazda_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "out_of_scope",
+      "metrics": {
+        "abstention_accuracy@10": [
+          {
+            "score": 0.0,
+            "reason": "Retrieval вернул контекст",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_mercedes_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "out_of_scope",
+      "metrics": {
+        "abstention_accuracy@10": [
+          {
+            "score": 0.0,
+            "reason": "Retrieval вернул контекст",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_negative_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "out_of_scope",
+      "metrics": {
+        "abstention_accuracy@10": [
+          {
+            "score": 0.0,
+            "reason": "Retrieval вернул контекст",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_negative_02",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "out_of_scope",
+      "metrics": {
+        "abstention_accuracy@10": [
+          {
+            "score": 1.0,
+            "reason": "Retrieval воздержался",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_osago_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "insurance",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 1.0,
+            "reason": "Найдено 1/1",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_payment_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "payment",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 1.0,
+            "reason": "Найдено 1/1",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_registration_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "documents",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 0.5,
+            "reason": "Найдено 1/2",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_remote_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "remote_purchase",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 1.0,
+            "reason": "Найдено 1/1",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_service_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "service",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 0.5,
+            "reason": "Найдено 1/2",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_sportage_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "model",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 1.0,
+            "reason": "Найдено 1/1",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_tradein_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "trade_in",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 0.5,
+            "reason": "Найдено 1/2",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_tucson_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "model",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 1.0,
+            "reason": "Найдено 1/1",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_used_warranty_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "warranty",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 0.0,
+            "reason": "Найдено 0/2",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 0.0,
+            "reason": "Релевантный документ не найден",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 0.0,
+            "reason": "Релевантно 0/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "ret_test_warranty_01",
+      "dataset": "retrieval",
+      "evaluation_type": "retrieval",
+      "split": "test",
+      "category": "warranty",
+      "metrics": {
+        "retrieval_recall@10": [
+          {
+            "score": 0.5,
+            "reason": "Найдено 1/2",
+            "repetition": 1
+          }
+        ],
+        "retrieval_mrr@10": [
+          {
+            "score": 1.0,
+            "reason": "Первый релевантный документ на позиции 1",
+            "repetition": 1
+          }
+        ],
+        "context_precision@10": [
+          {
+            "score": 1.0,
+            "reason": "Релевантно 1/1 возвращённых документов",
+            "repetition": 1
+          }
+        ]
+      }
+    }
+  ],
+  "operational": {
+    "token_usage": {
+      "average_agent_token_usage": {
+        "value": 3021.47,
+        "n": 60,
+        "expected_n": 60,
+        "incomplete": false,
+        "missing_usage_n": 0
+      },
+      "breakdown": {
+        "overall": {
+          "average_prompt_tokens_per_case": 2758.25,
+          "average_completion_tokens_per_case": 263.22,
+          "average_total_tokens_per_case": 3021.47,
+          "average_total_tokens_per_assistant_turn": 2517.89,
+          "case_n": 60,
+          "expected_case_n": 60,
+          "turn_n": 72,
+          "missing_usage_n": 0,
+          "incomplete": false
+        },
+        "generation": {
+          "average_prompt_tokens_per_case": 2257.9,
+          "average_completion_tokens_per_case": 200.98,
+          "average_total_tokens_per_case": 2458.88,
+          "average_total_tokens_per_assistant_turn": 2458.88,
+          "case_n": 48,
+          "expected_case_n": 48,
+          "turn_n": 48,
+          "missing_usage_n": 0,
+          "incomplete": false
+        },
+        "business": {
+          "average_prompt_tokens_per_case": 4759.67,
+          "average_completion_tokens_per_case": 512.17,
+          "average_total_tokens_per_case": 5271.83,
+          "average_total_tokens_per_assistant_turn": 2635.92,
+          "case_n": 12,
+          "expected_case_n": 12,
+          "turn_n": 24,
+          "missing_usage_n": 0,
+          "incomplete": false
+        }
+      }
+    }
+  }
+}

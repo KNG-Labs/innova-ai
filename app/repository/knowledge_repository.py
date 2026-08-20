@@ -26,6 +26,10 @@ class KnowledgeRepository:
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
 
+    async def delete_all_documents(self) -> None:
+        await self._session.execute(delete(KnowledgeDocument))
+        await self._session.flush()
+
     async def add_chunks(
         self,
         *,
@@ -51,14 +55,28 @@ class KnowledgeRepository:
         await self._session.flush()
 
     async def search_chunks(
-        self, query_embedding: list[float], top_k: int
-    ) -> list[tuple[KnowledgeChunk, float]]:
+        self,
+        query_embedding: list[float],
+        top_k: int,
+        *,
+        document_id: UUID | None = None,
+    ) -> list[tuple[KnowledgeChunk, str, float]]:
         """top_k ближайших по cosine. score = 1 - cosine_distance."""
         distance = KnowledgeChunk.embedding.cosine_distance(query_embedding)
         stmt = (
-            select(KnowledgeChunk, distance.label("distance"))
-            .order_by(distance)
+            select(
+                KnowledgeChunk,
+                KnowledgeDocument.title,
+                distance.label("distance"),
+            )
+            .join(
+                KnowledgeDocument,
+                KnowledgeDocument.id == KnowledgeChunk.document_id,
+            )
+            .order_by(distance, KnowledgeChunk.chunk_index, KnowledgeChunk.id)
             .limit(top_k)
         )
+        if document_id is not None:
+            stmt = stmt.where(KnowledgeChunk.document_id == document_id)
         result = await self._session.execute(stmt)
-        return [(row[0], 1.0 - float(row[1])) for row in result.all()]
+        return [(row[0], row[1], 1.0 - float(row[2])) for row in result.all()]

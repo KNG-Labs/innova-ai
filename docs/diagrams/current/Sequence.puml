@@ -5,17 +5,21 @@ skinparam sequenceArrowThickness 1.5
 skinparam sequenceParticipantBackgroundColor #FAFAFA
 skinparam noteBackgroundColor #E8F5E9
 skinparam noteBorderColor #4F7F52
+skinparam responseMessageBelowArrow true
 
-title Innova AI - Current Message and Lead Delivery Flow
+title Innova AI — путь пользовательского сообщения и защита ПД
 
 actor "Пользователь" as User
-participant "Widget / API client" as Client
+participant "Widget / Telegram /\nAPI client" as Client
 participant "FastAPI router" as Router
 participant "AgentService" as Agent
+participant "PiiSanitizer" as PII
 database "PostgreSQL + pgvector" as PG
 participant "KnowledgeRetrievalService" as Retrieval
+participant "Retrieval Planner\nAG2 adapter" as Planner
 participant "Embedding Client" as Embedding
-participant "AG2 / Fake AG2" as LLM
+participant "Main LLM\nAG2 adapter" as LLM
+participant "OpenRouter" as OpenRouter
 participant "State Machine" as SM
 queue "Redis Queue" as Redis
 participant "Lead Delivery Worker" as Worker
@@ -23,38 +27,157 @@ participant "LeadDeliveryService" as Delivery
 participant "AmoCRM / Webhook / Fake" as CRM
 
 note over User, CRM
-  CURRENT STATE
-  Соответствует реализованному коду
-  текущей версии репозитория.
+  CURRENT STATE 29.07.2026
 end note
 
-== Обработка сообщения ==
+== 1. Приём и локальная подготовка ==
 
-User -> Client : Сообщение
-Client -> Router : POST /message\nanonymous_id, session_id, content, page_title
+User -> Client : Текст или Telegram contact
+note right of Client
+  Telegram contact пока преобразуется в текст:
+  "Мой телефон: +7999..."
+
+  Telegram /start обрабатываются
+  коннектором локально и не входят
+  в показанный ниже POST /message flow.
+end note
+
+Client -> Router : POST /message\nanonymous_id, session_id,\nchannel, content, page_title
+Router -> Router : Pydantic validation
 Router -> Agent : handle_message(request)
 
-Agent -> PG : get_or_create user and active session
+Agent -> Agent : normalize(content)
+Agent -> PG : get_or_create anonymous user\nand active dialog session
 PG --> Agent : user, session
-Agent -> PG : load current lead and recent history
-PG --> Agent : lead, last 20 messages
-Agent -> PG : INSERT user message
+Agent -> PG : load lead + last 20 messages
+PG --> Agent : qualification, contact,\nraw local history
 
-Agent -> Retrieval : retrieve(content)
-Retrieval -> Embedding : embed(query)
-Embedding --> Retrieval : query vector
-Retrieval -> PG : pgvector top-k search
-PG --> Retrieval : relevant chunks with scores
-Retrieval --> Agent : prompt context
+Agent -> PII : seed_contacts(lead.contact)
+Agent -> PII : sanitize every history message
+PII --> Agent : history with stable tokens
+Agent -> PII : sanitize current content
+PII --> Agent : safe_content + local_contact\n+ contact_only flag
+Agent -> PII : sanitize qualification,\npage_title, last RAG source title
+PII --> Agent : safe context values
 
-Agent -> LLM : decide(history, state, qualification, context, page_title)
-LLM --> Agent : AgentDecision
-Agent -> SM : merge data and resolve transition
-SM --> Agent : validated next state and missing fields
+note right of PII
+  Example:
+  "+7 (999) 123-45-67" -> [PHONE_1]
+  "user@example.com"   -> [EMAIL_1]
 
-Agent -> PG : INSERT assistant message
-Agent -> PG : UPDATE session state and closed_at
-Agent -> PG : UPSERT lead draft
+  Реальные значения возвращаются AgentService
+  отдельно от AI payload и не передаются
+  в planner, embeddings или основной LLM.
+end note
+
+Agent -> PG : INSERT raw user message
+note right of PG
+  Raw-текст остаётся в локальной БД.
+  При повторном использовании история
+  снова проходит через PiiSanitizer.
+end note
+
+== 2. Выбор пути ==
+
+alt Сообщение содержит только контакт
+  Agent -> Agent : build deterministic\ncontact-only AgentDecision
+  note right of Agent #E8F5E9
+    Retrieval, planner, embeddings и LLM
+    полностью пропускаются.
+    Ответ строится из локального шаблона.
+  end note
+
+else Обычное или смешанное сообщение
+  == 2A. RAG retrieval ==
+
+  Agent -> Retrieval : retrieve(safe_content,\nsafe_history, safe_source_title)
+  Retrieval -> PII : sanitize query, history,\nsource title again
+  PII --> Retrieval : safe retrieval inputs
+
+  opt Есть ранее выбранный RAG source
+    Retrieval -> Planner : plan(safe current message,\nsafe history, safe source title)
+    Planner -> PII : ensure_safe(planner messages)
+
+    alt Guard обнаружил поддерживаемые ПД
+      PII --> Planner : PiiDetectedError
+      Planner --> Retrieval : RetrievalPlan.none()\nHTTP не выполняется
+    else Payload безопасен
+      PII --> Planner : OK
+      Planner -> OpenRouter : chat completion\n(retrieval planning)
+      OpenRouter --> Planner : mode + standalone query
+      Planner --> Retrieval : RetrievalPlan
+    end
+  end
+
+  alt RetrievalPlan.mode == none
+    Retrieval --> Agent : empty RetrievalResult
+  else Нужен поиск в базе знаний
+    Retrieval -> PII : sanitize planner query
+    PII --> Retrieval : safe_plan_query
+    Retrieval -> Embedding : embed([safe_plan_query])
+    Embedding -> PII : ensure_safe(texts)
+
+    alt Guard обнаружил поддерживаемые ПД
+      PII --> Embedding : PiiDetectedError
+      Embedding --> Retrieval : exception; HTTP не выполняется
+      Retrieval --> Agent : empty RetrievalResult
+    else Payload безопасен
+      PII --> Embedding : OK
+      Embedding -> OpenRouter : embeddings request
+      OpenRouter --> Embedding : query vector
+      Embedding --> Retrieval : query vector
+      Retrieval -> PG : pgvector top-k search
+      PG --> Retrieval : candidate chunks + scores
+
+      alt Нет кандидатов выше min_score
+        Retrieval --> Agent : empty RetrievalResult
+      else Релевантный источник выбран
+        Retrieval --> Agent : RetrievalResult(chunks, source)
+      end
+    end
+  end
+
+  Agent -> PII : sanitize formatted RAG context
+  PII --> Agent : safe prompt context
+
+  == 2B. Основное решение LLM ==
+
+  Agent -> LLM : decide(safe current message,\nsafe history, safe qualification,\nsafe RAG context, safe page title)
+  LLM -> PII : ensure_safe(all outbound messages)
+
+  alt Guard обнаружил поддерживаемые ПД
+    PII --> LLM : PiiDetectedError
+    LLM --> Agent : safe fallback AgentDecision\nHTTP не выполняется
+  else Payload безопасен
+    PII --> LLM : OK
+    LLM -> OpenRouter : chat completion
+    OpenRouter --> LLM : JSON response
+    LLM --> Agent : AgentDecision\nor safe timeout/parse fallback
+  end
+
+  opt Backend отклонил ошибочный старт qualification
+    note right of Agent
+      Возможен один corrective retry.
+      Он проходит через тот же LLM ensure_safe().
+    end note
+  end
+
+  Agent -> Agent : ignore LLM extracted_contact;\nuse only local_contact
+  Agent -> PII : sanitize final answer and lead_summary
+  PII --> Agent : safe answer + safe summary
+end
+
+== 3. Локальная бизнес-логика и сохранение ==
+
+Agent -> SM : apply qualification patch\n+ merge local contact\n+ resolve transition
+SM --> Agent : validated next state
+Agent -> Agent : contact refusal / opt-out logic\n+ compute missing fields
+
+Agent -> PG : INSERT sanitized assistant message
+Agent -> PG : UPDATE session state,\nRAG source, flags, closed_at
+Agent -> PII : sanitize new or existing summary
+PII --> Agent : summary without real contacts
+Agent -> PG : UPSERT lead draft\nqualification + real local contact\n+ safe summary
 
 alt Backend confirms LEAD_READY
   Agent -> PG : UPDATE lead status = ready
@@ -67,16 +190,22 @@ opt Lead became ready and delivery is enabled
 end
 
 Agent --> Router : AgentMessageResponse
-Router --> Client : 200 response
+Router --> Client : HTTP 200
 Client --> User : Ответ ассистента
 
-== Асинхронная доставка ==
+== 4. Асинхронная доставка лида ==
 
-Worker -> Redis : BRPOP lead_delivery
+Worker -> Redis : BRPOP innova:lead_delivery
 Redis --> Worker : LeadDeliveryJob(lead_id, destination)
 Worker -> Delivery : deliver(lead_id)
-Delivery -> PG : SELECT lead
-PG --> Delivery : ready lead
+Delivery -> PG : SELECT lead by id\nrequire ready or delivery_failed
+PG --> Delivery : qualification + real contact\n+ safe summary
+
+note over Delivery, CRM #FFF8E1
+  AmoCRM / настроенный CRM — разрешённый получатель контакта.
+  Этот путь не проходит через OpenRouter.
+end note
+
 Delivery -> CRM : deliver_lead(payload)
 
 alt CRM delivery succeeded

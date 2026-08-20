@@ -4,6 +4,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.client.embedding_client import FakeEmbeddingClient
+from app.client.retrieval_planner_client import FakeRetrievalPlannerClient
 from app.db.base import Base
 from app.schemas.knowledge_schema import KnowledgeDocumentCreate
 from app.service.knowledge_ingestion_service import KnowledgeIngestionService
@@ -44,16 +45,27 @@ async def _seed(session):
 
 async def test_relevant_faq_is_retrieved(session):
     await _seed(session)
-    retrieval = KnowledgeRetrievalService(session, FakeEmbeddingClient(), min_score=0.2)
-    chunks = await retrieval.retrieve("сколько стоит внедрение пилота")
-    assert chunks
-    assert any("150000" in c.content for c in chunks)
+    retrieval = KnowledgeRetrievalService(
+        session,
+        FakeEmbeddingClient(),
+        FakeRetrievalPlannerClient(),
+        min_score=0.2,
+    )
+    result = await retrieval.retrieve("сколько стоит внедрение пилота")
+    assert result.chunks
+    assert any("150000" in c.content for c in result.chunks)
 
 
 async def test_unknown_question_returns_nothing(session):
     await _seed(session)
-    retrieval = KnowledgeRetrievalService(session, FakeEmbeddingClient(), min_score=0.2)
-    assert await retrieval.retrieve("как приготовить домашний борщ") == []
+    retrieval = KnowledgeRetrievalService(
+        session,
+        FakeEmbeddingClient(),
+        FakeRetrievalPlannerClient(),
+        min_score=0.2,
+    )
+    result = await retrieval.retrieve("как приготовить домашний борщ")
+    assert result.chunks == ()
 
 
 async def test_ingest_and_list_via_api(client):
@@ -69,3 +81,29 @@ async def test_ingest_and_list_via_api(client):
     listed = await client.get("/knowledge/documents")
     titles = [d["title"] for d in listed.json()]
     assert {"Camry", "RAV4"} <= set(titles)
+
+
+async def test_replace_all_documents_via_api(client):
+    created = await client.post(
+        "/knowledge/documents",
+        json=[
+            {"title": "Старый документ", "content": "Устаревшая информация."},
+        ],
+    )
+    assert created.status_code == 201
+
+    replaced = await client.put(
+        "/knowledge/documents",
+        json=[
+            {"title": "Новый документ", "content": "Актуальная информация."},
+        ],
+    )
+    assert replaced.status_code == 200
+    assert len(replaced.json()["document_ids"]) == 1
+
+    listed = await client.get("/knowledge/documents")
+    assert listed.status_code == 200
+    assert [document["title"] for document in listed.json()] == ["Новый документ"]
+
+    empty = await client.put("/knowledge/documents", json=[])
+    assert empty.status_code == 422
