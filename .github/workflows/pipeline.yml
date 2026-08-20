@@ -2,9 +2,9 @@ name: Innova CI/CD
 
 on:
   pull_request:
-    branches: [jmlc_mvp]
+    branches: [main]
   push:
-    branches: [jmlc_mvp]
+    branches: [main]
 
 permissions:
   contents: read
@@ -98,14 +98,14 @@ jobs:
           '
 
       - name: Save verified image
-        if: github.event_name == 'push' && github.ref == 'refs/heads/jmlc_mvp'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           mkdir -p /tmp/innova-image
           docker image inspect --format '{{.Id}}' "${APP_IMAGE}" > /tmp/innova-image/image-id
           docker save --output /tmp/innova-image/image.tar "${APP_IMAGE}"
 
       - name: Upload verified image
-        if: github.event_name == 'push' && github.ref == 'refs/heads/jmlc_mvp'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: verified-image-${{ github.run_id }}
@@ -117,7 +117,7 @@ jobs:
 
   publish-and-deploy:
     name: Publish and deploy
-    if: github.event_name == 'push' && github.ref == 'refs/heads/jmlc_mvp'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: checks
     runs-on: ubuntu-latest
     permissions:
