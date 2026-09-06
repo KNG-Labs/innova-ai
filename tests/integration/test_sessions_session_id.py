@@ -5,7 +5,6 @@ import pytest
 pytestmark = pytest.mark.integration
 
 
-@pytest.mark.asyncio
 async def test_get_session_returns_session_details(client) -> None:
     """
     Тест: тест эндпоинта /sessions/{session_id}
@@ -36,7 +35,6 @@ async def test_get_session_returns_session_details(client) -> None:
     assert session_data["updated_at"]
 
 
-@pytest.mark.asyncio
 async def test_get_unknown_session_returns_404(client) -> None:
     """
     Тест: сессия не найдена
@@ -51,7 +49,6 @@ async def test_get_unknown_session_returns_404(client) -> None:
     assert response.json()["detail"] == "Session not found"
 
 
-@pytest.mark.asyncio
 async def test_list_messages_by_session_id(client) -> None:
     first_response = await client.post(
         "/message",

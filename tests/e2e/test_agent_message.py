@@ -3,15 +3,15 @@ from uuid import UUID
 import pytest
 
 from app.client.ag2_agent_client import FakeAg2AgentClient
-from app.schemas.agent_schema import AgentDecision, DialogState
+from app.schemas.agent_schema import DialogState
 from app.models.dialog_session_model import DialogSession
 from app.models.lead_model import Lead
 from main import app
+from tests.factories import agent_decision
 
 pytestmark = pytest.mark.e2e
 
 
-@pytest.mark.asyncio
 async def test_full_lead_flow_reaches_lead_ready(client) -> None:
     """E2E: три хода fake client доводят диалог до LEAD_READY.
 
@@ -28,31 +28,27 @@ async def test_full_lead_flow_reaches_lead_ready(client) -> None:
     app.state.llm_client = FakeAg2AgentClient(
         responses=[
             # Ход 1: GREETING → QUALIFICATION
-            AgentDecision(
+            agent_decision(
                 answer="Подскажите, какая модель вас интересует?",
-                intent="general",
                 next_state=DialogState.QUALIFICATION,
                 qualification_patch={"car_model": "Toyota Camry"},
                 missing_fields=["budget", "purchase_type", "contact"],
-                lead_ready=False,
                 extracted_contact=None,
             ),
             # Ход 2: QUALIFICATION → CONTACT_CAPTURE
-            AgentDecision(
+            agent_decision(
                 answer="Отлично! Как с вами связаться?",
                 intent="lead_request",
                 next_state=DialogState.CONTACT_CAPTURE,
                 qualification_patch={"budget": "2500000", "purchase_type": "кредит"},
                 missing_fields=["contact"],
-                lead_ready=False,
                 extracted_contact=None,
             ),
             # Ход 3: CONTACT_CAPTURE → LEAD_READY
-            AgentDecision(
+            agent_decision(
                 answer="Спасибо! Заявка принята, мы свяжемся.",
                 intent="lead_request",
                 next_state=DialogState.LEAD_READY,
-                qualification_patch={},
                 missing_fields=[],
                 lead_ready=True,
                 extracted_contact={"phone": "+79991234567", "name": "Иван"},

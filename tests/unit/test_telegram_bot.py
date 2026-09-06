@@ -1,8 +1,6 @@
 import json
 
 import httpx
-import pytest
-
 from app.channel.telegram_bot import handle_update
 
 
@@ -21,7 +19,6 @@ def telegram_update(
     }
 
 
-@pytest.mark.asyncio
 async def test_text_is_forwarded_to_innova_and_answer_is_sent() -> None:
     calls: list[tuple[str, dict]] = []
 
@@ -67,7 +64,6 @@ async def test_text_is_forwarded_to_innova_and_answer_is_sent() -> None:
     }
 
 
-@pytest.mark.asyncio
 async def test_start_does_not_call_innova_api() -> None:
     hosts: list[str] = []
 
@@ -88,7 +84,6 @@ async def test_start_does_not_call_innova_api() -> None:
     assert hosts == ["telegram.test"]
 
 
-@pytest.mark.asyncio
 async def test_group_message_is_ignored() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         raise AssertionError(f"Unexpected request: {request.url}")

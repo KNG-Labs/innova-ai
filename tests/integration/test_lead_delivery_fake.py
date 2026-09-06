@@ -46,7 +46,6 @@ async def _db():
     return maker()
 
 
-@pytest.mark.asyncio
 async def test_ready_lead_delivered(client) -> None:
     async with await _db() as db:
         lead = await _make_lead(db, status="ready")
@@ -62,7 +61,6 @@ async def test_ready_lead_delivered(client) -> None:
     assert crm.delivered[0].car_model == "Kia"
 
 
-@pytest.mark.asyncio
 async def test_draft_lead_rejected(client) -> None:
     async with await _db() as db:
         lead = await _make_lead(db, status="draft")
@@ -76,7 +74,6 @@ async def test_draft_lead_rejected(client) -> None:
     assert crm.delivered == []  # draft не доставлялся
 
 
-@pytest.mark.asyncio
 async def test_crm_failure_marks_delivery_failed(client) -> None:
     async with await _db() as db:
         lead = await _make_lead(db, status="ready")
@@ -90,7 +87,6 @@ async def test_crm_failure_marks_delivery_failed(client) -> None:
     assert result.last_delivery_error  # текст ошибки сохранён
 
 
-@pytest.mark.asyncio
 async def test_unknown_lead_raises(client) -> None:
     crm = FakeCrmClient()
     async with await _db() as db:

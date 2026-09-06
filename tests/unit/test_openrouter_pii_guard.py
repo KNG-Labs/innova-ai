@@ -55,7 +55,6 @@ class _CapturingAsyncJudgeCompletions:
         )
 
 
-@pytest.mark.asyncio
 async def test_llm_guard_blocks_raw_pii_before_agent_call() -> None:
     agent = _CapturingAgent("{}")
     client = object.__new__(Ag2AgentClient)
@@ -72,7 +71,6 @@ async def test_llm_guard_blocks_raw_pii_before_agent_call() -> None:
     assert decision.intent == "unknown"
 
 
-@pytest.mark.asyncio
 async def test_llm_captured_payload_contains_tokens_not_original_values() -> None:
     raw = "Хочу Camry, телефон +79991234567, email user@example.com"
     safe = PiiSanitizer().sanitize_text(raw).text
@@ -97,7 +95,6 @@ async def test_llm_captured_payload_contains_tokens_not_original_values() -> Non
     assert "[EMAIL_1]" in payload
 
 
-@pytest.mark.asyncio
 async def test_planner_guard_blocks_raw_pii_before_agent_call() -> None:
     agent = _CapturingAgent('{"mode":"none","query":""}')
     client = object.__new__(Ag2RetrievalPlannerClient)
@@ -113,7 +110,6 @@ async def test_planner_guard_blocks_raw_pii_before_agent_call() -> None:
     assert result == RetrievalPlan.none()
 
 
-@pytest.mark.asyncio
 async def test_planner_captured_payload_contains_tokens_not_original_values() -> None:
     raw = "Кредит, телефон +79991234567, email user@example.com"
     safe = PiiSanitizer().sanitize_text(raw).text
@@ -134,7 +130,6 @@ async def test_planner_captured_payload_contains_tokens_not_original_values() ->
     assert "[EMAIL_1]" in payload
 
 
-@pytest.mark.asyncio
 async def test_embedding_guard_blocks_raw_pii_before_http_call() -> None:
     embeddings = _CapturingEmbeddings()
     client = object.__new__(OpenRouterEmbeddingClient)
@@ -147,7 +142,6 @@ async def test_embedding_guard_blocks_raw_pii_before_http_call() -> None:
     assert embeddings.calls == []
 
 
-@pytest.mark.asyncio
 async def test_embedding_captured_payload_contains_token_not_phone() -> None:
     embeddings = _CapturingEmbeddings()
     client = object.__new__(OpenRouterEmbeddingClient)
@@ -160,7 +154,6 @@ async def test_embedding_captured_payload_contains_token_not_phone() -> None:
     assert embeddings.calls == [{"model": "test-model", "input": ["Camry [PHONE_1]"]}]
 
 
-@pytest.mark.asyncio
 async def test_embedding_analyzer_failure_is_fail_closed(monkeypatch) -> None:
     embeddings = _CapturingEmbeddings()
     client = object.__new__(OpenRouterEmbeddingClient)
@@ -196,7 +189,6 @@ def test_eval_judge_pseudonymizes_pii_and_preserves_value_identity() -> None:
     assert payload.count("[PHONE_2]") == 1
 
 
-@pytest.mark.asyncio
 async def test_eval_judge_async_pseudonymizes_pii() -> None:
     completions = _CapturingAsyncJudgeCompletions()
     judge = OpenRouterJudge(model="test-judge", api_key="test-key")

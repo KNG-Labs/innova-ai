@@ -191,7 +191,6 @@ def _retrieval(
     return service, embedding, planner, repository
 
 
-@pytest.mark.asyncio
 async def test_without_saved_source_uses_original_query_without_planner() -> None:
     service, embedding, planner, repository = _retrieval(
         [_row(CREDIT_ID, "Кредитование", "Взнос.", 0.82)]
@@ -205,7 +204,6 @@ async def test_without_saved_source_uses_original_query_without_planner() -> Non
     assert repository.calls == [(5, None)]
 
 
-@pytest.mark.asyncio
 async def test_planner_continues_trade_in_with_rewritten_query_and_source_filter() -> (
     None
 ):
@@ -239,7 +237,6 @@ async def test_planner_continues_trade_in_with_rewritten_query_and_source_filter
     assert planner.calls[0]["history"] == history[-6:]
 
 
-@pytest.mark.asyncio
 async def test_planner_switches_to_explicit_credit_topic() -> None:
     planner = FakeRetrievalPlannerClient(
         [
@@ -268,7 +265,6 @@ async def test_planner_switches_to_explicit_credit_topic() -> None:
     assert repository.calls == [(5, None)]
 
 
-@pytest.mark.asyncio
 async def test_none_plan_skips_embeddings_and_search() -> None:
     planner = FakeRetrievalPlannerClient([RetrievalPlan.none()])
     service, embedding, _, repository = _retrieval([], planner)
@@ -284,7 +280,6 @@ async def test_none_plan_skips_embeddings_and_search() -> None:
     assert repository.calls == []
 
 
-@pytest.mark.asyncio
 async def test_planner_exception_skips_embeddings_and_search() -> None:
     planner = FakeRetrievalPlannerClient([TimeoutError("planner timeout")])
     service, embedding, _, repository = _retrieval([], planner)
@@ -300,7 +295,6 @@ async def test_planner_exception_skips_embeddings_and_search() -> None:
     assert repository.calls == []
 
 
-@pytest.mark.asyncio
 async def test_analyzer_failure_returns_empty_result_without_embedding_or_search(
     monkeypatch,
 ) -> None:
@@ -319,7 +313,6 @@ async def test_analyzer_failure_returns_empty_result_without_embedding_or_search
     assert repository.calls == []
 
 
-@pytest.mark.asyncio
 async def test_low_relevance_does_not_select_source() -> None:
     service, _, _, _ = _retrieval([_row(CREDIT_ID, "Кредитование", "Взнос.", 0.19)])
 

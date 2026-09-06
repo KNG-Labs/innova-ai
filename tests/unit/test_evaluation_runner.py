@@ -366,7 +366,6 @@ def test_business_judge_transcript_redacts_contact_but_local_guardrail_checks_it
     }
 
 
-@pytest.mark.asyncio
 async def test_api_collector_keeps_setup_transcript_and_reads_usage() -> None:
     counter = 0
 
@@ -477,7 +476,6 @@ def test_token_usage_sums_multiturn_and_excludes_incomplete_cases() -> None:
     assert "judge" not in json.dumps(summary).casefold()
 
 
-@pytest.mark.asyncio
 async def test_mock_runner_writes_deepeval_results_and_all_eight_metrics(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

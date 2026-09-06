@@ -1,24 +1,23 @@
 import pytest
 from uuid import uuid4
 
-from app.client.ag2_agent_client import FakeAg2AgentClient, AgentDecision
+from app.client.ag2_agent_client import FakeAg2AgentClient
 from app.schemas.agent_schema import DialogState
 from main import app
+from tests.factories import agent_decision
 
 pytestmark = pytest.mark.integration
 
 
-@pytest.mark.asyncio
 async def test_get_leads_lists_lead_and_detail_shows_qualification(client) -> None:
     app.state.llm_client = FakeAg2AgentClient(
         responses=[
-            AgentDecision(
+            agent_decision(
                 answer="Расскажите подробнее.",
                 intent="lead_request",
                 next_state=DialogState.QUALIFICATION,
                 qualification_patch={"car_model": "Toyota Camry"},
                 missing_fields=["budget", "purchase_type", "contact"],
-                lead_ready=False,
             ),
         ]
     )
@@ -50,13 +49,11 @@ async def test_get_leads_lists_lead_and_detail_shows_qualification(client) -> No
     assert data["qualification"]["car_model"] == "Toyota Camry"
 
 
-@pytest.mark.asyncio
 async def test_get_lead_unknown_id_returns_404(client) -> None:
     response = await client.get(f"/leads/{uuid4()}")
     assert response.status_code == 404
 
 
-@pytest.mark.asyncio
 async def test_get_leads_filter_by_status(client) -> None:
     response = await client.get("/leads?status=ready")
     assert response.status_code == 200

@@ -1,5 +1,4 @@
 import pytest
-from app.domain import MISSING_ALL
 from app.client.ag2_agent_client import (
     FakeAg2AgentClient,
     AgentDecision,
@@ -14,6 +13,7 @@ from app.service.state_machine import (
     is_lead_ready,
     resolve_next_state,
 )
+from tests.factories import agent_decision
 
 pytestmark = pytest.mark.unit
 
@@ -53,26 +53,17 @@ def test_parse_reply_strips_code_fence():
 
 
 def test_state_machine_allows_valid_transition():
-    decision = AgentDecision(
-        answer="ok",
-        intent="general",
-        next_state=DialogState.FAQ,
-        qualification_patch={},
+    decision = agent_decision(
         missing_fields=[],
-        lead_ready=False,
     )
     result = resolve_next_state(DialogState.GREETING, decision, {}, None)
     assert result == DialogState.FAQ
 
 
 def test_qualification_faq_is_inline_and_keeps_business_state():
-    decision = AgentDecision(
+    decision = agent_decision(
         answer="Оценка по trade-in бесплатна.",
-        intent="general",
-        next_state=DialogState.FAQ,
-        qualification_patch={},
         missing_fields=["budget", "purchase_type", "contact"],
-        lead_ready=False,
     )
     qualification = {"car_model": "Toyota Camry"}
 
@@ -88,13 +79,11 @@ def test_qualification_faq_is_inline_and_keeps_business_state():
 
 
 def test_service_name_alone_cannot_move_faq_to_qualification():
-    decision = AgentDecision(
+    decision = agent_decision(
         answer="Расскажу про условия кредита.",
         intent="lead_request",
         next_state=DialogState.QUALIFICATION,
         qualification_patch={"purchase_type": "кредит"},
-        missing_fields=MISSING_ALL,
-        lead_ready=False,
     )
     confirmed = has_confirmed_lead_intent(
         current_state=DialogState.FAQ,
@@ -126,13 +115,10 @@ def test_service_name_alone_cannot_move_faq_to_qualification():
     ],
 )
 def test_explicit_lead_request_can_start_qualification(message: str):
-    decision = AgentDecision(
+    decision = agent_decision(
         answer="Начнём подбор.",
         intent="lead_request",
         next_state=DialogState.QUALIFICATION,
-        qualification_patch={},
-        missing_fields=MISSING_ALL,
-        lead_ready=False,
     )
     confirmed = has_confirmed_lead_intent(
         current_state=DialogState.FAQ,
@@ -155,13 +141,12 @@ def test_explicit_lead_request_can_start_qualification(message: str):
 
 
 def test_answer_to_expected_qualification_field_is_confirmed():
-    decision = AgentDecision(
+    decision = agent_decision(
         answer="Какой способ покупки рассматриваете?",
         intent="lead_request",
         next_state=DialogState.QUALIFICATION,
         qualification_patch={"budget": "3000000"},
         missing_fields=["purchase_type", "contact"],
-        lead_ready=False,
     )
 
     assert has_confirmed_lead_intent(
@@ -173,13 +158,12 @@ def test_answer_to_expected_qualification_field_is_confirmed():
 
 
 def test_pending_confirmation_with_confirmed_status_can_start_qualification():
-    decision = AgentDecision(
+    decision = agent_decision(
         answer="Какую модель рассматриваете?",
         intent="lead_request",
         next_state=DialogState.QUALIFICATION,
         qualification_patch={"car_model": "Skoda"},
         missing_fields=["budget", "purchase_type", "contact"],
-        lead_ready=False,
         lead_intent_status=LeadIntentStatus.CONFIRMED,
     )
 
@@ -193,13 +177,11 @@ def test_pending_confirmation_with_confirmed_status_can_start_qualification():
 
 
 def test_yes_without_pending_confirmation_does_not_confirm_lead_intent():
-    decision = AgentDecision(
+    decision = agent_decision(
         answer="Расскажу подробнее.",
         intent="lead_request",
         next_state=DialogState.QUALIFICATION,
         qualification_patch={"car_model": "Skoda"},
-        missing_fields=MISSING_ALL,
-        lead_ready=False,
         lead_intent_status=LeadIntentStatus.CONFIRMED,
     )
 
@@ -213,8 +195,7 @@ def test_yes_without_pending_confirmation_does_not_confirm_lead_intent():
 
 
 def test_state_machine_blocks_lead_ready_without_contact():
-    decision = AgentDecision(
-        answer="ok",
+    decision = agent_decision(
         intent="lead_request",
         next_state=DialogState.LEAD_READY,
         qualification_patch={"purchase_type": "кредит"},
@@ -229,11 +210,9 @@ def test_state_machine_blocks_lead_ready_without_contact():
 
 def test_false_lead_ready_incomplete_qual_stays_qualification():
     # LLM врёт: lead_ready=true, но car_model/budget нет
-    decision = AgentDecision(
-        answer="ok",
+    decision = agent_decision(
         intent="lead_request",
         next_state=DialogState.LEAD_READY,
-        qualification_patch={},
         extracted_contact={"phone": "+79991234567"},
         missing_fields=[],
         lead_ready=True,
@@ -248,11 +227,9 @@ def test_false_lead_ready_incomplete_qual_stays_qualification():
 
 
 def test_false_lead_ready_full_qual_no_contact_goes_contact_capture():
-    decision = AgentDecision(
-        answer="ok",
+    decision = agent_decision(
         intent="lead_request",
         next_state=DialogState.LEAD_READY,
-        qualification_patch={},
         extracted_contact=None,
         missing_fields=[],
         lead_ready=True,
@@ -265,11 +242,9 @@ def test_false_lead_ready_full_qual_no_contact_goes_contact_capture():
 
 
 def test_lead_ready_allowed_when_merged_complete():
-    decision = AgentDecision(
-        answer="ok",
+    decision = agent_decision(
         intent="lead_request",
         next_state=DialogState.LEAD_READY,
-        qualification_patch={},
         extracted_contact=None,
         missing_fields=[],
         lead_ready=True,
@@ -406,7 +381,6 @@ def test_agent_decision_rejects_unknown_qualification_patch_field():
         )
 
 
-@pytest.mark.asyncio
 async def test_fake_client_returns_default():
     client = FakeAg2AgentClient()
     result = await client.decide(
@@ -416,24 +390,18 @@ async def test_fake_client_returns_default():
     assert result.intent == "general"
 
 
-@pytest.mark.asyncio
 async def test_fake_client_returns_scripted_sequence():
     responses = [
-        AgentDecision(
+        agent_decision(
             answer="Привет!",
-            intent="general",
-            next_state=DialogState.FAQ,
-            qualification_patch={},
             missing_fields=[],
-            lead_ready=False,
         ),
-        AgentDecision(
+        agent_decision(
             answer="Хорошо, уточните бюджет",
             intent="pricing",
             next_state=DialogState.QUALIFICATION,
             qualification_patch={"purchase_type": "кредит"},
             missing_fields=["budget", "contact"],
-            lead_ready=False,
         ),
     ]
     client = FakeAg2AgentClient(responses=responses)
@@ -471,13 +439,8 @@ def test_no_opt_out_after_first_contact_refusal():
 
 
 def test_contact_preference_defaults_to_none():
-    decision = AgentDecision(
-        answer="ok",
-        intent="general",
-        next_state=DialogState.FAQ,
-        qualification_patch={},
+    decision = agent_decision(
         missing_fields=[],
-        lead_ready=False,
     )
 
     assert decision.contact_preference == ContactPreference.NONE
@@ -486,13 +449,8 @@ def test_contact_preference_defaults_to_none():
 
 @pytest.mark.parametrize("value", ["none", "refusal", "resume"])
 def test_contact_preference_accepts_contract_values(value):
-    decision = AgentDecision(
-        answer="ok",
-        intent="general",
-        next_state=DialogState.FAQ,
-        qualification_patch={},
+    decision = agent_decision(
         missing_fields=[],
-        lead_ready=False,
         contact_preference=value,
     )
 

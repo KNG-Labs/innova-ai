@@ -1,12 +1,11 @@
 import pytest
 
-from app.client.ag2_agent_client import FakeAg2AgentClient, AgentDecision
+from app.client.ag2_agent_client import FakeAg2AgentClient
 from app.client.retrieval_planner_client import (
     FakeRetrievalPlannerClient,
     RetrievalMode,
     RetrievalPlan,
 )
-from app.domain import MISSING_ALL
 from app.schemas.agent_schema import DialogState
 from app.schemas.agent_schema import LeadIntentStatus
 from main import app
@@ -14,6 +13,7 @@ from uuid import UUID, uuid4
 from app.models.dialog_session_model import DialogSession
 from app.models.lead_model import Lead
 from app.models.message_model import Message
+from tests.factories import agent_decision
 
 pytestmark = pytest.mark.integration
 
@@ -22,7 +22,6 @@ pytestmark = pytest.mark.integration
     ("alias", "alias_id"),
     [("trade-in", "latin"), ("трейд-ин", "hyphen"), ("трейдин", "phonetic")],
 )
-@pytest.mark.asyncio
 async def test_trade_in_aliases_retrieve_same_source(
     client,
     alias: str,
@@ -54,13 +53,8 @@ async def test_trade_in_aliases_retrieve_same_source(
     assert knowledge.status_code == 201
     app.state.llm_client = _CapturingClient(
         responses=[
-            AgentDecision(
+            agent_decision(
                 answer="Trade-in — зачёт старого автомобиля.",
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
             )
         ]
     )
@@ -74,7 +68,6 @@ async def test_trade_in_aliases_retrieve_same_source(
     assert "[Источник: Программа Trade-in]" in captured_contexts[0]
 
 
-@pytest.mark.asyncio
 async def test_post_message_creates_anonymous_user_session_and_messages(client) -> None:
     """/message: успешный путь со сценарным AG2-стабом.
 
@@ -85,13 +78,9 @@ async def test_post_message_creates_anonymous_user_session_and_messages(client) 
     # init_app_state, а get_agent_service читает llm_client из app.state в момент запроса.
     app.state.llm_client = FakeAg2AgentClient(
         responses=[
-            AgentDecision(
+            agent_decision(
                 answer="Toyota Camry — от 2 500 000 ₽. Что ещё подсказать?",
                 intent="pricing",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
             ),
         ]
     )
@@ -135,7 +124,6 @@ async def test_post_message_creates_anonymous_user_session_and_messages(client) 
     )
 
 
-@pytest.mark.asyncio
 async def test_post_message_continues_existing_dialog_session(client) -> None:
     """session_id сохраняется между сообщениями.
 
@@ -145,21 +133,16 @@ async def test_post_message_continues_existing_dialog_session(client) -> None:
 
     app.state.llm_client = FakeAg2AgentClient(
         responses=[
-            AgentDecision(
+            agent_decision(
                 answer="Здравствуйте! Какая модель вас интересует?",
-                intent="general",
                 next_state=DialogState.QUALIFICATION,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Отлично! Оставьте контакт, и мы свяжемся.",
                 intent="lead_request",
                 next_state=DialogState.CONTACT_CAPTURE,
                 qualification_patch={"car_model": "Toyota Camry"},
                 missing_fields=["budget", "purchase_type", "contact"],
-                lead_ready=False,
             ),
         ]
     )
@@ -216,7 +199,6 @@ async def test_post_message_continues_existing_dialog_session(client) -> None:
     assert messages[2]["content"] == "Хочу оставить заявку"
 
 
-@pytest.mark.asyncio
 async def test_post_message_rejects_missing_anonymous_id(client) -> None:
     """
     Тест: ошибка при отсутствии поля anonymous_id
@@ -235,7 +217,6 @@ async def test_post_message_rejects_missing_anonymous_id(client) -> None:
     assert response.json()["detail"]
 
 
-@pytest.mark.asyncio
 async def test_post_message_rejects_invalid_anonymous_id(client) -> None:
     """
     Тест: валидация поля anonymous_id
@@ -255,7 +236,6 @@ async def test_post_message_rejects_invalid_anonymous_id(client) -> None:
     assert response.json()["detail"]
 
 
-@pytest.mark.asyncio
 async def test_post_message_continues_active_session_without_session_id(client) -> None:
     """
     Тест: DialogSessionRepository.get_or_create_active_session() должен уметь
@@ -298,7 +278,6 @@ async def test_post_message_continues_active_session_without_session_id(client) 
     assert len(messages_response.json()) == 4
 
 
-@pytest.mark.asyncio
 async def test_different_anonymous_users_get_different_sessions(client) -> None:
     """
     Тест: разные anonymous users получают разные сессии.
@@ -334,7 +313,6 @@ async def test_different_anonymous_users_get_different_sessions(client) -> None:
     assert first_data["session_id"] != second_data["session_id"]
 
 
-@pytest.mark.asyncio
 async def test_same_anonymous_id_in_different_channels_creates_different_users(
     client,
 ) -> None:
@@ -370,7 +348,6 @@ async def test_same_anonymous_id_in_different_channels_creates_different_users(
     assert website_data["session_id"] != telegram_data["session_id"]
 
 
-@pytest.mark.asyncio
 async def test_post_message_rejects_blank_content(client) -> None:
     """
     Тест: невалидный content
@@ -388,7 +365,6 @@ async def test_post_message_rejects_blank_content(client) -> None:
     assert response.status_code == 422
 
 
-@pytest.mark.asyncio
 async def test_post_message_rejects_unknown_channel(client) -> None:
     """
     Тест: невалидный channel
@@ -407,7 +383,6 @@ async def test_post_message_rejects_unknown_channel(client) -> None:
     assert response.status_code == 422
 
 
-@pytest.mark.asyncio
 async def test_post_message_rejects_session_belonging_to_other_user(
     client,
 ) -> None:
@@ -467,7 +442,6 @@ async def test_post_message_rejects_session_belonging_to_other_user(
     )
 
 
-@pytest.mark.asyncio
 async def test_post_message_rejects_nonexistent_session_id(client) -> None:
     """
     Тест: если передан несуществующий session_id,
@@ -492,7 +466,6 @@ async def test_post_message_rejects_nonexistent_session_id(client) -> None:
     assert data["session_id"] != fake_session_id
 
 
-@pytest.mark.asyncio
 async def test_closed_session_sets_closed_at_and_next_message_starts_new_session(
     client,
 ) -> None:
@@ -500,21 +473,13 @@ async def test_closed_session_sets_closed_at_and_next_message_starts_new_session
 
     app.state.llm_client = FakeAg2AgentClient(
         responses=[
-            AgentDecision(
+            agent_decision(
                 answer="Расскажите, что нужно?",
-                intent="general",
                 next_state=DialogState.QUALIFICATION,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Хорошо, закрываю обращение.",
-                intent="general",
                 next_state=DialogState.CLOSED,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
             ),
         ]
     )
@@ -569,7 +534,6 @@ async def test_closed_session_sets_closed_at_and_next_message_starts_new_session
     assert third_data["session_id"] != session_id
 
 
-@pytest.mark.asyncio
 async def test_two_explicit_contact_refusals_opt_out_without_closing_session(
     client,
 ) -> None:
@@ -586,7 +550,7 @@ async def test_two_explicit_contact_refusals_opt_out_without_closing_session(
 
     app.state.llm_client = _CapturingClient(
         responses=[
-            AgentDecision(
+            agent_decision(
                 answer="Оставьте контакт для связи.",
                 intent="lead_request",
                 next_state=DialogState.CONTACT_CAPTURE,
@@ -596,57 +560,39 @@ async def test_two_explicit_contact_refusals_opt_out_without_closing_session(
                     "purchase_type": "кредит",
                 },
                 missing_fields=["contact"],
-                lead_ready=False,
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Понимаю.",
-                intent="general",
                 next_state=DialogState.CLOSED,
-                qualification_patch={},
                 missing_fields=["contact"],
-                lead_ready=False,
                 contact_preference="refusal",
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Работаем ежедневно с 9:00 до 21:00.",
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
                 missing_fields=["contact"],
-                lead_ready=False,
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Могу продолжить подбор. Оставьте контакт.",
                 intent="lead_request",
                 next_state=DialogState.CONTACT_CAPTURE,
-                qualification_patch={},
                 missing_fields=["contact"],
-                lead_ready=False,
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Хорошо, больше не буду просить контакт.",
-                intent="general",
                 next_state=DialogState.CLOSED,
-                qualification_patch={},
                 missing_fields=["contact"],
-                lead_ready=False,
                 contact_preference="refusal",
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Camry стоит от 2 800 000 рублей.",
                 intent="pricing",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
                 missing_fields=["contact"],
-                lead_ready=False,
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Хорошо, вернёмся к заявке. Оставьте контакт.",
                 intent="lead_request",
                 next_state=DialogState.CONTACT_CAPTURE,
-                qualification_patch={},
                 missing_fields=["contact"],
-                lead_ready=False,
                 contact_preference="resume",
             ),
         ]
@@ -735,7 +681,6 @@ async def test_two_explicit_contact_refusals_opt_out_without_closing_session(
     assert captured_opt_out == [False, False, False, False, False, True, True]
 
 
-@pytest.mark.asyncio
 async def test_post_message_threads_page_title_to_llm(client) -> None:
     """page_title из запроса доходит до llm_client.decide нормализованным."""
 
@@ -748,13 +693,9 @@ async def test_post_message_threads_page_title_to_llm(client) -> None:
 
     app.state.llm_client = _CapturingClient(
         responses=[
-            AgentDecision(
+            agent_decision(
                 answer="Подскажу по Camry.",
-                intent="general",
                 next_state=DialogState.QUALIFICATION,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
             ),
         ]
     )
@@ -773,7 +714,6 @@ async def test_post_message_threads_page_title_to_llm(client) -> None:
     assert captured["page_title"] == "Toyota Camry 2024"
 
 
-@pytest.mark.asyncio
 async def test_post_message_threads_missing_fields_to_llm(client) -> None:
     captured: list[list[str] | None] = []
 
@@ -793,22 +733,19 @@ async def test_post_message_threads_missing_fields_to_llm(client) -> None:
 
     app.state.llm_client = _CapturingClient(
         responses=[
-            AgentDecision(
+            agent_decision(
                 answer="Уточню условия покупки.",
                 intent="lead_request",
                 next_state=DialogState.QUALIFICATION,
                 qualification_patch={"car_model": "Toyota Camry"},
                 extracted_contact={"phone": "+79991234567"},
                 missing_fields=["budget", "purchase_type"],
-                lead_ready=False,
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Какой бюджет вы рассматриваете?",
                 intent="lead_request",
                 next_state=DialogState.QUALIFICATION,
-                qualification_patch={},
                 missing_fields=["budget", "purchase_type"],
-                lead_ready=False,
             ),
         ]
     )
@@ -838,7 +775,6 @@ async def test_post_message_threads_missing_fields_to_llm(client) -> None:
     assert captured[1] == ["budget", "purchase_type"]
 
 
-@pytest.mark.asyncio
 async def test_mixed_contact_is_sanitized_for_llm_history_and_embeddings(
     client,
 ) -> None:
@@ -861,23 +797,20 @@ async def test_mixed_contact_is_sanitized_for_llm_history_and_embeddings(
     app.state.embedding_client = embedding
     app.state.llm_client = _CapturingClient(
         responses=[
-            AgentDecision(
+            agent_decision(
                 answer="Какой бюджет вы рассматриваете?",
                 intent="lead_request",
                 next_state=DialogState.QUALIFICATION,
                 qualification_patch={"car_model": "Toyota Camry"},
                 extracted_contact={"phone": "+70000000000"},
                 missing_fields=["budget", "purchase_type"],
-                lead_ready=False,
                 lead_summary=("Позвонить +79991234567 или написать user@example.com"),
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Уточните бюджет.",
                 intent="lead_request",
                 next_state=DialogState.QUALIFICATION,
-                qualification_patch={},
                 missing_fields=["budget", "purchase_type"],
-                lead_ready=False,
             ),
         ]
     )
@@ -924,7 +857,6 @@ async def test_mixed_contact_is_sanitized_for_llm_history_and_embeddings(
         assert "user@example.com" not in lead.summary
 
 
-@pytest.mark.asyncio
 async def test_contact_only_message_skips_all_external_ai_calls(
     client, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -1009,25 +941,22 @@ async def test_contact_only_message_skips_all_external_ai_calls(
         }
 
 
-@pytest.mark.asyncio
 async def test_qualification_patch_null_removes_saved_field(client) -> None:
     app.state.llm_client = FakeAg2AgentClient(
         responses=[
-            AgentDecision(
+            agent_decision(
                 answer="Какой бюджет вы рассматриваете?",
                 intent="lead_request",
                 next_state=DialogState.QUALIFICATION,
                 qualification_patch={"car_model": "Toyota Camry"},
                 missing_fields=["budget", "purchase_type", "contact"],
-                lead_ready=False,
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Хорошо, убрал Camry из параметров подбора.",
                 intent="lead_request",
                 next_state=DialogState.QUALIFICATION,
                 qualification_patch={"car_model": None},
                 missing_fields=["car_model", "budget", "purchase_type", "contact"],
-                lead_ready=False,
             ),
         ]
     )
@@ -1059,7 +988,6 @@ async def test_qualification_patch_null_removes_saved_field(client) -> None:
     assert "car_model" not in lead.json()["qualification"]
 
 
-@pytest.mark.asyncio
 async def test_faq_during_qualification_preserves_data_and_can_resume(client) -> None:
     captured_states: list[str] = []
     captured_qualification: list[dict] = []
@@ -1101,29 +1029,22 @@ async def test_faq_during_qualification_preserves_data_and_can_resume(client) ->
 
     app.state.llm_client = _CapturingClient(
         responses=[
-            AgentDecision(
+            agent_decision(
                 answer="Какой бюджет вы рассматриваете?",
                 intent="lead_request",
                 next_state=DialogState.QUALIFICATION,
                 qualification_patch={"car_model": "Toyota Camry"},
                 missing_fields=["budget", "purchase_type", "contact"],
-                lead_ready=False,
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Оценка по trade-in бесплатна и занимает 30–40 минут.",
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
                 missing_fields=["budget", "purchase_type", "contact"],
-                lead_ready=False,
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Хорошо. Какой бюджет вы рассматриваете?",
                 intent="lead_request",
                 next_state=DialogState.QUALIFICATION,
-                qualification_patch={},
                 missing_fields=["budget", "purchase_type", "contact"],
-                lead_ready=False,
             ),
         ]
     )
@@ -1175,7 +1096,6 @@ async def test_faq_during_qualification_preserves_data_and_can_resume(client) ->
         assert row.last_rag_source_title == "Программа Trade-in"
 
 
-@pytest.mark.asyncio
 async def test_trade_in_follow_up_does_not_send_credit_context_to_llm(client) -> None:
     captured_contexts: list[str] = []
 
@@ -1242,37 +1162,17 @@ async def test_trade_in_follow_up_does_not_send_credit_context_to_llm(client) ->
 
     app.state.llm_client = _CapturingClient(
         responses=[
-            AgentDecision(
+            agent_decision(
                 answer="Trade-in позволяет сдать автомобиль в зачёт нового.",
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Оценка бесплатна; нужны ПТС, СТС и паспорт собственника.",
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Оценка бесплатна и занимает 30–40 минут.",
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Для оценки нужны ПТС или ЭПТС, СТС и паспорт.",
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
             ),
         ]
     )
@@ -1318,7 +1218,6 @@ async def test_trade_in_follow_up_does_not_send_credit_context_to_llm(client) ->
         assert "Кредитование и финансирование" not in context
 
 
-@pytest.mark.asyncio
 async def test_explicit_credit_topic_replaces_saved_trade_in_source(client) -> None:
     embedding_calls: list[list[str]] = []
     captured_contexts: list[str] = []
@@ -1365,21 +1264,11 @@ async def test_explicit_credit_topic_replaces_saved_trade_in_source(client) -> N
 
     app.state.llm_client = _CapturingClient(
         responses=[
-            AgentDecision(
+            agent_decision(
                 answer="Trade-in — зачёт старого автомобиля.",
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Кредит оформляется через банки-партнёры.",
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
             ),
         ]
     )
@@ -1409,7 +1298,6 @@ async def test_explicit_credit_topic_replaces_saved_trade_in_source(client) -> N
         assert row.last_rag_source_title == "Кредитование и финансирование"
 
 
-@pytest.mark.asyncio
 async def test_low_relevance_keeps_previous_confirmed_source(client) -> None:
     captured_contexts: list[str] = []
 
@@ -1450,21 +1338,11 @@ async def test_low_relevance_keeps_previous_confirmed_source(client) -> None:
     assert knowledge.status_code == 201
     app.state.llm_client = _CapturingClient(
         responses=[
-            AgentDecision(
+            agent_decision(
                 answer="Оценка бесплатна.",
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Точной информации нет.",
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
             ),
         ]
     )
@@ -1491,7 +1369,6 @@ async def test_low_relevance_keeps_previous_confirmed_source(client) -> None:
         assert row.last_rag_source_title == "Программа Trade-in"
 
 
-@pytest.mark.asyncio
 async def test_rag_source_is_not_shared_between_users_or_channels(client) -> None:
     captured_contexts: list[str] = []
 
@@ -1525,29 +1402,14 @@ async def test_rag_source_is_not_shared_between_users_or_channels(client) -> Non
     assert knowledge.status_code == 201
     app.state.llm_client = _CapturingClient(
         responses=[
-            AgentDecision(
+            agent_decision(
                 answer="Оценка бесплатна.",
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Нужно уточнить тему.",
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Нужно уточнить тему.",
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
             ),
         ]
     )
@@ -1581,7 +1443,6 @@ async def test_rag_source_is_not_shared_between_users_or_channels(client) -> Non
     assert captured_contexts[1:] == ["", ""]
 
 
-@pytest.mark.asyncio
 async def test_credit_offer_confirmation_retrieves_credit_and_keeps_original_yes(
     client,
 ) -> None:
@@ -1639,24 +1500,14 @@ async def test_credit_offer_confirmation_retrieves_credit_and_keeps_original_yes
 
     app.state.llm_client = _CapturingClient(
         responses=[
-            AgentDecision(
+            agent_decision(
                 answer=(
                     "Автокредит — это банковское финансирование покупки. "
                     "Могу рассказать подробнее об условиях автокредита."
                 ),
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Срок — от 1 до 7 лет, первоначальный взнос — от 10%.",
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
             ),
         ]
     )
@@ -1690,7 +1541,6 @@ async def test_credit_offer_confirmation_retrieves_credit_and_keeps_original_yes
         assert row.last_rag_source_title == "Кредитование и финансирование"
 
 
-@pytest.mark.asyncio
 async def test_credit_word_cannot_start_qualification_from_faq(client) -> None:
     knowledge = await client.post(
         "/knowledge/documents",
@@ -1704,21 +1554,15 @@ async def test_credit_word_cannot_start_qualification_from_faq(client) -> None:
     assert knowledge.status_code == 201
     app.state.llm_client = FakeAg2AgentClient(
         responses=[
-            AgentDecision(
+            agent_decision(
                 answer="Чем могу помочь?",
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Автокредит оформляется через банки-партнёры.",
                 intent="lead_request",
                 next_state=DialogState.QUALIFICATION,
                 qualification_patch={"purchase_type": "кредит"},
                 missing_fields=["car_model", "budget", "contact"],
-                lead_ready=False,
             ),
         ]
     )
@@ -1743,7 +1587,6 @@ async def test_credit_word_cannot_start_qualification_from_faq(client) -> None:
     assert lead.json()["qualification"] == {}
 
 
-@pytest.mark.asyncio
 async def test_ambiguous_model_and_service_requests_set_confirmation_pending(
     client,
 ) -> None:
@@ -1784,40 +1627,25 @@ async def test_ambiguous_model_and_service_requests_set_confirmation_pending(
     assert knowledge.status_code == 201
     app.state.llm_client = _CapturingClient(
         responses=[
-            AgentDecision(
+            agent_decision(
                 answer=(
                     "Skoda Kodiaq — семейный кроссовер с полным приводом. "
                     "Хотите, чтобы я помог подобрать Skoda для покупки?"
                 ),
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
                 lead_intent_status=LeadIntentStatus.NEEDS_CONFIRMATION,
             ),
-            AgentDecision(
+            agent_decision(
                 answer=(
                     "Skoda Kodiaq — семейный кроссовер с полным приводом. "
                     "Хотите, чтобы я помог подобрать Skoda для покупки?"
                 ),
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
                 lead_intent_status=LeadIntentStatus.NEEDS_CONFIRMATION,
             ),
-            AgentDecision(
+            agent_decision(
                 answer=(
                     "Кредит доступен через банки-партнёры. "
                     "Хотите, чтобы я помог оформить покупку в кредит?"
                 ),
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
                 lead_intent_status=LeadIntentStatus.NEEDS_CONFIRMATION,
             ),
         ]
@@ -1845,7 +1673,6 @@ async def test_ambiguous_model_and_service_requests_set_confirmation_pending(
     assert all("[Источник:" in context for context in captured_contexts)
 
 
-@pytest.mark.asyncio
 async def test_yes_after_purchase_confirmation_starts_qualification_and_restores_topic(
     client,
 ) -> None:
@@ -1880,25 +1707,19 @@ async def test_yes_after_purchase_confirmation_starts_qualification_and_restores
     )
     app.state.llm_client = _CapturingClient(
         responses=[
-            AgentDecision(
+            agent_decision(
                 answer=(
                     "Skoda Kodiaq — семейный кроссовер. "
                     "Хотите, чтобы я помог подобрать Skoda для покупки?"
                 ),
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
                 lead_intent_status=LeadIntentStatus.NEEDS_CONFIRMATION,
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Отлично. Какой бюджет вы рассматриваете?",
                 intent="lead_request",
                 next_state=DialogState.QUALIFICATION,
                 qualification_patch={"car_model": "Skoda"},
                 missing_fields=["budget", "purchase_type", "contact"],
-                lead_ready=False,
                 lead_intent_status=LeadIntentStatus.CONFIRMED,
             ),
         ]
@@ -1928,7 +1749,6 @@ async def test_yes_after_purchase_confirmation_starts_qualification_and_restores
         assert row.lead_intent_confirmation_pending is False
 
 
-@pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("non_confirmation", "status"),
     [
@@ -1972,31 +1792,16 @@ async def test_nonconfirming_turn_clears_pending_and_later_yes_stays_faq(
     )
     app.state.llm_client = _CapturingClient(
         responses=[
-            AgentDecision(
+            agent_decision(
                 answer="Хотите, чтобы я помог подобрать Skoda для покупки?",
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
                 lead_intent_status=LeadIntentStatus.NEEDS_CONFIRMATION,
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Хорошо, обращайтесь, если появятся вопросы.",
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
                 lead_intent_status=status,
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Что именно вас интересует?",
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
             ),
         ]
     )
@@ -2028,7 +1833,6 @@ async def test_nonconfirming_turn_clears_pending_and_later_yes_stays_faq(
     assert lead.json()["qualification"] == {}
 
 
-@pytest.mark.asyncio
 async def test_rejected_qualification_start_gets_one_corrective_retry(client) -> None:
     correction_flags: list[bool] = []
 
@@ -2048,21 +1852,14 @@ async def test_rejected_qualification_start_gets_one_corrective_retry(client) ->
 
     app.state.llm_client = _CapturingClient(
         responses=[
-            AgentDecision(
+            agent_decision(
                 answer="Начнём подбор.",
                 intent="lead_request",
                 next_state=DialogState.QUALIFICATION,
                 qualification_patch={"car_model": "Skoda"},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Хотите, чтобы я помог подобрать Skoda для покупки?",
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
                 lead_intent_status=LeadIntentStatus.NEEDS_CONFIRMATION,
             ),
         ]
@@ -2079,15 +1876,12 @@ async def test_rejected_qualification_start_gets_one_corrective_retry(client) ->
     assert lead.json()["qualification"] == {}
 
 
-@pytest.mark.asyncio
 async def test_repeated_bad_qualification_uses_safe_fallback(client) -> None:
-    invalid = AgentDecision(
+    invalid = agent_decision(
         answer="Начнём подбор.",
         intent="lead_request",
         next_state=DialogState.QUALIFICATION,
         qualification_patch={"car_model": "Skoda"},
-        missing_fields=MISSING_ALL,
-        lead_ready=False,
     )
     app.state.llm_client = FakeAg2AgentClient(responses=[invalid, invalid])
 
@@ -2104,7 +1898,6 @@ async def test_repeated_bad_qualification_uses_safe_fallback(client) -> None:
     assert lead.json()["qualification"] == {}
 
 
-@pytest.mark.asyncio
 async def test_intent_confirmation_pending_is_isolated_by_user_and_channel(
     client,
 ) -> None:
@@ -2126,30 +1919,15 @@ async def test_intent_confirmation_pending_is_isolated_by_user_and_channel(
 
     app.state.llm_client = _CapturingClient(
         responses=[
-            AgentDecision(
+            agent_decision(
                 answer="Хотите, чтобы я помог подобрать Skoda для покупки?",
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
                 lead_intent_status=LeadIntentStatus.NEEDS_CONFIRMATION,
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Что именно вас интересует?",
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
             ),
-            AgentDecision(
+            agent_decision(
                 answer="Что именно вас интересует?",
-                intent="general",
-                next_state=DialogState.FAQ,
-                qualification_patch={},
-                missing_fields=MISSING_ALL,
-                lead_ready=False,
             ),
         ]
     )

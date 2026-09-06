@@ -1,8 +1,6 @@
 from types import SimpleNamespace
 from uuid import uuid4
 
-import pytest
-
 from app.service.knowledge_ingestion_service import (
     KnowledgeIngestionService,
     chunk_text,
@@ -23,7 +21,6 @@ def test_long_text_chunks_with_overlap():
     assert all(len(c) <= 800 for c in chunks)
 
 
-@pytest.mark.asyncio
 async def test_document_title_is_included_in_embedding_but_not_stored_content():
     class _Embedding:
         def __init__(self):
@@ -59,7 +56,6 @@ async def test_document_title_is_included_in_embedding_but_not_stored_content():
     assert repository.saved["chunks"] == ["Оценка автомобиля бесплатна."]
 
 
-@pytest.mark.asyncio
 async def test_knowledge_embedding_payload_is_sanitized_but_chunks_stay_local():
     class _Embedding:
         def __init__(self):
