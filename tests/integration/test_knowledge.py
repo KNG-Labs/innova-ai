@@ -29,18 +29,22 @@ async def session():
 
 async def _seed(session):
     ingest = KnowledgeIngestionService(session, FakeEmbeddingClient())
-    for doc in (
-        (
-            "Цены",
-            "Базовый пилот Innova AI стоит от 150000 рублей за внедрение ассистента.",
-        ),
-        ("Сроки", "Внедрение ассистента занимает от двух до четырёх недель."),
-        (
-            "Поддержка",
-            "Поддержка плюс обновление базы знаний — часть стоимости пилота.",
-        ),
-    ):
-        await ingest.ingest(KnowledgeDocumentCreate(title=doc[0], content=doc[1]))
+    await ingest.ingest_many(
+        [
+            KnowledgeDocumentCreate(
+                title="Цены",
+                content="Базовый пилот Innova AI стоит от 150000 рублей за внедрение ассистента.",
+            ),
+            KnowledgeDocumentCreate(
+                title="Сроки",
+                content="Внедрение ассистента занимает от двух до четырёх недель.",
+            ),
+            KnowledgeDocumentCreate(
+                title="Поддержка",
+                content="Поддержка плюс обновление базы знаний — часть стоимости пилота.",
+            ),
+        ]
+    )
 
 
 async def test_relevant_faq_is_retrieved(session):

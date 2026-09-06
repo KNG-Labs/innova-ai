@@ -24,30 +24,6 @@ class LeadRepository:
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def create(
-        self,
-        *,
-        user_id: UUID,
-        session_id: UUID,
-        status: str = "draft",
-        contact: dict | None = None,
-        qualification: dict | None = None,
-        summary: str | None = None,
-    ) -> Lead:
-        lead = Lead(
-            user_id=user_id,
-            session_id=session_id,
-            status=status,
-            contact=contact,
-            qualification=qualification,
-            summary=summary,
-        )
-
-        self._session.add(lead)
-        await self._session.flush()
-
-        return lead
-
     async def update(
         self,
         lead: Lead,

@@ -36,14 +36,6 @@ class KnowledgeIngestionService:
         self._repo = KnowledgeRepository(db_session)
         self._embedding = embedding_client
 
-    async def ingest(self, payload: KnowledgeDocumentCreate) -> UUID:
-        doc = await self._repo.create_document(
-            title=payload.title, source=payload.source, content=payload.content
-        )
-        await self._index_document(doc.id, payload.title, payload.content)
-        await self._db.commit()
-        return doc.id
-
     async def ingest_many(self, payloads: list[KnowledgeDocumentCreate]) -> list[UUID]:
         ids: list[UUID] = []
         for payload in payloads:

@@ -24,10 +24,10 @@ async def _make_lead(db, *, status: str):
     session = await DialogSessionRepository(db).get_or_create_active_session(
         user_id=user.id, session_id=None
     )
-    lead = await LeadRepository(db).create(
+    repository = LeadRepository(db)
+    lead = await repository.upsert_draft(
         user_id=user.id,
         session_id=session.id,
-        status=status,
         qualification={
             "car_model": "Kia",
             "budget": "2 млн",
@@ -36,6 +36,8 @@ async def _make_lead(db, *, status: str):
         contact={"name": "Пётр", "phone": "+79990000000"},
         summary="тест",
     )
+    if status != "draft":
+        await repository.update(lead, status=status)
     await db.commit()
     return lead
 
