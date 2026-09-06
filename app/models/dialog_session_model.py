@@ -7,14 +7,14 @@ from uuid import UUID, uuid4
 from sqlalchemy import Boolean, ForeignKey, String, func, DateTime, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base, SoftDeleteMixin
+from app.db.base import Base
 
 if TYPE_CHECKING:
     from app.models.message_model import Message
     from app.models.user_model import User
 
 
-class DialogSession(SoftDeleteMixin, Base):
+class DialogSession(Base):
     """Сессия диалога между Юзером и INNOVA AI агентом."""
 
     __tablename__ = "dialog_sessions"

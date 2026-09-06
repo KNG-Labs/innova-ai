@@ -11,15 +11,13 @@ class LeadRepository:
         self._session = session
 
     async def get_by_id(self, lead_id: UUID) -> Lead | None:
-        stmt = select(Lead).where(Lead.id == lead_id, Lead.deleted_at.is_(None))
+        stmt = select(Lead).where(Lead.id == lead_id)
 
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
     async def get_by_session_id(self, session_id: UUID) -> Lead | None:
-        stmt = select(Lead).where(
-            Lead.session_id == session_id, Lead.deleted_at.is_(None)
-        )
+        stmt = select(Lead).where(Lead.session_id == session_id)
 
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
@@ -51,7 +49,7 @@ class LeadRepository:
         return lead
 
     async def list_all(self, status: str | None = None) -> list[Lead]:
-        stmt = select(Lead).where(Lead.deleted_at.is_(None))
+        stmt = select(Lead)
         if status is not None:
             stmt = stmt.where(Lead.status == status)
         stmt = stmt.order_by(Lead.created_at.desc())

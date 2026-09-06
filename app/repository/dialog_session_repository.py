@@ -19,10 +19,7 @@ class DialogSessionRepository:
         self._session = session
 
     async def get_by_id(self, session_id: UUID) -> DialogSession | None:
-        stmt = select(DialogSession).where(
-            DialogSession.id == session_id,
-            DialogSession.deleted_at.is_(None),
-        )
+        stmt = select(DialogSession).where(DialogSession.id == session_id)
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -30,7 +27,7 @@ class DialogSessionRepository:
         stmt = (
             select(DialogSession)
             .options(selectinload(DialogSession.user))
-            .where(DialogSession.id == session_id, DialogSession.deleted_at.is_(None))
+            .where(DialogSession.id == session_id)
         )
 
         result = await self._session.execute(stmt)
@@ -43,7 +40,6 @@ class DialogSessionRepository:
                 DialogSession.user_id == user_id,
                 DialogSession.closed_at.is_(None),
                 DialogSession.state.not_in(("CLOSED", "LEAD_READY")),
-                DialogSession.deleted_at.is_(None),
             )
             .order_by(DialogSession.created_at.desc())
             .limit(1)

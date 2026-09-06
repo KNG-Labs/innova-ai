@@ -7,11 +7,11 @@ from sqlalchemy import ForeignKey, String, Text, DateTime, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.db.base import Base, SoftDeleteMixin
+from app.db.base import Base
 from app.models.dialog_session_model import DialogSession
 
 
-class Message(SoftDeleteMixin, Base):
+class Message(Base):
     """Одно сообщение в истории диалога."""
 
     __tablename__ = "messages"

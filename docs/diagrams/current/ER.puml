@@ -21,7 +21,6 @@ class users {
    channel: varchar(32)
    created_at: timestamptz
    updated_at: timestamptz
-   deleted_at: timestamptz?
 }
 
 class dialog_sessions {
@@ -37,7 +36,6 @@ class dialog_sessions {
    created_at: timestamptz
    updated_at: timestamptz
    closed_at: timestamptz?
-   deleted_at: timestamptz?
 }
 
 class messages {
@@ -47,7 +45,6 @@ class messages {
    content: text
    message_metadata: jsonb?
    created_at: timestamptz
-   deleted_at: timestamptz?
 }
 
 class leads {
@@ -61,7 +58,6 @@ class leads {
    last_delivery_error: text?
    created_at: timestamptz
    updated_at: timestamptz
-   deleted_at: timestamptz?
 }
 
 class knowledge_documents {
@@ -120,9 +116,8 @@ note right of knowledge_documents
 end note
 
 note bottom of users
-  Частичный unique index:
-  (channel, anonymous_id)
-  WHERE deleted_at IS NULL.
+  UNIQUE constraint:
+  (channel, anonymous_id).
 end note
 
 @enduml

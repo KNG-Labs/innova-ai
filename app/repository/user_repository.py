@@ -15,7 +15,6 @@ class UserRepository:
         stmt = select(User).where(
             User.channel == channel,
             User.anonymous_id == anonymous_id,
-            User.deleted_at.is_(None),
         )
 
         result = await self._session.execute(stmt)

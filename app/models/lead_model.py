@@ -7,10 +7,10 @@ from sqlalchemy import DateTime, ForeignKey, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.db.base import Base, SoftDeleteMixin
+from app.db.base import Base
 
 
-class Lead(SoftDeleteMixin, Base):
+class Lead(Base):
     """Карточка лида с квалификацией, контактом и статусом доставки."""
 
     __tablename__ = "leads"
