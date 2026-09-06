@@ -2,10 +2,10 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.di import get_lead_service
+from app.di import get_lead_delivery_service, get_lead_service
+from app.models.lead_model import Lead
 from app.schemas.lead_schema import LeadListItem, LeadResponse
 from app.service.lead_service import LeadService, LeadNotFoundError
-from app.di import get_lead_delivery_service
 from app.service.lead_delivery_service import (
     LeadNotDeliverableError,
 )
@@ -18,7 +18,7 @@ router = APIRouter(prefix="/leads", tags=["Leads"])
 async def list_leads(
     status: str | None = None,
     lead_service: LeadService = Depends(get_lead_service),
-) -> list[LeadListItem]:
+) -> list[Lead]:
     return await lead_service.list_leads(status=status)
 
 
@@ -26,7 +26,7 @@ async def list_leads(
 async def get_lead(
     lead_id: UUID,
     lead_service: LeadService = Depends(get_lead_service),
-) -> LeadResponse:
+) -> Lead:
     try:
         return await lead_service.get_lead(lead_id)
     except LeadNotFoundError:
@@ -47,7 +47,7 @@ async def get_lead(
 async def deliver_lead(
     lead_id: UUID,
     delivery_service: LeadDeliveryService = Depends(get_lead_delivery_service),
-) -> LeadResponse:
+) -> Lead:
     try:
         lead = await delivery_service.deliver(lead_id)
     except LeadNotFoundError:
@@ -59,15 +59,4 @@ async def deliver_lead(
             status_code=status.HTTP_409_CONFLICT,
             detail="Lead is not in a deliverable status (draft)",
         )
-    return LeadResponse(
-        id=lead.id,
-        session_id=lead.session_id,
-        user_id=lead.user_id,
-        status=lead.status,
-        qualification=lead.qualification,
-        contact=lead.contact,
-        summary=lead.summary,
-        last_delivery_error=lead.last_delivery_error,
-        created_at=lead.created_at,
-        updated_at=lead.updated_at,
-    )
+    return lead

@@ -9,7 +9,7 @@ from app.client.token_usage import (
     capture_token_usage_enabled,
     consume_token_usage,
 )
-from app.repository import LeadRepository
+from app.repository.lead_repository import LeadRepository
 from app.repository.dialog_session_repository import DialogSessionRepository
 from app.repository.message_repository import MessageRepository
 from app.repository.user_repository import UserRepository
@@ -23,7 +23,6 @@ from app.schemas.agent_schema import (
     AgentDecision,
     LeadIntentStatus,
 )
-from app.service.business_service import MessageNormalizer
 from app.service.knowledge_retrieval_service import (
     KnowledgeRetrievalService,
     RetrievalResult,
@@ -65,7 +64,6 @@ class AgentService:
         *,
         db_session: AsyncSession,
         llm_client: LLMClient,
-        normalizer: MessageNormalizer,
         queue_client: QueueClient,
         delivery_provider: str,
         retrieval: KnowledgeRetrievalService,
@@ -73,7 +71,6 @@ class AgentService:
 
         self._db_session = db_session
         self._llm_client = llm_client
-        self._normalizer = normalizer
         self._queue = queue_client
         self._delivery_provider = delivery_provider
         self._retrieval = retrieval
@@ -87,7 +84,7 @@ class AgentService:
         self, request: AgentMessageRequest
     ) -> AgentMessageResponse:
 
-        content = self._normalizer.normalize(request.content)
+        content = request.content
 
         user = await self._users.get_or_create_anonymous_user(
             channel=request.channel.value,

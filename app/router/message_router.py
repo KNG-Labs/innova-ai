@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.di import get_agent_service
 from app.exceptions import SessionOwnershipError
-from app.schemas import AgentMessageRequest, AgentMessageResponse
+from app.schemas.agent_schema import AgentMessageRequest, AgentMessageResponse
 from app.service.agent_service import AgentService
 
 router = APIRouter()

@@ -10,7 +10,11 @@ from sqlalchemy import pool
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from app.db.base import Base
-from app.models import *  # noqa: F403
+from app.models.dialog_session_model import DialogSession  # noqa: F401
+from app.models.knowledge_model import KnowledgeChunk, KnowledgeDocument  # noqa: F401
+from app.models.lead_model import Lead  # noqa: F401
+from app.models.message_model import Message  # noqa: F401
+from app.models.user_model import User  # noqa: F401
 
 load_dotenv()
 

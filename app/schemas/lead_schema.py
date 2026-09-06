@@ -7,7 +7,10 @@ from pydantic import BaseModel, ConfigDict
 class LeadListItem(BaseModel):
     """Строка списка GET /leads. Лёгкая: без тяжёлых JSONB-полей."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(
+        extra="forbid",
+        from_attributes=True,
+    )
 
     id: UUID
     session_id: UUID
@@ -20,7 +23,10 @@ class LeadListItem(BaseModel):
 class LeadResponse(BaseModel):
     """Карточка лида GET /leads/{lead_id}. Полная."""
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(
+        extra="forbid",
+        from_attributes=True,
+    )
 
     id: UUID
     session_id: UUID

@@ -4,7 +4,8 @@ import pytest
 
 from app.client.ag2_agent_client import FakeAg2AgentClient
 from app.schemas.agent_schema import AgentDecision, DialogState
-from app.models import DialogSession, Lead
+from app.models.dialog_session_model import DialogSession
+from app.models.lead_model import Lead
 from main import app
 
 pytestmark = pytest.mark.e2e

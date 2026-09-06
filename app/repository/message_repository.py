@@ -3,7 +3,7 @@ from uuid import UUID
 from sqlalchemy import case, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Message
+from app.models.message_model import Message
 
 
 class MessageRepository:

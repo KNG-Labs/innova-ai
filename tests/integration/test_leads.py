@@ -2,7 +2,7 @@ import pytest
 from uuid import uuid4
 
 from app.client.ag2_agent_client import FakeAg2AgentClient, AgentDecision
-from app.schemas import DialogState
+from app.schemas.agent_schema import DialogState
 from main import app
 
 pytestmark = pytest.mark.integration

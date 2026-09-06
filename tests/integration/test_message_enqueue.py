@@ -2,7 +2,7 @@ import pytest
 
 from app.client.ag2_agent_client import AgentDecision, FakeAg2AgentClient
 from app.client.queue_client import FakeQueueClient
-from app.schemas import DialogState
+from app.schemas.agent_schema import DialogState
 from main import app
 
 pytestmark = [pytest.mark.integration, pytest.mark.integration_crm_fake]

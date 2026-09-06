@@ -7,11 +7,13 @@ from app.client.retrieval_planner_client import (
     RetrievalPlan,
 )
 from app.domain import MISSING_ALL
-from app.schemas import DialogState
+from app.schemas.agent_schema import DialogState
 from app.schemas.agent_schema import LeadIntentStatus
 from main import app
 from uuid import UUID, uuid4
-from app.models import DialogSession, Lead, Message
+from app.models.dialog_session_model import DialogSession
+from app.models.lead_model import Lead
+from app.models.message_model import Message
 
 pytestmark = pytest.mark.integration
 

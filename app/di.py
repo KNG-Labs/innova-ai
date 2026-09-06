@@ -19,7 +19,6 @@ from app.db.session import create_engine as create_db_engine
 from app.db.session import create_session_maker
 from app.privacy import initialize_pii_analyzer
 from app.service.agent_service import AgentService
-from app.service.business_service import MessageNormalizer
 from app.service.lead_delivery_service import LeadDeliveryService
 from app.service.session_service import SessionService
 from app.service.lead_service import LeadService
@@ -51,9 +50,6 @@ async def init_app_state(app: FastAPI) -> None:
     app.state.db_engine = db_engine
     app.state.db_session_maker = db_session_maker
 
-    normalizer = MessageNormalizer()
-
-    app.state.normalizer = normalizer
     app.state.embedding_client = build_embedding_client()
 
     llm_provider = os.getenv("LLM_PROVIDER", "stub").strip().lower()
@@ -134,7 +130,6 @@ async def get_agent_service(
     return AgentService(
         db_session=db_session,
         llm_client=request.app.state.llm_client,
-        normalizer=request.app.state.normalizer,
         queue_client=request.app.state.queue_client,
         delivery_provider=request.app.state.delivery_provider,
         retrieval=retrieval,

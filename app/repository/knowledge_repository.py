@@ -18,9 +18,6 @@ class KnowledgeRepository:
         await self._session.flush()
         return doc
 
-    async def get_document(self, document_id: UUID) -> KnowledgeDocument | None:
-        return await self._session.get(KnowledgeDocument, document_id)
-
     async def list_documents(self) -> list[KnowledgeDocument]:
         stmt = select(KnowledgeDocument).order_by(KnowledgeDocument.created_at.desc())
         result = await self._session.execute(stmt)

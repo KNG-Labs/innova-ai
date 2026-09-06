@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.exceptions import SessionOwnershipError
-from app.models import DialogSession
+from app.models.dialog_session_model import DialogSession
 
 
 class DialogSessionRepository:
@@ -120,7 +120,3 @@ class DialogSessionRepository:
             update(DialogSession).where(DialogSession.id == session_id).values(**values)
         )
         await self._session.execute(stmt)
-
-    async def soft_delete(self, dialog_session: DialogSession) -> None:
-        dialog_session.deleted_at = func.now()
-        await self._session.flush()

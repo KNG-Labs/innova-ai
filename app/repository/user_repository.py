@@ -1,8 +1,8 @@
-from sqlalchemy import select, func
+from sqlalchemy import select
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import User
+from app.models.user_model import User
 
 
 class UserRepository:
@@ -47,7 +47,3 @@ class UserRepository:
             channel=channel,
             anonymous_id=anonymous_id,
         )
-
-    async def soft_delete(self, user: User) -> None:
-        user.deleted_at = func.now()
-        await self._session.flush()

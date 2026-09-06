@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.lead_model import Lead
@@ -48,22 +48,6 @@ class LeadRepository:
 
         return lead
 
-    async def get_or_create_by_session_id(
-        self,
-        *,
-        user_id: UUID,
-        session_id: UUID,
-    ) -> Lead:
-        lead = await self.get_by_session_id(session_id)
-
-        if lead is not None:
-            return lead
-
-        return await self.create(
-            user_id=user_id,
-            session_id=session_id,
-        )
-
     async def update(
         self,
         lead: Lead,
@@ -89,16 +73,6 @@ class LeadRepository:
         await self._session.flush()
 
         return lead
-
-    async def list_by_user_id(self, user_id: UUID) -> list[Lead]:
-        stmt = (
-            select(Lead)
-            .where(Lead.user_id == user_id, Lead.deleted_at.is_(None))
-            .order_by(Lead.created_at.desc())
-        )
-
-        result = await self._session.execute(stmt)
-        return list(result.scalars().all())
 
     async def list_all(self, status: str | None = None) -> list[Lead]:
         stmt = select(Lead).where(Lead.deleted_at.is_(None))
@@ -140,7 +114,3 @@ class LeadRepository:
                 lead.summary = summary
 
         return lead
-
-    async def soft_delete(self, lead: Lead) -> None:
-        lead.deleted_at = func.now()
-        await self._session.flush()

@@ -3,6 +3,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.di import get_session_service
+from app.models.dialog_session_model import DialogSession
+from app.models.message_model import Message
 from app.schemas.session_schema import SessionResponse, StoredMessageResponse
 from app.service.session_service import SessionService, SessionNotFoundError
 
@@ -13,7 +15,7 @@ router = APIRouter(prefix="/sessions", tags=["Sessions"])
 async def get_session(
     session_id: UUID,
     session_service: SessionService = Depends(get_session_service),
-) -> SessionResponse:
+) -> DialogSession:
     try:
         return await session_service.get_session(session_id)
     except SessionNotFoundError:
@@ -30,7 +32,7 @@ async def get_session(
 async def get_session_messages(
     session_id: UUID,
     session_service: SessionService = Depends(get_session_service),
-) -> list[StoredMessageResponse]:
+) -> list[Message]:
     try:
         return await session_service.get_session_messages(session_id)
     except SessionNotFoundError:
