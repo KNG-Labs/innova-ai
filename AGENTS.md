@@ -236,7 +236,7 @@ bash /opt/innova/current/scripts/rollback.sh \
 
 Когда в работе возникает небольшое семантическое решение, которое человек принимает
 за секунду, использовать TypeSafe Jev через
-`UV_CACHE_DIR=/tmp/innova-jev-uv-cache uv run python scripts/jev.py`. Передавать
+`UV_CACHE_DIR=/tmp/innova-jev-uv-cache uv run python .agents/scripts/jev.py`. Передавать
 JSON-запрос через stdin, объединяя независимые вопросы к одному состоянию в один
 вызов. Подходящие формы ответа: `choice`, `noul` и `score`.
 
