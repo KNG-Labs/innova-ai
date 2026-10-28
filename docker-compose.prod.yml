@@ -71,7 +71,9 @@ services:
 
   worker:
     <<: *app
-    command: python -m app.worker.lead_delivery
+    command: >-
+      celery -A app.worker.lead_delivery:celery_app worker
+      --loglevel=INFO --concurrency=1 --queues=innova.lead_delivery
     depends_on:
       db:
         condition: service_healthy

@@ -87,9 +87,7 @@ async def init_app_state(app: FastAPI) -> None:
     app.state.delivery_provider = get_delivery_provider()
     app.state.crm_client = build_crm_client(http_client)
 
-    queue_client, redis_conn = await build_queue_client()
-    app.state.queue_client = queue_client
-    app.state.redis_conn = redis_conn
+    app.state.queue_client = build_queue_client()
 
 
 async def close_app_state(app: FastAPI) -> None:
@@ -97,11 +95,6 @@ async def close_app_state(app: FastAPI) -> None:
     if http_client is not None:
         await http_client.aclose()
         app.state.http_client = None
-
-    redis_conn = getattr(app.state, "redis_conn", None)
-    if redis_conn is not None:
-        await redis_conn.aclose()
-        app.state.redis_conn = None
 
     db_engine = getattr(app.state, "db_engine", None)
     if db_engine is not None:

@@ -21,7 +21,12 @@ class LeadDeliveryService:
         self._leads = LeadRepository(db_session)
         self._crm = crm_client
 
-    async def deliver(self, lead_id: UUID) -> Lead:
+    async def deliver(
+        self,
+        lead_id: UUID,
+        *,
+        raise_on_delivery_error: bool = False,
+    ) -> Lead:
         lead = await self._leads.get_by_id(lead_id)
         if lead is None:
             raise LeadNotFoundError
@@ -38,6 +43,8 @@ class LeadDeliveryService:
             summary=lead.summary,
         )
 
+        delivery_error: Exception | None = None
+
         try:
             await self._crm.deliver_lead(payload)
             lead.status = "delivered"
@@ -45,8 +52,13 @@ class LeadDeliveryService:
         except Exception as exc:  # noqa: BLE001 - ошибка доставки = бизнес-исход, не 500
             lead.status = "delivery_failed"
             lead.last_delivery_error = repr(exc)[:_ERROR_MAX_LEN]
+            delivery_error = exc
 
         await self._db_session.flush()
         await self._db_session.commit()
         await self._db_session.refresh(lead)
+
+        if raise_on_delivery_error and delivery_error is not None:
+            raise delivery_error
+
         return lead

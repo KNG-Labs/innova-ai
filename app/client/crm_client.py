@@ -124,11 +124,19 @@ class AmoCrmLeadDeliveryClient:
             return
 
         # note best-effort: сделка уже создана, доставку из-за note не валим
-        note_resp = await self._http.post(
-            f"{self._base_url}/api/v4/leads/{lead_amo_id}/notes",
-            headers=headers,
-            json=[{"note_type": "common", "params": {"text": note}}],
-        )
+        try:
+            note_resp = await self._http.post(
+                f"{self._base_url}/api/v4/leads/{lead_amo_id}/notes",
+                headers=headers,
+                json=[{"note_type": "common", "params": {"text": note}}],
+            )
+        except httpx.RequestError:
+            _logger.warning(
+                "amoCRM note request failed; lead already created",
+                exc_info=True,
+            )
+            return
+
         if note_resp.status_code >= 300:
             _logger.warning(
                 "amoCRM note %s: %s", note_resp.status_code, note_resp.text[:300]

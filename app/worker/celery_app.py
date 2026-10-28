@@ -2,7 +2,7 @@ import os
 
 from celery import Celery
 
-redis_url = os.environ['REDIS_URL']
+redis_url = os.environ["REDIS_URL"]
 
 celery_app = Celery("innova", broker=redis_url)
 
