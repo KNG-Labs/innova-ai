@@ -54,9 +54,9 @@ async def deliver_lead(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Lead not found"
         )
-    except LeadNotDeliverableError:
+    except LeadNotDeliverableError as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Lead is not in a deliverable status (draft)",
+            detail=str(exc),
         )
     return lead

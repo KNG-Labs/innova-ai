@@ -1,5 +1,4 @@
 import os
-from typing import Any
 
 import httpx
 
@@ -9,7 +8,11 @@ from app.client.crm_client import (
     FakeCrmClient,
     WebhookLeadDeliveryClient,
 )
-from app.client.queue_client import FakeQueueClient, QueueClient
+from app.client.queue_client import (
+    FakeQueueClient,
+    QueueClient,
+    CeleryQueueClient,
+)
 
 
 def get_delivery_provider() -> str:
@@ -37,17 +40,13 @@ def build_crm_client(http_client: httpx.AsyncClient) -> CrmClient:
     raise RuntimeError(f"Unsupported LEAD_DELIVERY_PROVIDER: {provider}")
 
 
-async def build_queue_client() -> tuple[QueueClient, Any]:
-    """Возвращает (queue_client, redis_conn_or_None).
-    redis_conn закрывает вызвавший."""
+def build_queue_client() -> QueueClient:
+    if get_delivery_provider() == "disabled":
+        return FakeQueueClient()
 
-    redis_url = os.getenv("REDIS_URL", "").strip()
-    if not redis_url:
-        return FakeQueueClient(), None
+    if not os.getenv("REDIS_URL", "").strip():
+        raise RuntimeError("REDIS_URL is required when lead delivery is enabled")
 
-    import redis.asyncio as aioredis
+    from app.worker.celery_app import celery_app
 
-    from app.client.queue_client import RedisQueueClient
-
-    redis_conn = aioredis.from_url(redis_url)
-    return RedisQueueClient(redis_conn), redis_conn
+    return CeleryQueueClient(celery_app=celery_app)

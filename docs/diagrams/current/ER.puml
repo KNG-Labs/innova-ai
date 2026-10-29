@@ -60,6 +60,11 @@ class leads {
    updated_at: timestamptz
 }
 
+class lead_delivery_attempts {
+   lead_id: uuid <<PK, FK>>
+   started_at: timestamptz
+}
+
 class knowledge_documents {
    id: uuid
    title: varchar(512)
@@ -79,6 +84,7 @@ class knowledge_chunks {
 
 users               "1" -down-  "0..*" dialog_sessions    : user_id
 users               "1" -left-  "0..*" leads              : user_id
+leads               "1" -left-  "0..1" lead_delivery_attempts : lead_id, RESTRICT
 dialog_sessions     "1" -down-  "0..*" messages           : session_id
 dialog_sessions     "1" -left-  "0..1" leads              : session_id
 knowledge_documents "1" -down-  "0..*" knowledge_chunks   : document_id
@@ -113,6 +119,12 @@ note right of knowledge_documents
 
   last_rag_source_* поддерживает контекстный
   retrieval между репликами.
+end note
+
+note left of lead_delivery_attempts
+  Отметка фиксируется до запроса к CRM
+  отдельной транзакцией.
+  Неизвестный исход требует needs_review.
 end note
 
 note bottom of users

@@ -1,8 +1,10 @@
 from uuid import UUID
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import delete, insert, select
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, create_async_engine
+from sqlalchemy.pool import NullPool
 
+from app.models.lead_delivery_attempt_model import LeadDeliveryAttemptModel
 from app.models.lead_model import Lead
 
 
@@ -15,6 +17,33 @@ class LeadRepository:
 
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
+
+    async def get_delivery_attempt(
+        self, lead_id: UUID
+    ) -> LeadDeliveryAttemptModel | None:
+        return await self._session.get(LeadDeliveryAttemptModel, lead_id)
+
+    async def start_delivery_attempt(self, lead_id: UUID) -> None:
+        bind = self._session.bind
+        if not isinstance(bind, AsyncEngine):
+            raise RuntimeError("Delivery attempts require an engine-bound session")
+
+        # An independent connection avoids exhausting the pool while holding a lead lock.
+        journal_engine = create_async_engine(bind.url, poolclass=NullPool)
+        try:
+            async with journal_engine.begin() as connection:
+                await connection.execute(
+                    insert(LeadDeliveryAttemptModel).values(lead_id=lead_id)
+                )
+        finally:
+            await journal_engine.dispose()
+
+    async def clear_delivery_attempt(self, lead_id: UUID) -> None:
+        await self._session.execute(
+            delete(LeadDeliveryAttemptModel).where(
+                LeadDeliveryAttemptModel.lead_id == lead_id
+            )
+        )
 
     async def get_by_session_id(self, session_id: UUID) -> Lead | None:
         stmt = select(Lead).where(Lead.session_id == session_id)

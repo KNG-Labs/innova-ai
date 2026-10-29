@@ -22,8 +22,8 @@ component "PiiSanitizer\nLLM / planner / embeddings" as PrivacyAI
 database "PostgreSQL + pgvector\nдиалоги, лиды, база знаний" as PostgreSQL
 cloud "OpenRouter" as OpenRouter
 
-queue "Redis\nready lead queue" as Redis
-component "Delivery Worker" as Delivery
+queue "Redis\nCelery broker" as Redis
+component "Celery Delivery Worker" as Delivery
 cloud "AmoCRM / webhook /\nfake adapter" as CRM
 
 User -down-> Channels
@@ -35,10 +35,10 @@ PrivacyAI -down-> OpenRouter : после\nensure_safe()
 
 Core -right-> PostgreSQL : локальные\nданные
 
-Core -down-> Redis : готовый\nlead
-Redis -down-> Delivery : job
+Core -down-> Redis : deliver_lead(lead_id)\nJSON task
+Redis -down-> Delivery : innova.lead_delivery
 Delivery -down-> CRM : реальный контакт\n+ безопасный summary
-Delivery -right-> PostgreSQL : lead и статус\nдоставки
+Delivery -right-> PostgreSQL : lead, row lock,\nотметка попытки и статус
 
 note left of PrivacyAI #FFEBEE
   Телефон, email и Telegram username
