@@ -65,6 +65,10 @@ class CrmClient(Protocol):
     async def deliver_lead(self, payload: CrmPayload) -> None: ...
 
 
+class CrmDeliveryRejectedError(RuntimeError):
+    """The destination confirms that no lead was created."""
+
+
 class FakeCrmClient:
     """Заглушка для тестов без реальных CRM токенов."""
 
@@ -74,7 +78,7 @@ class FakeCrmClient:
 
     async def deliver_lead(self, payload: CrmPayload) -> None:
         if self._fail:
-            raise RuntimeError("fake CRM rejected the lead")
+            raise CrmDeliveryRejectedError("fake CRM rejected the lead")
         self.delivered.append(payload)
 
 

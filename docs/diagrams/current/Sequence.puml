@@ -21,13 +21,13 @@ participant "Embedding Client" as Embedding
 participant "Main LLM\nAG2 adapter" as LLM
 participant "OpenRouter" as OpenRouter
 participant "State Machine" as SM
-queue "Redis Queue" as Redis
-participant "Lead Delivery Worker" as Worker
+queue "Redis / Celery broker" as Redis
+participant "Celery Worker" as Worker
 participant "LeadDeliveryService" as Delivery
 participant "AmoCRM / Webhook / Fake" as CRM
 
 note over User, CRM
-  CURRENT STATE 29.07.2026
+  CURRENT STATE 29.10.2026
 end note
 
 == 1. Приём и локальная подготовка ==
@@ -186,7 +186,7 @@ end
 Agent -> PG : COMMIT
 
 opt Lead became ready and delivery is enabled
-  Agent -> Redis : LPUSH LeadDeliveryJob
+  Agent -> Redis : send_task deliver_lead(str(lead_id))\nqueue innova.lead_delivery
 end
 
 Agent --> Router : AgentMessageResponse
@@ -195,10 +195,9 @@ Client --> User : Ответ ассистента
 
 == 4. Асинхронная доставка лида ==
 
-Worker -> Redis : BRPOP innova:lead_delivery
-Redis --> Worker : LeadDeliveryJob(lead_id, destination)
-Worker -> Delivery : deliver(lead_id)
-Delivery -> PG : SELECT lead by id\nrequire ready or delivery_failed
+Redis --> Worker : JSON task: deliver_lead(lead_id)
+Worker -> Delivery : deliver(lead_id, raise_on_delivery_error=True)
+Delivery -> PG : SELECT lead FOR NO KEY UPDATE\ncheck status and previous attempt
 PG --> Delivery : qualification + real contact\n+ safe summary
 
 note over Delivery, CRM #FFF8E1
@@ -206,17 +205,34 @@ note over Delivery, CRM #FFF8E1
   Этот путь не проходит через OpenRouter.
 end note
 
-Delivery -> CRM : deliver_lead(payload)
-
-alt CRM delivery succeeded
-  CRM --> Delivery : success
-  Delivery -> PG : status = delivered\nlast_delivery_error = null
-else CRM delivery failed
-  CRM --> Delivery : exception
-  Delivery -> PG : status = delivery_failed\nlast_delivery_error = error
+alt Already delivered
+  Delivery --> Worker : existing result, no CRM call
+else Previous unconfirmed attempt or needs_review
+  Delivery -> PG : preserve / set needs_review\nCOMMIT if changed
+  Delivery --> Worker : stop without CRM call
+else Delivery is permitted
+  Delivery -> PG : INSERT lead_delivery_attempts\nseparate connection and COMMIT
+  Delivery -> CRM : deliver_lead(payload)
+  alt CRM confirmed success
+    CRM --> Delivery : success
+    Delivery -> PG : status = delivered, error = null\nDELETE attempt
+  else Connection failure / confirmed rejection
+    CRM --> Delivery : exception
+    Delivery -> PG : status = delivery_failed, error\nDELETE attempt
+  else Unconfirmed result
+    CRM --> Delivery : exception
+    Delivery -> PG : status = needs_review, error\nKEEP attempt
+  end
+  Delivery -> PG : COMMIT status + attempt change atomically
+  Delivery --> Worker : result / re-raise exception
 end
 
-Delivery -> PG : COMMIT
-Delivery --> Worker : updated lead
+Worker -> Redis : ACK after execution / publish bounded retry
+
+note over Worker, PG #FFF8E1
+  Child SIGKILL: reject_on_worker_lost requeues task.
+  The committed attempt survives rollback.
+  Redelivery stops at needs_review without a second CRM call.
+end note
 
 @enduml

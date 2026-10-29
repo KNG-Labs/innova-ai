@@ -15,6 +15,7 @@ from app.models.knowledge_model import KnowledgeChunk, KnowledgeDocument  # noqa
 from app.models.lead_model import Lead  # noqa: F401
 from app.models.message_model import Message  # noqa: F401
 from app.models.user_model import User  # noqa: F401
+from app.models.lead_delivery_attempt_model import LeadDeliveryAttemptModel  # noqa: F401
 
 load_dotenv()
 

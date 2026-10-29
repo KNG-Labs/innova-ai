@@ -11,7 +11,10 @@ pytestmark = pytest.mark.unit
     ("error", "expected_attempts"),
     [
         (httpx.ConnectError("connection failed"), 4),
+        (httpx.ConnectTimeout("connect timed out"), 4),
+        (httpx.PoolTimeout("pool exhausted"), 4),
         (httpx.ReadTimeout("response timed out"), 1),
+        (RuntimeError("unconfirmed CRM response"), 1),
     ],
 )
 def test_retry_policy(

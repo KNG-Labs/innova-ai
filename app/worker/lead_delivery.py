@@ -13,9 +13,12 @@ from app.models.dialog_session_model import DialogSession  # noqa: F401
 from app.models.knowledge_model import KnowledgeDocument  # noqa: F401
 from app.models.message_model import Message  # noqa: F401
 from app.models.user_model import User  # noqa: F401
+from app.models.lead_delivery_attempt_model import LeadDeliveryAttemptModel  # noqa: F401
 
 
 @celery_app.task(
+    acks_late=True,
+    reject_on_worker_lost=True,
     autoretry_for=(
         httpx.ConnectError,
         httpx.ConnectTimeout,

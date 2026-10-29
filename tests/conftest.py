@@ -9,6 +9,7 @@ TEST_DATABASE_URL = os.getenv(
 )
 
 TEST_ENV = {
+    "PYTHON_DOTENV_DISABLED": "1",
     "DATABASE_URL": TEST_DATABASE_URL,
     "LLM_PROVIDER": "stub",
     "EMBEDDING_PROVIDER": "fake",
@@ -33,6 +34,10 @@ import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy import text
+from sqlalchemy.engine import make_url
+
+if not (make_url(TEST_DATABASE_URL).database or "").endswith(("_test", "_eval")):
+    raise RuntimeError("Tests require a temporary database ending in _test or _eval")
 
 from app.db.base import Base
 from app.di import close_app_state, init_app_state

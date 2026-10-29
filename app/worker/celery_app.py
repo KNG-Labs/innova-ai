@@ -11,4 +11,5 @@ celery_app.conf.update(
     task_serializer="json",
     accept_content=["json"],
     task_ignore_result=True,
+    worker_prefetch_multiplier=1,
 )

@@ -28,7 +28,7 @@ services:
   migrate:
     build: .
     command: alembic upgrade head
-    env_file: .env
+    env_file: ${APP_ENV_FILE:-.env}
     environment:
       DATABASE_URL: postgresql+asyncpg://innova:innova@db:5432/innova_ai
     depends_on:
@@ -39,7 +39,7 @@ services:
   api:
     build: .
     command: uvicorn main:app --host 0.0.0.0 --port 8000
-    env_file: .env
+    env_file: ${APP_ENV_FILE:-.env}
     environment:
       DATABASE_URL: postgresql+asyncpg://innova:innova@db:5432/innova_ai
       REDIS_URL: redis://redis:6379/0
@@ -68,7 +68,7 @@ services:
     command: >-
       celery -A app.worker.lead_delivery:celery_app worker
       --loglevel=INFO --concurrency=1 --queues=innova.lead_delivery
-    env_file: .env
+    env_file: ${APP_ENV_FILE:-.env}
     environment:
       DATABASE_URL: postgresql+asyncpg://innova:innova@db:5432/innova_ai
       REDIS_URL: redis://redis:6379/0
@@ -82,7 +82,7 @@ services:
   telegram-bot:
     build: .
     command: python -m app.channel.telegram_bot
-    env_file: .env
+    env_file: ${APP_ENV_FILE:-.env}
     environment:
       INNOVA_API_URL: http://api:8000
     depends_on:

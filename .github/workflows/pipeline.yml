@@ -36,6 +36,10 @@ jobs:
           --health-timeout 3s
           --health-retries 20
     env:
+      PYTHON_DOTENV_DISABLED: "1"
+      PYTEST_DISABLE_PLUGIN_AUTOLOAD: "1"
+      DEEPEVAL_DISABLE_DOTENV: "1"
+      DEEPEVAL_TELEMETRY_OPT_OUT: "YES"
       DATABASE_URL: postgresql+asyncpg://innova:innova@localhost:5432/innova_ai_test
       TEST_DATABASE_URL: postgresql+asyncpg://innova:innova@localhost:5432/innova_ai_test
       LLM_PROVIDER: stub
@@ -75,7 +79,7 @@ jobs:
           uv run alembic check
 
       - name: Run tests
-        run: uv run pytest -q
+        run: uv run pytest -p pytest_asyncio.plugin -q
 
       - name: Build production image
         run: |
@@ -96,6 +100,16 @@ jobs:
             test ! -e /app/evals
             test ! -e /app/.git
           '
+          docker run --rm --network none -i \
+            -e PYTHON_DOTENV_DISABLED=1 -e REDIS_URL=memory:// \
+            "${APP_IMAGE}" python -B - <<'PY'
+          from sqlalchemy.orm import configure_mappers
+          from app.db.base import Base
+          from app.worker.lead_delivery import deliver_lead
+          configure_mappers()
+          assert "lead_delivery_attempts" in {t.name for t in Base.metadata.sorted_tables}
+          print(deliver_lead.name)
+          PY
 
       - name: Save verified image
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'

@@ -5,7 +5,7 @@ Innova AI — диалоговый сервис лидогенерации. По
 Текущая реализация рассчитана на одного автомобильного дилера. Серверная часть хранит историю и состояние диалога в PostgreSQL,
 использует AG2/OpenRouter или детерминированную заглушку для обработки сообщений,
 получает релевантный контекст через pgvector и передаёт готовые лиды отдельному
-фоновому обработчику через Redis.
+Celery worker через брокер Redis.
 
 ## Возможности
 
@@ -15,14 +15,15 @@ Innova AI — диалоговый сервис лидогенерации. По
 - управляемая backend-кодом машина состояний;
 - квалификация по `car_model`, `budget` и `purchase_type`;
 - сбор контакта через `phone`, `email` или `telegram`;
-- статусы лида `draft`, `ready`, `delivered` и `delivery_failed`;
+- статусы лида `draft`, `ready`, `delivered`, `delivery_failed` и `needs_review`;
 - семантический поиск с продолжением темы внутри диалоговой сессии;
 - AG2 через OpenRouter с безопасным fallback;
 - локальное распознавание телефона, email и Telegram username;
 - стабильные токены вместо реальных контактов во всех AI-payload;
 - обработка сообщений только с контактом без вызова LLM, planner и embeddings;
 - проверка payload перед HTTP-запросами в OpenRouter;
-- асинхронная доставка лидов через Redis и отдельный worker;
+- асинхронная доставка лидов через Celery и Redis, с ограниченными повторами
+  и защитой от повторного создания сделки;
 - режимы доставки AmoCRM, webhook, fake и disabled;
 - API для чтения сессий, сообщений, лидов и базы знаний;
 - встраиваемый JavaScript-виджет и демонстрационная страница.
@@ -43,12 +44,14 @@ Innova AI — диалоговый сервис лидогенерации. По
 - PostgreSQL 17 с pgvector
 - Alembic
 - Redis
+- Celery
 - AG2 (AutoGen) через OpenRouter
 - httpx
 - pytest, Ruff и mypy
 - uv
 
-PostgreSQL является источником истины для пользователей, сессий, сообщений, лидов и документов базы знаний. Redis используется только как очередь доставки лидов.
+PostgreSQL является источником истины для пользователей, сессий, сообщений, лидов,
+отметок доставки и документов базы знаний. Redis используется как брокер Celery.
 
 ## Путь сообщения и защита персональных данных
 
@@ -73,7 +76,7 @@ PostgreSQL является источником истины для польз�
   → ответить пользователю
 
 Готовый lead
-  → Redis → delivery worker → AmoCRM / webhook / fake adapter
+  → Redis → Celery worker → AmoCRM / webhook / fake adapter
 ```
 
 ## Состояния диалога
@@ -387,29 +390,42 @@ VPS_SSH_KNOWN_HOSTS
 uv sync
 ```
 
-Запустите инфраструктуру:
+Для локального обучения используйте временную базу и заглушки. Рабочие `.env`
+и `.env.production` содержат реальные секреты и не должны загружаться для проверок.
 
 ```bash
-docker compose up -d db redis
+export APP_ENV_FILE=/dev/null
+export PYTHON_DOTENV_DISABLED=1
+docker compose --env-file /dev/null up -d --wait db redis
+docker compose --env-file /dev/null exec -T db createdb -U innova innova_ai_test
 ```
 
-Если приложение работает на хосте с PostgreSQL из Compose, используйте порт `5433`:
+В каждом терминале API/worker задайте одинаковое окружение:
 
-```text
-DATABASE_URL=postgresql+asyncpg://innova:innova@localhost:5433/innova_ai
-REDIS_URL=redis://localhost:6379/0
+```bash
+export PYTHON_DOTENV_DISABLED=1
+export DATABASE_URL=postgresql+asyncpg://innova:innova@127.0.0.1:5433/innova_ai_test
+export TEST_DATABASE_URL="$DATABASE_URL"
+export REDIS_URL=redis://127.0.0.1:6379/0
+export LLM_PROVIDER=stub
+export EMBEDDING_PROVIDER=fake
+export LEAD_DELIVERY_PROVIDER=fake
 ```
 
 Примените миграции и запустите процессы:
 
 ```bash
-uv run alembic upgrade head
-uv run uvicorn main:app --reload
-uv run python -m app.worker.lead_delivery
+.venv/bin/alembic upgrade head
+.venv/bin/uvicorn main:app --reload
+# В другом терминале с тем же окружением:
+.venv/bin/celery -A app.worker.lead_delivery:celery_app worker \
+  --loglevel=INFO --concurrency=1 --queues=innova.lead_delivery
 ```
 
 API и фоновый обработчик запускаются отдельными процессами и должны получать
 одинаковые настройки PostgreSQL, Redis и способа доставки.
+Повторы, состояние `needs_review` и ручная проверка описаны в
+[инструкции Celery](docs/operations/CELERY.md).
 
 ## Веб-виджет
 
@@ -442,25 +458,37 @@ postgresql+asyncpg://innova:innova@localhost:5432/innova_ai_test
 
 Переопределите его через `TEST_DATABASE_URL`, если PostgreSQL работает на другом порту. Для базы из Compose:
 
+Интеграционные фикстуры пересоздают таблицы: данные выбранной тестовой базы
+будут удалены. Используйте только временную базу с ненужными данными.
+
 ```bash
-docker compose exec db createdb -U innova innova_ai_test
-TEST_DATABASE_URL=postgresql+asyncpg://innova:innova@localhost:5433/innova_ai_test \
-  uv run pytest -q
+export APP_ENV_FILE=/dev/null
+export PYTHON_DOTENV_DISABLED=1
+export DATABASE_URL=postgresql+asyncpg://innova:innova@127.0.0.1:5433/innova_ai_test
+export TEST_DATABASE_URL="$DATABASE_URL"
+.venv/bin/alembic upgrade head
+.venv/bin/alembic check
+export PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
+export DEEPEVAL_DISABLE_DOTENV=1
+export DEEPEVAL_TELEMETRY_OPT_OUT=YES
+.venv/bin/python -m pytest -p pytest_asyncio.plugin -q
 ```
 
 Отдельные проверки:
 
 ```bash
-uv run pytest tests/unit -q
-uv run pytest -m integration -q
-uv run pytest -m integration_crm_fake -q
-uv run ruff check .
+.venv/bin/python -m pytest -p pytest_asyncio.plugin tests/unit -q
+.venv/bin/python -m pytest -p pytest_asyncio.plugin -m integration -q
+.venv/bin/python -m pytest -p pytest_asyncio.plugin -m integration_crm_fake -q
+uv run ruff check app tests main.py
 uv run mypy app/ --ignore-missing-imports
 ```
 
 Автоматические тесты используют заглушки LLM, векторизации, очереди и CRM там,
-где внешние сервисы не являются предметом проверки. Полная цепочка «виджет →
-AG2 → лид → очередь Redis → фоновый обработчик → AmoCRM» также проверена вручную.
+где внешние сервисы не являются предметом проверки. В этой ветке проверена цепочка
+«API → Redis → Celery → локальный webhook» с заглушкой LLM, включая повторную
+выдачу после `SIGKILL` дочернего worker без повторного создания сделки.
+Настоящие amoCRM и LLM в эти проверки не входят.
 
 ## Оценка качества
 
@@ -562,7 +590,7 @@ app/
   router/       маршруты FastAPI
   schemas/      публичные и внутренние схемы Pydantic
   service/      логика диалога, базы знаний, лидов и доставки
-  worker/       фоновая доставка лидов из Redis
+  worker/       Celery-задача доставки лидов через брокер Redis
 docs/           продуктовые документы, диаграммы и данные RAG
 migrations/     окружение Alembic и версии миграций
 static/         виджет, демонстрационная страница
