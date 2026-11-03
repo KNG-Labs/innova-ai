@@ -64,14 +64,8 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen
 
-      - name: Check formatting
-        run: uv run ruff format --check app tests main.py
-
-      - name: Run linter
-        run: uv run ruff check app tests main.py
-
-      - name: Run type checking
-        run: uv run mypy app/ --ignore-missing-imports
+      - name: Run pre-commit checks
+        run: uv run pre-commit run --all-files
 
       - name: Verify migrations
         run: |

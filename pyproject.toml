@@ -29,6 +29,7 @@ eval = [
 dev = [
     { include-group = "eval" },
     "mypy>=1.20.1",
+    "pre-commit>=4.7.0",
     "pydantic>=2.13.3",
     "pytest>=9.0.3",
     "pytest-asyncio>=1.3.0",
