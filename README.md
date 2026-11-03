@@ -47,6 +47,7 @@ API пока не имеет аутентификации; администра�
 - [Доставка лидов: повторы и ручная проверка](docs/operations/CELERY.md)
 - [CI/CD](docs/operations/CI_CD.md) и [развёртывание на VPS](docs/operations/VPS_DEPLOY.md)
 - [Оценка качества и метрики](docs/EVALUATION.md)
+- [Трассировка Langfuse](docs/operations/LANGFUSE.md)
 - [Продуктовое видение](docs/PRD.md) и [целевая архитектура](docs/System_Design.md)
 - [Диаграммы текущей системы](docs/diagrams/current/) и [целевой архитектуры](docs/diagrams/target/)
 - [Материалы базы знаний](docs/RAG/)

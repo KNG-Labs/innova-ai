@@ -14,6 +14,7 @@ from langfuse.types import (
     MaskOtelSpansResult,
     OtelSpanPatch,
 )
+from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
 from app.privacy import PiiSanitizer
 
@@ -47,6 +48,8 @@ def mask_spans(*, params: MaskOtelSpansParams) -> MaskOtelSpansResult:
 
 def init_tracing() -> Langfuse | None:
     global _client
+    if _client is not None:
+        return _client
     if os.getenv("LANGFUSE_TRACING_ENABLED", "true").lower() in {"false", "0"}:
         return None
     settings = [
@@ -64,6 +67,22 @@ def init_tracing() -> Langfuse | None:
     from langfuse.openai import openai  # noqa: F401
 
     return _client
+
+
+def trace_headers() -> dict[str, str]:
+    headers: dict[str, str] = {}
+    if _client is not None:
+        TraceContextTextMapPropagator().inject(headers)
+    # Only W3C IDs and sampling flags cross the broker boundary.
+    return {"traceparent": headers["traceparent"]} if "traceparent" in headers else {}
+
+
+def flush_tracing() -> None:
+    if _client is not None:
+        try:
+            _client.flush()
+        except Exception as exc:
+            _logger.warning("Langfuse flush failed (%s)", type(exc).__name__)
 
 
 async def close_tracing() -> None:

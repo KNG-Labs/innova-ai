@@ -6,7 +6,7 @@ from uuid import UUID
 from collections import deque
 
 from app.schemas.lead_delivery_schema import LeadDeliveryJob
-from app.tracing import traced, update_observation
+from app.tracing import trace_headers, traced, update_observation
 
 
 class QueueClient(Protocol):
@@ -55,5 +55,6 @@ class CeleryQueueClient:
             self._celery_app.send_task,
             "app.worker.lead_delivery.deliver_lead",
             args=[str(lead_id)],
+            headers=trace_headers(),
         )
         update_observation(output={"enqueued": True})
