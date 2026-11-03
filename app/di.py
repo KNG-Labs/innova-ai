@@ -63,7 +63,7 @@ async def init_app_state(app: FastAPI) -> None:
         base_url = os.getenv(
             "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"
         ).strip()
-        model = os.getenv("AG2_MODEL", "openai/gpt-oss-120b:free").strip()
+        model = os.getenv("AG2_MODEL", "deepseek/deepseek-v4.1-flash-1017").strip()
         from app.client.ag2_agent_client import Ag2AgentClient
         from app.client.retrieval_planner_client import Ag2RetrievalPlannerClient
 
