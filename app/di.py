@@ -18,6 +18,7 @@ from app.client.delivery_factory import (
 from app.db.session import create_engine as create_db_engine
 from app.db.session import create_session_maker
 from app.privacy import initialize_pii_analyzer
+from app.tracing import close_tracing, init_tracing
 from app.service.agent_service import AgentService
 from app.service.lead_delivery_service import LeadDeliveryService
 from app.service.session_service import SessionService
@@ -35,6 +36,7 @@ async def init_app_state(app: FastAPI) -> None:
     ):
         raise RuntimeError("LLM_PROVIDER=ag2 требует OPENROUTER_API_KEY")
 
+    init_tracing()
     http_client = httpx.AsyncClient(timeout=30.0)
 
     app.state.http_client = http_client
@@ -91,6 +93,7 @@ async def init_app_state(app: FastAPI) -> None:
 
 
 async def close_app_state(app: FastAPI) -> None:
+    await close_tracing()
     http_client = getattr(app.state, "http_client", None)
     if http_client is not None:
         await http_client.aclose()

@@ -9,6 +9,7 @@ from typing import Protocol, runtime_checkable
 from app.schemas.agent_schema import DialogState, AgentDecision
 from app.domain import QUALIFICATION_FIELDS, MISSING_ALL
 from app.privacy import PiiSanitizer
+from app.tracing import traced, update_observation
 from app.client.token_usage import (
     AgentTokenUsage,
     capture_token_usage_enabled,
@@ -209,6 +210,7 @@ class Ag2AgentClient(LLMClient):
         self._last_token_usage = None
         return usage
 
+    @traced("decide-lead")
     async def decide(
         self,
         user_message: str,
@@ -228,6 +230,9 @@ class Ag2AgentClient(LLMClient):
         Состояние при этом НЕ теряется: _FALLBACK_DECISION.next_state=GREETING
         не пройдёт проверку переходов и state machine оставит текущее состояние.
         """
+        update_observation(
+            metadata={"force_lead_intent_confirmation": force_lead_intent_confirmation}
+        )
         context = _build_context_message(
             current_state,
             qualification_data,
@@ -252,11 +257,16 @@ class Ag2AgentClient(LLMClient):
             # Последний fail-closed барьер непосредственно перед AG2/OpenRouter.
             PiiSanitizer.ensure_safe(messages)
             reply = await asyncio.wait_for(
-                self._agent.a_generate_reply(messages=messages),
+                asyncio.to_thread(self._agent.generate_reply, messages=messages),
                 timeout=_AG2_TIMEOUT_S,
             )
         except Exception as exc:  # noqa: BLE001 — любой сбой провайдера = fallback, не 500
             logger.warning("AG2 call failed (%s): %r", type(exc).__name__, exc)
+            update_observation(
+                level="ERROR",
+                status_message=type(exc).__name__,
+                metadata={"fallback": True},
+            )
             return _FALLBACK_DECISION
         finally:
             if capture_usage:
@@ -265,7 +275,14 @@ class Ag2AgentClient(LLMClient):
                     calls=1, complete=False
                 )
 
-        return _parse_reply(reply)
+        decision = _parse_reply(reply)
+        update_observation(
+            output={
+                "next_state": decision.next_state.value,
+                "lead_ready": decision.lead_ready,
+            }
+        )
+        return decision
 
 
 def _build_context_message(
@@ -299,6 +316,9 @@ def _build_context_message(
 def _parse_reply(reply: str | dict | None) -> AgentDecision:
     """Парсит ответ AG2. При любой ошибке — безопасный fallback."""
     if not reply:
+        update_observation(
+            level="WARNING", status_message="empty_reply", metadata={"fallback": True}
+        )
         return _FALLBACK_DECISION
 
     text = reply if isinstance(reply, str) else reply.get("content", "")
@@ -316,6 +336,9 @@ def _parse_reply(reply: str | dict | None) -> AgentDecision:
         return AgentDecision.model_validate(data)
     except (json.JSONDecodeError, ValidationError) as e:
         logger.warning("AG2 parse failed: %s | raw=%r", e, raw)
+        update_observation(
+            level="WARNING", status_message="invalid_reply", metadata={"fallback": True}
+        )
         return _FALLBACK_DECISION
 
 

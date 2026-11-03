@@ -19,7 +19,7 @@ class _CapturingAgent:
         self.reply = reply
         self.calls: list[list[dict]] = []
 
-    async def a_generate_reply(self, *, messages):
+    def generate_reply(self, *, messages):
         self.calls.append(messages)
         return self.reply
 

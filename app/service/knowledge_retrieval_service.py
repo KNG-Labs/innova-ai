@@ -12,6 +12,7 @@ from app.client.retrieval_planner_client import (
 )
 from app.client.token_usage import AgentTokenUsage, consume_token_usage
 from app.privacy import PrivacyBoundaryError, PiiSanitizer
+from app.tracing import traced, update_observation
 from app.repository.knowledge_repository import KnowledgeRepository
 from app.schemas.knowledge_schema import RetrievedChunk
 from app.service.retrieval_selector import RetrievalCandidate, select_source
@@ -46,6 +47,7 @@ class KnowledgeRetrievalService:
     def consume_planner_token_usage(self) -> AgentTokenUsage | None:
         return consume_token_usage(self._planner)
 
+    @traced("retrieve-context", as_type="retriever")
     async def retrieve(
         self,
         query: str,
@@ -54,16 +56,22 @@ class KnowledgeRetrievalService:
         last_source_title: str | None = None,
         history: list[dict] | None = None,
     ) -> RetrievalResult:
+        update_observation(output={"chunks": []})
         try:
             pii = PiiSanitizer()
             normalized_query = " ".join(pii.sanitize_text(query).text.split())
             normalized_title = pii.sanitize_text(last_source_title or "").text.strip()
             safe_history = pii.sanitize_value((history or [])[-6:])
         except PrivacyBoundaryError:
+            update_observation(level="WARNING", status_message="privacy_blocked")
             logging.getLogger(__name__).warning(
                 "Retrieval blocked because local PII analysis failed"
             )
             return RetrievalResult()
+        update_observation(
+            input=normalized_query,
+            metadata={"top_k": self._top_k, "min_score": self._min_score},
+        )
         if not normalized_query:
             return RetrievalResult()
 
@@ -81,8 +89,14 @@ class KnowledgeRetrievalService:
                     type(exc).__name__,
                     exc,
                 )
+                update_observation(
+                    level="WARNING",
+                    status_message="planner_failed",
+                    metadata={"fallback": True},
+                )
                 plan = RetrievalPlan.none()
 
+        update_observation(metadata={"mode": plan.mode.value})
         if plan.mode == RetrievalMode.NONE:
             return RetrievalResult()
 
@@ -90,6 +104,7 @@ class KnowledgeRetrievalService:
             safe_plan_query = pii.sanitize_text(plan.query).text
             [query_embedding] = await self._embedding.embed([safe_plan_query])
         except PrivacyBoundaryError:
+            update_observation(level="WARNING", status_message="privacy_blocked")
             logging.getLogger(__name__).warning(
                 "Retrieval embedding blocked by privacy boundary"
             )
@@ -131,6 +146,12 @@ class KnowledgeRetrievalService:
                 content=candidate.content,
             )
             for candidate in selection.candidates
+        )
+        update_observation(
+            output={
+                "source_id": str(selection.source_id),
+                "chunks": [chunk.model_dump(mode="json") for chunk in chunks],
+            }
         )
         return RetrievalResult(
             chunks=chunks,

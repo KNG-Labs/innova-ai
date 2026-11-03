@@ -23,6 +23,7 @@ from app.client.token_usage import (
     usage_delta,
 )
 from app.privacy import PiiSanitizer
+from app.tracing import traced, update_observation
 
 logger = logging.getLogger(__name__)
 
@@ -122,6 +123,7 @@ class Ag2RetrievalPlannerClient(RetrievalPlannerClient):
         self._last_token_usage = None
         return usage
 
+    @traced("plan-retrieval")
     async def plan(
         self,
         *,
@@ -134,6 +136,7 @@ class Ag2RetrievalPlannerClient(RetrievalPlannerClient):
             "last_source_title": last_source_title,
             "recent_history": history[-6:],
         }
+        update_observation(input=backend_context)
         messages = [
             {
                 "role": "user",
@@ -151,7 +154,7 @@ class Ag2RetrievalPlannerClient(RetrievalPlannerClient):
             # Последний fail-closed барьер непосредственно перед AG2/OpenRouter.
             PiiSanitizer.ensure_safe(messages)
             reply = await asyncio.wait_for(
-                self._agent.a_generate_reply(messages=messages),
+                asyncio.to_thread(self._agent.generate_reply, messages=messages),
                 timeout=_AG2_TIMEOUT_S,
             )
         except Exception as exc:  # noqa: BLE001 - planner abstains on any provider error
@@ -160,6 +163,11 @@ class Ag2RetrievalPlannerClient(RetrievalPlannerClient):
                 type(exc).__name__,
                 exc,
             )
+            update_observation(
+                level="ERROR",
+                status_message=type(exc).__name__,
+                metadata={"fallback": True},
+            )
             return RetrievalPlan.none()
         finally:
             if capture_usage:
@@ -167,11 +175,16 @@ class Ag2RetrievalPlannerClient(RetrievalPlannerClient):
                 self._last_token_usage = delta or AgentTokenUsage(
                     calls=1, complete=False
                 )
-        return _parse_retrieval_plan(reply)
+        plan = _parse_retrieval_plan(reply)
+        update_observation(output=plan.model_dump(mode="json"))
+        return plan
 
 
 def _parse_retrieval_plan(reply: str | dict | None) -> RetrievalPlan:
     if not reply:
+        update_observation(
+            level="WARNING", status_message="empty_reply", metadata={"fallback": True}
+        )
         return RetrievalPlan.none()
 
     text = reply if isinstance(reply, str) else reply.get("content", "")
@@ -187,6 +200,9 @@ def _parse_retrieval_plan(reply: str | dict | None) -> RetrievalPlan:
         return RetrievalPlan.model_validate_json(text)
     except (ValidationError, ValueError) as exc:
         logger.warning("Retrieval planner parse failed: %s | raw=%r", exc, raw)
+        update_observation(
+            level="WARNING", status_message="invalid_reply", metadata={"fallback": True}
+        )
         return RetrievalPlan.none()
 
 
