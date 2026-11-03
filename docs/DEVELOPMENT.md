@@ -112,7 +112,7 @@ Worker Celery и Telegram-бот используют код из собранн
 ```text
 API:         http://localhost:8000
 OpenAPI:     http://localhost:8000/docs
-Демо виджета: http://localhost:8000/static/widget-demo.html
+Демонстрация: http://localhost:8000/static/widget-demo.html
 PostgreSQL:  localhost:5433
 Redis:       localhost:6379
 ```

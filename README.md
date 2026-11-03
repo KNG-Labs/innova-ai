@@ -6,7 +6,7 @@
 
 ## Возможности
 
-- Веб-виджет, HTTP API и Telegram-бот.
+- Демонстрационная веб-страница, HTTP API и Telegram-бот.
 - Ответы по базе знаний через RAG и pgvector.
 - Квалификация по модели автомобиля, бюджету и способу покупки.
 - Сохранение истории диалога и контактов в PostgreSQL; токенизация контактов перед AI-вызовами.
@@ -32,7 +32,7 @@ cp .env.example .env
 docker compose up --build api worker
 ```
 
-- [Демо виджета](http://localhost:8000/static/widget-demo.html)
+- [Демонстрация INNOVA AI](http://localhost:8000/static/widget-demo.html)
 - [Swagger / OpenAPI](http://localhost:8000/docs)
 
 Настройка провайдеров, запуск Telegram-бота и работа с кодом описаны в
@@ -42,7 +42,7 @@ API пока не имеет аутентификации; администра�
 ## Документация
 
 - [Разработка, конфигурация и тестирование](docs/DEVELOPMENT.md)
-- [API и встраивание виджета](docs/API.md)
+- [API и демонстрационная страница](docs/API.md)
 - [Текущая архитектура, состояния диалога и ограничения](docs/ARCHITECTURE.md)
 - [Доставка лидов: повторы и ручная проверка](docs/operations/CELERY.md)
 - [CI/CD](docs/operations/CI_CD.md) и [развёртывание на VPS](docs/operations/VPS_DEPLOY.md)
