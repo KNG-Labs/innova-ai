@@ -54,7 +54,7 @@ async def send_message(
     """Адаптер для работы Телеграм API и контракта Innova
 
     принимает только личные чаты;
-    отвечает на /start и /help без обращения к LLM;
+    отвечает на /start без обращения к LLM;
     превращает переданный Telegram-контакт в текст Мой телефон: ...;
     показывает кнопку передачи телефона в состоянии CONTACT_CAPTURE;
     разбивает ответы длиннее 4000 символов.
@@ -110,7 +110,7 @@ async def handle_update(
     if isinstance(text, str):
         command = text.split(maxsplit=1)[0].split("@", maxsplit=1)[0]
 
-        if command in {"/start", "/help"}:
+        if command == "/start":
             await send_message(
                 client,
                 bot_api_url,

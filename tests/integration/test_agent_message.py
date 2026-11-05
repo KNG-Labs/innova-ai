@@ -690,7 +690,6 @@ async def test_post_message_threads_page_title_to_llm(client) -> None:
         responses=[
             agent_decision(
                 answer="Подскажу по Camry.",
-                next_state=DialogState.QUALIFICATION,
             ),
         ]
     )
@@ -852,7 +851,7 @@ async def test_mixed_contact_is_sanitized_for_llm_history_and_embeddings(
         assert "user@example.com" not in lead.summary
 
 
-async def test_contact_only_message_skips_all_external_ai_calls(
+async def test_contact_only_message_uses_llm_with_masked_contact(
     client, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setenv("EVAL_CAPTURE_TOKEN_USAGE", "1")
@@ -867,7 +866,9 @@ async def test_contact_only_message_skips_all_external_ai_calls(
 
     class _CapturingClient(FakeAg2AgentClient):
         def __init__(self) -> None:
-            super().__init__()
+            super().__init__(
+                responses=[agent_decision(answer="Как могу помочь дальше?")]
+            )
             self.calls: list[dict] = []
 
         async def decide(self, *args, **kwargs):
@@ -890,8 +891,13 @@ async def test_contact_only_message_skips_all_external_ai_calls(
     )
 
     assert response.status_code == 200
-    assert response.json()["answer"].startswith("Спасибо, контакт сохранён.")
-    assert llm.calls == []
+    assert response.json()["answer"] == "Как могу помочь дальше?"
+    assert len(llm.calls) == 1
+    assert llm.calls[0]["missing_fields"] == ["car_model", "budget", "purchase_type"]
+    assert "[PHONE_1]" in llm.calls[0]["user_message"]
+    assert "+79991234567" not in repr(llm.calls)
+    assert "user@example.com" not in repr(llm.calls)
+    assert "@ivan_auto" not in repr(llm.calls)
     assert embedding.calls == []
 
     async with app.state.db_session_maker() as db:
@@ -904,15 +910,15 @@ async def test_contact_only_message_skips_all_external_ai_calls(
                 "prompt_tokens": 0,
                 "completion_tokens": 0,
                 "total_tokens": 0,
-                "calls": 0,
-                "complete": True,
+                "calls": 1,
+                "complete": False,
                 "components": {
                     "agent": {
                         "prompt_tokens": 0,
                         "completion_tokens": 0,
                         "total_tokens": 0,
-                        "calls": 0,
-                        "complete": True,
+                        "calls": 1,
+                        "complete": False,
                     },
                 },
             }
@@ -1401,6 +1407,10 @@ async def test_credit_word_cannot_start_qualification_from_faq(client) -> None:
                 qualification_patch={"purchase_type": "кредит"},
                 missing_fields=["car_model", "budget", "contact"],
             ),
+            agent_decision(
+                answer="Хотите оформить покупку в кредит?",
+                lead_intent_status=LeadIntentStatus.NEEDS_CONFIRMATION,
+            ),
         ]
     )
 
@@ -1704,12 +1714,18 @@ async def test_rejected_qualification_start_gets_one_corrective_retry(client) ->
     )
 
     assert response.json()["state"] == "FAQ"
+    assert (
+        response.json()["answer"]
+        == "Хотите, чтобы я помог подобрать Skoda для покупки?"
+    )
     assert correction_flags == [False, True]
     lead = await client.get(f"/leads/{response.json()['lead_id']}")
     assert lead.json()["qualification"] == {}
 
 
-async def test_repeated_bad_qualification_uses_safe_fallback(client) -> None:
+async def test_repeated_bad_qualification_returns_error_without_partial_writes(
+    client,
+) -> None:
     invalid = agent_decision(
         answer="Начнём подбор.",
         intent="lead_request",
@@ -1723,12 +1739,14 @@ async def test_repeated_bad_qualification_uses_safe_fallback(client) -> None:
         json={"anonymous_id": "fallback-intent-user", "content": "Skoda"},
     )
 
-    assert response.json()["state"] == "FAQ"
-    assert response.json()["answer"] == (
-        "Уточните, пожалуйста: хотите, чтобы я помог подобрать автомобиль для покупки?"
-    )
-    lead = await client.get(f"/leads/{response.json()['lead_id']}")
-    assert lead.json()["qualification"] == {}
+    assert response.status_code == 502
+    assert response.json() == {"detail": "Agent response unavailable"}
+    async with app.state.db_session_maker() as db:
+        from sqlalchemy import select, func
+
+        assert await db.scalar(select(func.count()).select_from(Message)) == 0
+        assert await db.scalar(select(func.count()).select_from(Lead)) == 0
+        assert await db.scalar(select(func.count()).select_from(DialogSession)) == 0
 
 
 async def test_intent_confirmation_pending_is_isolated_by_user_and_channel(

@@ -67,6 +67,26 @@ async def test_llm_guard_blocks_raw_pii_before_agent_call() -> None:
     assert decision.intent == "unknown"
 
 
+@pytest.mark.parametrize("error", [TimeoutError, RuntimeError])
+async def test_llm_provider_failure_returns_technical_fallback(error) -> None:
+    class _FailingAgent:
+        def generate_reply(self, **kwargs):
+            raise error("provider failure")
+
+    client = object.__new__(Ag2AgentClient)
+    client._agent = _FailingAgent()
+    decision = await client.decide(
+        user_message="Привет",
+        history=[],
+        current_state="FAQ",
+        qualification_data={},
+    )
+    assert decision.intent == "unknown"
+    assert (
+        decision.answer == "Извините, не удалось обработать запрос. Попробуйте ещё раз."
+    )
+
+
 async def test_llm_captured_payload_contains_tokens_not_original_values() -> None:
     raw = "Хочу Camry, телефон +79991234567, email user@example.com"
     safe = PiiSanitizer().sanitize_text(raw).text

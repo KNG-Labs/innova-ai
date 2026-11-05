@@ -16,7 +16,7 @@ from app.repository.lead_repository import LeadRepository
 from app.repository.dialog_session_repository import DialogSessionRepository
 from app.repository.message_repository import MessageRepository
 from app.repository.user_repository import UserRepository
-from app.domain import REQUIRED_QUAL
+from app.exceptions import AgentResponseError
 from app.privacy import PiiSanitizer
 from app.schemas.agent_schema import (
     AgentMessageRequest,
@@ -47,18 +47,6 @@ from app.service.state_machine import (
 )
 
 _logger = logging.getLogger(__name__)
-
-_CONTACT_SAVED_ANSWERS = {
-    "car_model": "Спасибо, контакт сохранён. Какой автомобиль или марка вас интересует?",
-    "budget": "Спасибо, контакт сохранён. Какой бюджет покупки вы рассматриваете?",
-    "purchase_type": (
-        "Спасибо, контакт сохранён. Какой способ покупки рассматриваете: "
-        "наличные, кредит или трейд-ин?"
-    ),
-}
-_CONTACT_READY_ANSWER = (
-    "Спасибо, контакт сохранён. Передаю заявку специалисту, который свяжется с вами."
-)
 
 
 class AgentService:
@@ -162,15 +150,9 @@ class AgentService:
 
             knowledge_contacts: dict[str, str] = {}
             if sanitized_message.contact_only:
-                # Контакт уже извлечён локально: никакие внешние AI-вызовы не нужны.
+                # В сообщении нет темы для поиска; ответ всё равно формирует LLM.
                 retrieved: tuple[RetrievedChunk, ...] = ()
                 retrieved_context = ""
-                decision = _contact_only_decision(
-                    current_state=current_state,
-                    qualification_data=qualification_data,
-                    contact=contact_before_llm,
-                    extracted_contact=local_contact,
-                )
             else:
                 # RAG и LLM получают только локально очищенные данные.
                 retrieved = await self._retrieval.retrieve(sanitized_content)
@@ -178,29 +160,29 @@ class AgentService:
                     format_chunks_for_prompt(retrieved)
                 )
 
-                decision = await self._llm_client.decide(
-                    user_message=sanitized_content,
-                    history=history,
-                    current_state=current_state.value,
-                    qualification_data=safe_qualification_data,
-                    retrieved_context=retrieved_context,
-                    page_title=safe_page_title,
-                    missing_fields=current_missing_fields,
-                    contact_opt_out=contact_opt_out,
-                    lead_intent_confirmation_pending=(
-                        session.lead_intent_confirmation_pending
-                    ),
+            decision = await self._llm_client.decide(
+                user_message=sanitized_content,
+                history=history,
+                current_state=current_state.value,
+                qualification_data=safe_qualification_data,
+                retrieved_context=retrieved_context,
+                page_title=safe_page_title,
+                missing_fields=current_missing_fields,
+                contact_opt_out=contact_opt_out,
+                lead_intent_confirmation_pending=(
+                    session.lead_intent_confirmation_pending
+                ),
+            )
+            if capture_usage:
+                agent_usage += consume_token_usage(self._llm_client) or AgentTokenUsage(
+                    calls=1, complete=False
                 )
-                if capture_usage:
-                    agent_usage += consume_token_usage(
-                        self._llm_client
-                    ) or AgentTokenUsage(calls=1, complete=False)
-                decision = _apply_local_privacy_result(
-                    decision,
-                    pii=pii,
-                    local_contact=local_contact,
-                    knowledge_contacts=knowledge_contacts,
-                )
+            decision = _apply_local_privacy_result(
+                decision,
+                pii=pii,
+                local_contact=local_contact,
+                knowledge_contacts=knowledge_contacts,
+            )
 
             proposed_qualification_patch = dict(decision.qualification_patch)
             if (
@@ -267,18 +249,7 @@ class AgentService:
                     != LeadIntentStatus.NEEDS_CONFIRMATION
                     or decision.qualification_patch
                 ):
-                    decision = AgentDecision(
-                        answer=(
-                            "Уточните, пожалуйста: хотите, чтобы я помог подобрать "
-                            "автомобиль для покупки?"
-                        ),
-                        intent="general",
-                        next_state=DialogState.FAQ,
-                        qualification_patch={},
-                        missing_fields=current_missing_fields,
-                        lead_ready=False,
-                        lead_intent_status=LeadIntentStatus.NEEDS_CONFIRMATION,
-                    )
+                    raise AgentResponseError("Agent ignored lead intent correction")
                 proposed_qualification_patch = {}
                 lead_intent_confirmed = False
                 inline_qualification_faq = False
@@ -479,43 +450,4 @@ def _apply_local_privacy_result(
                 else None
             ),
         }
-    )
-
-
-def _contact_only_decision(
-    *,
-    current_state: DialogState,
-    qualification_data: dict[str, str],
-    contact: dict[str, str],
-    extracted_contact: dict[str, str | None],
-) -> AgentDecision:
-    """Детерминированный ответ без LLM для сообщения только с контактом."""
-    missing_qualification = [
-        field for field in REQUIRED_QUAL if not qualification_data.get(field)
-    ]
-    if not missing_qualification:
-        next_state = (
-            DialogState.LEAD_READY
-            if current_state == DialogState.CONTACT_CAPTURE
-            else DialogState.CONTACT_CAPTURE
-        )
-        answer = (
-            _CONTACT_READY_ANSWER
-            if not compute_missing_fields(qualification_data, contact)
-            else "Спасибо, контакт сохранён."
-        )
-    else:
-        next_state = DialogState.QUALIFICATION
-        answer = _CONTACT_SAVED_ANSWERS[missing_qualification[0]]
-
-    return AgentDecision(
-        answer=answer,
-        intent="lead_request",
-        next_state=next_state,
-        qualification_patch={},
-        extracted_contact=extracted_contact,
-        missing_fields=compute_missing_fields(qualification_data, contact),
-        lead_ready=not compute_missing_fields(qualification_data, contact),
-        lead_summary=None,
-        lead_intent_status=LeadIntentStatus.CONFIRMED,
     )

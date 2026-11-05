@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.di import get_agent_service
-from app.exceptions import SessionOwnershipError
+from app.exceptions import AgentResponseError, SessionOwnershipError
 from app.schemas.agent_schema import AgentMessageRequest, AgentMessageResponse
 from app.service.agent_service import AgentService
 
@@ -19,4 +19,9 @@ async def handle_agent_message(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Session does not belong to the current user",
+        )
+    except AgentResponseError:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Agent response unavailable",
         )
