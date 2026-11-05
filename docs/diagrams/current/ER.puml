@@ -117,8 +117,8 @@ note right of knowledge_documents
   ссылается на knowledge_documents.id
   с ON DELETE SET NULL.
 
-  last_rag_source_* поддерживает контекстный
-  retrieval между репликами.
+  last_rag_source_* больше не используется.
+  Поля сохранены до следующей миграции.
 end note
 
 note left of lead_delivery_attempts

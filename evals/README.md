@@ -50,7 +50,7 @@ judge-вызову на кейс. `BusinessDialogueSuccess` объединяет
 проверяются только локальным guardrail.
 
 Восьмая метрика — `average_agent_token_usage`. Она включает только AG2 main
-agent и retrieval planner, суммируется на API eval-кейс и не включает judge или
+agent и его корректирующий повтор, суммируется на API eval-кейс и не включает judge или
 embeddings. При отсутствующем `message_metadata.eval_token_usage` кейс
 исключается из среднего, а результат помечается `incomplete`.
 
