@@ -41,3 +41,5 @@ uv run pytest -q
 ```
 
 Инструкция по деплою находится в `docs/operations/VPS_DEPLOY.md`
+
+Вся полезная информация находится в папке `docs/`.
