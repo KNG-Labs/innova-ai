@@ -1,11 +1,6 @@
 import pytest
 
 from app.client.ag2_agent_client import FakeAg2AgentClient
-from app.client.retrieval_planner_client import (
-    FakeRetrievalPlannerClient,
-    RetrievalMode,
-    RetrievalPlan,
-)
 from app.schemas.agent_schema import DialogState
 from app.schemas.agent_schema import LeadIntentStatus
 from main import app
@@ -881,10 +876,8 @@ async def test_contact_only_message_skips_all_external_ai_calls(
 
     embedding = _CapturingEmbedding()
     llm = _CapturingClient()
-    planner = FakeRetrievalPlannerClient()
     app.state.embedding_client = embedding
     app.state.llm_client = llm
-    app.state.retrieval_planner_client = planner
 
     response = await client.post(
         "/message",
@@ -899,7 +892,6 @@ async def test_contact_only_message_skips_all_external_ai_calls(
     assert response.status_code == 200
     assert response.json()["answer"].startswith("Спасибо, контакт сохранён.")
     assert llm.calls == []
-    assert planner.calls == []
     assert embedding.calls == []
 
     async with app.state.db_session_maker() as db:
@@ -915,13 +907,6 @@ async def test_contact_only_message_skips_all_external_ai_calls(
                 "calls": 0,
                 "complete": True,
                 "components": {
-                    "retrieval_planner": {
-                        "prompt_tokens": 0,
-                        "completion_tokens": 0,
-                        "total_tokens": 0,
-                        "calls": 0,
-                        "complete": True,
-                    },
                     "agent": {
                         "prompt_tokens": 0,
                         "completion_tokens": 0,
@@ -1093,132 +1078,9 @@ async def test_faq_during_qualification_preserves_data_and_can_resume(client) ->
         row = await db.get(DialogSession, UUID(session_id))
         assert row is not None
         assert row.expected_qualification_field == "budget"
-        assert row.last_rag_source_title == "Программа Trade-in"
 
 
-async def test_trade_in_follow_up_does_not_send_credit_context_to_llm(client) -> None:
-    captured_contexts: list[str] = []
-
-    class _TradeInEmbedding:
-        async def embed(self, texts):
-            embeddings = []
-            for text in texts:
-                normalized = text.casefold()
-                if "trade" in normalized or "трей" in normalized:
-                    vector = [1.0, 0.0]
-                elif "кредит" in normalized:
-                    vector = [0.0, 1.0]
-                else:
-                    vector = [0.6, 0.8]
-                embeddings.append(vector + [0.0] * 1534)
-            return embeddings
-
-    class _CapturingClient(FakeAg2AgentClient):
-        async def decide(self, *args, retrieved_context="", **kwargs):
-            captured_contexts.append(retrieved_context)
-            return await super().decide(
-                *args,
-                retrieved_context=retrieved_context,
-                **kwargs,
-            )
-
-    app.state.embedding_client = _TradeInEmbedding()
-    app.state.retrieval_planner_client = FakeRetrievalPlannerClient(
-        [
-            RetrievalPlan(
-                mode=RetrievalMode.LAST_SOURCE,
-                query="Условия программы Trade-in",
-            ),
-            RetrievalPlan(
-                mode=RetrievalMode.LAST_SOURCE,
-                query="Условия программы Trade-in",
-            ),
-            RetrievalPlan(
-                mode=RetrievalMode.LAST_SOURCE,
-                query="Подробности программы Trade-in",
-            ),
-        ]
-    )
-    knowledge = await client.post(
-        "/knowledge/documents",
-        json=[
-            {
-                "title": "Программа Trade-in",
-                "content": (
-                    "Оценка автомобиля по программе trade-in бесплатна. "
-                    "Для оценки нужны ПТС, СТС и паспорт собственника."
-                ),
-            },
-            {
-                "title": "Кредитование и финансирование",
-                "content": (
-                    "Автокредит оформляется через банки-партнёры. "
-                    "Первоначальный взнос — от 10%."
-                ),
-            },
-        ],
-    )
-    assert knowledge.status_code == 201
-
-    app.state.llm_client = _CapturingClient(
-        responses=[
-            agent_decision(
-                answer="Trade-in позволяет сдать автомобиль в зачёт нового.",
-            ),
-            agent_decision(
-                answer="Оценка бесплатна; нужны ПТС, СТС и паспорт собственника.",
-            ),
-            agent_decision(
-                answer="Оценка бесплатна и занимает 30–40 минут.",
-            ),
-            agent_decision(
-                answer="Для оценки нужны ПТС или ЭПТС, СТС и паспорт.",
-            ),
-        ]
-    )
-
-    first = await client.post(
-        "/message",
-        json={
-            "anonymous_id": "trade-in-follow-up-user",
-            "content": "Расскажи про треййдин",
-        },
-    )
-    second = await client.post(
-        "/message",
-        json={
-            "anonymous_id": "trade-in-follow-up-user",
-            "session_id": first.json()["session_id"],
-            "content": "А условия",
-        },
-    )
-    third = await client.post(
-        "/message",
-        json={
-            "anonymous_id": "trade-in-follow-up-user",
-            "session_id": first.json()["session_id"],
-            "content": "Условия",
-        },
-    )
-    fourth = await client.post(
-        "/message",
-        json={
-            "anonymous_id": "trade-in-follow-up-user",
-            "session_id": first.json()["session_id"],
-            "content": "Подробнее",
-        },
-    )
-
-    assert second.status_code == 200
-    assert "кредит" not in second.json()["answer"].casefold()
-    assert third.json()["answer"].startswith("Оценка бесплатна")
-    assert fourth.json()["answer"].startswith("Для оценки нужны")
-    for context in captured_contexts[1:]:
-        assert "[Источник: Программа Trade-in]" in context
-        assert "Кредитование и финансирование" not in context
-
-
-async def test_explicit_credit_topic_replaces_saved_trade_in_source(client) -> None:
+async def test_each_message_searches_current_topic(client) -> None:
     embedding_calls: list[list[str]] = []
     captured_contexts: list[str] = []
 
@@ -1291,14 +1153,8 @@ async def test_explicit_credit_topic_replaces_saved_trade_in_source(client) -> N
     assert "[Источник: Кредитование и финансирование]" in captured_contexts[1]
     assert "Программа Trade-in" not in captured_contexts[1]
 
-    session_maker = app.state.db_session_maker
-    async with session_maker() as db:
-        row = await db.get(DialogSession, UUID(first.json()["session_id"]))
-        assert row is not None
-        assert row.last_rag_source_title == "Кредитование и финансирование"
 
-
-async def test_low_relevance_keeps_previous_confirmed_source(client) -> None:
+async def test_low_relevance_returns_empty_context(client) -> None:
     captured_contexts: list[str] = []
 
     class _Embedding:
@@ -1323,9 +1179,7 @@ async def test_low_relevance_keeps_previous_confirmed_source(client) -> None:
             )
 
     app.state.embedding_client = _Embedding()
-    app.state.retrieval_planner_client = FakeRetrievalPlannerClient(
-        [RetrievalPlan.none()]
-    )
+
     knowledge = await client.post(
         "/knowledge/documents",
         json=[
@@ -1362,14 +1216,9 @@ async def test_low_relevance_keeps_previous_confirmed_source(client) -> None:
 
     assert second.status_code == 200
     assert captured_contexts[1] == ""
-    session_maker = app.state.db_session_maker
-    async with session_maker() as db:
-        row = await db.get(DialogSession, UUID(first.json()["session_id"]))
-        assert row is not None
-        assert row.last_rag_source_title == "Программа Trade-in"
 
 
-async def test_rag_source_is_not_shared_between_users_or_channels(client) -> None:
+async def test_current_query_is_independent_of_other_users_and_channels(client) -> None:
     captured_contexts: list[str] = []
 
     class _Embedding:
@@ -1443,7 +1292,7 @@ async def test_rag_source_is_not_shared_between_users_or_channels(client) -> Non
     assert captured_contexts[1:] == ["", ""]
 
 
-async def test_credit_offer_confirmation_retrieves_credit_and_keeps_original_yes(
+async def test_confirmation_keeps_original_message_without_rewriting_query(
     client,
 ) -> None:
     captured_user_messages: list[str] = []
@@ -1476,14 +1325,7 @@ async def test_credit_offer_confirmation_retrieves_credit_and_keeps_original_yes
             )
 
     app.state.embedding_client = _CreditEmbedding()
-    app.state.retrieval_planner_client = FakeRetrievalPlannerClient(
-        [
-            RetrievalPlan(
-                mode=RetrievalMode.LAST_SOURCE,
-                query="Условия автокредитования",
-            )
-        ]
-    )
+
     knowledge = await client.post(
         "/knowledge/documents",
         json=[
@@ -1530,15 +1372,10 @@ async def test_credit_offer_confirmation_retrieves_credit_and_keeps_original_yes
 
     assert second.status_code == 200
     assert captured_user_messages == ["Кредит что такое?", "Да"]
-    assert "[Источник: Кредитование и финансирование]" in captured_contexts[1]
+    assert "[Источник: Кредитование и финансирование]" in captured_contexts[0]
+    assert captured_contexts[1] == ""
     assert "бюджет" not in second.json()["answer"].casefold()
     assert second.json()["state"] == "FAQ"
-
-    session_maker = app.state.db_session_maker
-    async with session_maker() as db:
-        row = await db.get(DialogSession, UUID(first.json()["session_id"]))
-        assert row is not None
-        assert row.last_rag_source_title == "Кредитование и финансирование"
 
 
 async def test_credit_word_cannot_start_qualification_from_faq(client) -> None:
@@ -1702,9 +1539,7 @@ async def test_yes_after_purchase_confirmation_starts_qualification_and_restores
         ],
     )
     assert knowledge.status_code == 201
-    app.state.retrieval_planner_client = FakeRetrievalPlannerClient(
-        [RetrievalPlan.none()]
-    )
+
     app.state.llm_client = _CapturingClient(
         responses=[
             agent_decision(
@@ -1787,9 +1622,7 @@ async def test_nonconfirming_turn_clears_pending_and_later_yes_stays_faq(
         ],
     )
     assert knowledge.status_code == 201
-    app.state.retrieval_planner_client = FakeRetrievalPlannerClient(
-        [RetrievalPlan.none(), RetrievalPlan.none()]
-    )
+
     app.state.llm_client = _CapturingClient(
         responses=[
             agent_decision(

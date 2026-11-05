@@ -55,8 +55,6 @@ class KnowledgeRepository:
         self,
         query_embedding: list[float],
         top_k: int,
-        *,
-        document_id: UUID | None = None,
     ) -> list[tuple[KnowledgeChunk, str, float]]:
         """top_k ближайших по cosine. score = 1 - cosine_distance."""
         distance = KnowledgeChunk.embedding.cosine_distance(query_embedding)
@@ -73,7 +71,5 @@ class KnowledgeRepository:
             .order_by(distance, KnowledgeChunk.chunk_index, KnowledgeChunk.id)
             .limit(top_k)
         )
-        if document_id is not None:
-            stmt = stmt.where(KnowledgeChunk.document_id == document_id)
         result = await self._session.execute(stmt)
         return [(row[0], row[1], 1.0 - float(row[2])) for row in result.all()]

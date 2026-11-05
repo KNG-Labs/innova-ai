@@ -1,349 +1,108 @@
 from types import SimpleNamespace
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 
-from app.client.retrieval_planner_client import (
-    FakeRetrievalPlannerClient,
-    RetrievalMode,
-    RetrievalPlan,
-    _parse_retrieval_plan,
-)
 from app.privacy import PiiAnalysisError, PiiSanitizer
 from app.schemas.knowledge_schema import RetrievedChunk
 from app.service.knowledge_retrieval_service import (
     KnowledgeRetrievalService,
     format_chunks_for_prompt,
 )
-from app.service.retrieval_selector import RetrievalCandidate, select_source
 
 pytestmark = pytest.mark.unit
 
 
-TRADE_IN_ID = UUID("00000000-0000-0000-0000-000000000001")
-CREDIT_ID = UUID("00000000-0000-0000-0000-000000000002")
-
-
-def _candidate(
-    document_id: UUID,
-    title: str,
-    content: str,
-    score: float,
-    *,
-    chunk_index: int = 0,
-) -> RetrievalCandidate:
-    return RetrievalCandidate(
-        document_id=document_id,
-        chunk_id=uuid4(),
-        chunk_index=chunk_index,
-        title=title,
-        score=score,
-        content=content,
-    )
-
-
-@pytest.mark.parametrize(
-    ("raw", "mode", "query"),
-    [
-        (
-            '{"mode":"last_source","query":"  Условия   программы Trade-in "}',
-            RetrievalMode.LAST_SOURCE,
-            "Условия программы Trade-in",
-        ),
-        (
-            '{"mode":"current","query":"Условия автокредитования"}',
-            RetrievalMode.CURRENT,
-            "Условия автокредитования",
-        ),
-        ('{"mode":"none","query":"лишнее"}', RetrievalMode.NONE, ""),
-    ],
-)
-def test_parse_retrieval_plan(raw: str, mode: RetrievalMode, query: str) -> None:
-    plan = _parse_retrieval_plan(raw)
-
-    assert plan.mode == mode
-    assert plan.query == query
-
-
-@pytest.mark.parametrize(
-    "raw",
-    [
-        "not-json",
-        '{"mode":"last_source","query":""}',
-        '{"mode":"other","query":"Trade-in"}',
-        '{"mode":"current","query":"Кредит","extra":true}',
-    ],
-)
-def test_invalid_retrieval_plan_abstains(raw: str) -> None:
-    assert _parse_retrieval_plan(raw) == RetrievalPlan.none()
-
-
-def test_selection_restricts_last_source_and_returns_at_most_two_chunks() -> None:
-    duplicate = "Оценка автомобиля бесплатна."
-    selection = select_source(
-        candidates=[
-            _candidate(CREDIT_ID, "Кредит", "Взнос от 10%.", 0.99),
-            _candidate(TRADE_IN_ID, "Trade-in", duplicate, 0.90, chunk_index=1),
-            _candidate(TRADE_IN_ID, "Trade-in", duplicate, 0.89, chunk_index=2),
-            _candidate(
-                TRADE_IN_ID,
-                "Trade-in",
-                "Нужны ПТС и СТС.",
-                0.80,
-                chunk_index=3,
-            ),
-            _candidate(
-                TRADE_IN_ID,
-                "Trade-in",
-                "Доплата фиксируется в договоре.",
-                0.70,
-                chunk_index=4,
-            ),
-        ],
-        required_source_id=TRADE_IN_ID,
-    )
-
-    assert selection is not None
-    assert selection.source_id == TRADE_IN_ID
-    assert [item.content for item in selection.candidates] == [
-        duplicate,
-        "Нужны ПТС и СТС.",
-    ]
-
-
-def test_current_selection_uses_best_current_document() -> None:
-    selection = select_source(
-        candidates=[
-            _candidate(CREDIT_ID, "Кредит", "Взнос от 10%.", 0.82),
-            _candidate(TRADE_IN_ID, "Trade-in", "Оценка бесплатна.", 0.45),
-        ]
-    )
-
-    assert selection is not None
-    assert selection.source_id == CREDIT_ID
-
-
 class _Embedding:
-    def __init__(self) -> None:
-        self.calls: list[list[str]] = []
+    def __init__(self):
+        self.calls = []
 
-    async def embed(self, texts: list[str]) -> list[list[float]]:
+    async def embed(self, texts):
         self.calls.append(texts)
         return [[1.0] for _ in texts]
 
 
 class _Repository:
-    def __init__(self, rows: list[tuple]) -> None:
+    def __init__(self, rows):
         self.rows = rows
-        self.calls: list[tuple[int, UUID | None]] = []
+        self.calls = []
 
-    async def search_chunks(
-        self,
-        embedding,
-        top_k,
-        *,
-        document_id: UUID | None = None,
-    ):
-        self.calls.append((top_k, document_id))
-        rows = (
-            [row for row in self.rows if row[0].document_id == document_id]
-            if document_id is not None
-            else self.rows
-        )
-        return rows[:top_k]
+    async def search_chunks(self, embedding, top_k):
+        self.calls.append((embedding, top_k))
+        return self.rows[:top_k]
 
 
-def _row(
-    document_id: UUID,
-    title: str,
-    content: str,
-    score: float,
-    *,
-    chunk_index: int = 0,
-):
+def _row(title, score):
     return (
-        SimpleNamespace(
-            document_id=document_id,
-            id=uuid4(),
-            chunk_index=chunk_index,
-            content=content,
-        ),
+        SimpleNamespace(document_id=uuid4(), id=uuid4(), content=title + " facts"),
         title,
         score,
     )
 
 
-def _retrieval(
-    rows,
-    planner: FakeRetrievalPlannerClient | None = None,
-):
+def _retrieval(rows):
     embedding = _Embedding()
-    planner = planner or FakeRetrievalPlannerClient()
-    service = KnowledgeRetrievalService(
-        None,  # type: ignore[arg-type]
-        embedding,
-        planner,
-        top_k=5,
-        min_score=0.2,
-    )
+    service = KnowledgeRetrievalService(None, embedding, top_k=3, min_score=0.2)
     repository = _Repository(rows)
     service._repo = repository
-    return service, embedding, planner, repository
+    return service, embedding, repository
 
 
-async def test_without_saved_source_uses_original_query_without_planner() -> None:
-    service, embedding, planner, repository = _retrieval(
-        [_row(CREDIT_ID, "Кредитование", "Взнос.", 0.82)]
-    )
-
-    result = await service.retrieve("  Кредит  ")
-
-    assert result.source_id == CREDIT_ID
-    assert embedding.calls == [["Кредит"]]
-    assert planner.calls == []
-    assert repository.calls == [(5, None)]
-
-
-async def test_planner_continues_trade_in_with_rewritten_query_and_source_filter() -> (
-    None
-):
-    planner = FakeRetrievalPlannerClient(
+async def test_direct_search_keeps_multiple_documents_and_applies_score_threshold():
+    service, embedding, repository = _retrieval(
         [
-            RetrievalPlan(
-                mode=RetrievalMode.LAST_SOURCE,
-                query="Условия программы Trade-in",
-            )
+            _row("Camry", 0.9),
+            _row("Creta", 0.8),
+            _row("Unrelated", 0.19),
+            _row("Extra", 0.5),
         ]
     )
-    service, embedding, planner, repository = _retrieval(
-        [
-            _row(CREDIT_ID, "Кредитование", "Взнос.", 0.99),
-            _row(TRADE_IN_ID, "Trade-in", "Оценка.", 0.81),
-        ],
-        planner,
+
+    result = await service.retrieve("  Сравни   Camry и Creta  ")
+
+    assert [chunk.title for chunk in result] == ["Camry", "Creta"]
+    assert embedding.calls == [["Сравни Camry и Creta"]]
+    assert repository.calls == [([1.0], 3)]
+
+
+async def test_current_message_is_not_rewritten_or_restricted_to_previous_source():
+    service, embedding, _ = _retrieval([_row("Trade-in", 0.8)])
+    await service.retrieve("Trade-in")
+    await service.retrieve("Кредит")
+    assert embedding.calls == [["Trade-in"], ["Кредит"]]
+
+
+async def test_query_contacts_are_masked_before_embedding():
+    service, embedding, _ = _retrieval([])
+    await service.retrieve("Телефон +79991234567, условия кредита")
+    assert embedding.calls == [["Телефон [PHONE_1], условия кредита"]]
+
+
+async def test_empty_query_does_not_call_embedding_or_database():
+    service, embedding, repository = _retrieval([])
+    assert await service.retrieve("  ") == ()
+    assert embedding.calls == repository.calls == []
+
+
+async def test_analyzer_failure_blocks_embedding_and_database(monkeypatch):
+    def fail(self, text):
+        raise PiiAnalysisError("synthetic failure")
+
+    monkeypatch.setattr(PiiSanitizer, "find_entities", fail)
+    service, embedding, repository = _retrieval([])
+    assert await service.retrieve("Кредит") == ()
+    assert embedding.calls == repository.calls == []
+
+
+def test_prompt_keeps_source_labels():
+    chunk = RetrievedChunk(
+        document_id=uuid4(),
+        chunk_id=uuid4(),
+        title="Trade-in",
+        content="Оценка бесплатна.",
+        score=0.9,
     )
-    history = [{"role": "user", "content": str(index)} for index in range(8)]
-
-    result = await service.retrieve(
-        "А условия по нему?",
-        last_source_id=TRADE_IN_ID,
-        last_source_title="Trade-in",
-        history=history,
+    assert (
+        format_chunks_for_prompt((chunk,)) == "[Источник: Trade-in]\nОценка бесплатна."
     )
-
-    assert result.source_id == TRADE_IN_ID
-    assert embedding.calls == [["Условия программы Trade-in"]]
-    assert repository.calls == [(5, TRADE_IN_ID)]
-    assert planner.calls[0]["history"] == history[-6:]
-
-
-async def test_planner_switches_to_explicit_credit_topic() -> None:
-    planner = FakeRetrievalPlannerClient(
-        [
-            RetrievalPlan(
-                mode=RetrievalMode.CURRENT,
-                query="Условия автокредитования",
-            )
-        ]
-    )
-    service, embedding, _, repository = _retrieval(
-        [
-            _row(CREDIT_ID, "Кредитование", "Взнос.", 0.82),
-            _row(TRADE_IN_ID, "Trade-in", "Оценка.", 0.45),
-        ],
-        planner,
-    )
-
-    result = await service.retrieve(
-        "Кредит",
-        last_source_id=TRADE_IN_ID,
-        last_source_title="Trade-in",
-    )
-
-    assert result.source_id == CREDIT_ID
-    assert embedding.calls == [["Условия автокредитования"]]
-    assert repository.calls == [(5, None)]
-
-
-async def test_none_plan_skips_embeddings_and_search() -> None:
-    planner = FakeRetrievalPlannerClient([RetrievalPlan.none()])
-    service, embedding, _, repository = _retrieval([], planner)
-
-    result = await service.retrieve(
-        "Спасибо",
-        last_source_id=TRADE_IN_ID,
-        last_source_title="Trade-in",
-    )
-
-    assert result == result.__class__()
-    assert embedding.calls == []
-    assert repository.calls == []
-
-
-async def test_planner_exception_skips_embeddings_and_search() -> None:
-    planner = FakeRetrievalPlannerClient([TimeoutError("planner timeout")])
-    service, embedding, _, repository = _retrieval([], planner)
-
-    result = await service.retrieve(
-        "А условия?",
-        last_source_id=TRADE_IN_ID,
-        last_source_title="Trade-in",
-    )
-
-    assert result.source_id is None
-    assert embedding.calls == []
-    assert repository.calls == []
-
-
-async def test_analyzer_failure_returns_empty_result_without_embedding_or_search(
-    monkeypatch,
-) -> None:
-    service, embedding, planner, repository = _retrieval([])
-
-    def _fail_analysis(self, text):
-        raise PiiAnalysisError("synthetic analyzer failure")
-
-    monkeypatch.setattr(PiiSanitizer, "find_entities", _fail_analysis)
-
-    result = await service.retrieve("Условия кредита")
-
-    assert result == result.__class__()
-    assert embedding.calls == []
-    assert planner.calls == []
-    assert repository.calls == []
-
-
-async def test_low_relevance_does_not_select_source() -> None:
-    service, _, _, _ = _retrieval([_row(CREDIT_ID, "Кредитование", "Взнос.", 0.19)])
-
-    result = await service.retrieve("Как приготовить домашний борщ?")
-
-    assert result.source_id is None
-    assert result.chunks == ()
-
-
-def test_prompt_contains_only_selected_source_without_scores() -> None:
-    prompt = format_chunks_for_prompt(
-        (
-            RetrievedChunk(
-                document_id=TRADE_IN_ID,
-                chunk_id=uuid4(),
-                title="Программа Trade-in",
-                score=0.9,
-                content="Оценка бесплатна.",
-            ),
-            RetrievedChunk(
-                document_id=TRADE_IN_ID,
-                chunk_id=uuid4(),
-                title="Программа Trade-in",
-                score=0.8,
-                content="Нужны ПТС и СТС.",
-            ),
-        )
-    )
-
-    assert prompt == (
-        "[Источник: Программа Trade-in]\nОценка бесплатна.\n\n"
-        "[Источник: Программа Trade-in]\nНужны ПТС и СТС."
-    )
-    assert "score=" not in prompt
+    assert format_chunks_for_prompt(()) == ""

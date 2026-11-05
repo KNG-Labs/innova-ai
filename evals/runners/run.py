@@ -31,7 +31,6 @@ from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.client.embedding_client import build_embedding_client
-from app.client.retrieval_planner_client import FakeRetrievalPlannerClient
 from app.db.session import create_engine, create_session_maker
 from app.models.knowledge_model import KnowledgeChunk, KnowledgeDocument
 from app.models.message_model import Message
@@ -398,7 +397,6 @@ async def collect_retrieval_predictions(
             retrieval = KnowledgeRetrievalService(
                 db_session,
                 embedding_client,
-                FakeRetrievalPlannerClient(),
                 top_k=top_k,
                 min_score=min_score,
             )
@@ -408,7 +406,7 @@ async def collect_retrieval_predictions(
                 result = await retrieval.retrieve(case.example.question)
                 document_ids: list[str] = []
                 retrieval_context: list[str] = []
-                for retrieved in result.chunks:
+                for retrieved in result:
                     document = await db_session.get(
                         KnowledgeDocument, retrieved.document_id
                     )

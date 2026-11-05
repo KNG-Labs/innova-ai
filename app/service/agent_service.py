@@ -26,9 +26,9 @@ from app.schemas.agent_schema import (
     AgentDecision,
     LeadIntentStatus,
 )
+from app.schemas.knowledge_schema import RetrievedChunk
 from app.service.knowledge_retrieval_service import (
     KnowledgeRetrievalService,
-    RetrievalResult,
     format_chunks_for_prompt,
 )
 from app.service.state_machine import (
@@ -107,7 +107,6 @@ class AgentService:
         ):
             current_state = DialogState(session.state)
             capture_usage = capture_token_usage_enabled()
-            planner_usage = AgentTokenUsage()
             agent_usage = AgentTokenUsage()
 
             # Загрузить текущий draft лида для контекста
@@ -153,11 +152,6 @@ class AgentService:
                 if request.page_title is not None
                 else None
             )
-            safe_last_source_title = (
-                pii.sanitize_text(session.last_rag_source_title).text
-                if session.last_rag_source_title is not None
-                else None
-            )
 
             # Сохранение входящего сообщения
             user_message = await self._messages.create(
@@ -168,7 +162,7 @@ class AgentService:
 
             if sanitized_message.contact_only:
                 # Контакт уже извлечён локально: никакие внешние AI-вызовы не нужны.
-                retrieved = RetrievalResult()
+                retrieved: tuple[RetrievedChunk, ...] = ()
                 retrieved_context = ""
                 decision = _contact_only_decision(
                     current_state=current_state,
@@ -178,19 +172,9 @@ class AgentService:
                 )
             else:
                 # RAG и LLM получают только локально очищенные данные.
-                retrieved = await self._retrieval.retrieve(
-                    sanitized_content,
-                    last_source_id=session.last_rag_source_id,
-                    last_source_title=safe_last_source_title,
-                    history=history,
-                )
-                if capture_usage and session.last_rag_source_id is not None:
-                    planner_usage += (
-                        self._retrieval.consume_planner_token_usage()
-                        or AgentTokenUsage(calls=1, complete=False)
-                    )
+                retrieved = await self._retrieval.retrieve(sanitized_content)
                 retrieved_context = pii.sanitize_text(
-                    format_chunks_for_prompt(retrieved.chunks)
+                    format_chunks_for_prompt(retrieved)
                 ).text
 
                 decision = await self._llm_client.decide(
@@ -240,7 +224,7 @@ class AgentService:
             )
             inline_qualification_faq = (
                 current_state == DialogState.QUALIFICATION
-                and retrieved.source_id is not None
+                and bool(retrieved)
                 and is_information_question(content)
                 and not has_explicit_lead_request(content)
                 and not is_contact_valid(decision.extracted_contact)
@@ -363,26 +347,13 @@ class AgentService:
                 merged_qual,
             )
 
-            last_rag_source_id = (
-                retrieved.source_id
-                if retrieved.source_id is not None
-                else session.last_rag_source_id
-            )
-            last_rag_source_title = (
-                retrieved.source_title
-                if retrieved.source_id is not None
-                else session.last_rag_source_title
-            )
-
             # Сохранение ответа ассистента
             message_metadata = None
             if capture_usage:
-                total_usage = planner_usage + agent_usage
                 message_metadata = {
                     "eval_token_usage": {
-                        **total_usage.as_metadata(),
+                        **agent_usage.as_metadata(),
                         "components": {
-                            "retrieval_planner": planner_usage.as_metadata(),
                             "agent": agent_usage.as_metadata(),
                         },
                     }
@@ -406,8 +377,6 @@ class AgentService:
                 contact_refusals=contact_refusals,
                 contact_opt_out=contact_opt_out,
                 lead_intent_confirmation_pending=lead_intent_confirmation_pending,
-                last_rag_source_id=last_rag_source_id,
-                last_rag_source_title=last_rag_source_title,
                 expected_qualification_field=expected_qualification_field,
                 close=is_closing,
             )

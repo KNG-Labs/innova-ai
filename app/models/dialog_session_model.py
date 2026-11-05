@@ -52,6 +52,7 @@ class DialogSession(Base):
         default=False,
         server_default="false",
     )
+    # shortcut: старые RAG-поля не используются; удалить при следующей миграции схемы.
     last_rag_source_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("knowledge_documents.id", ondelete="SET NULL"),
         nullable=True,

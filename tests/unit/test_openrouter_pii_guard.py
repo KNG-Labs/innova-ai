@@ -4,10 +4,6 @@ import pytest
 
 from app.client.ag2_agent_client import Ag2AgentClient
 from app.client.embedding_client import OpenRouterEmbeddingClient
-from app.client.retrieval_planner_client import (
-    Ag2RetrievalPlannerClient,
-    RetrievalPlan,
-)
 from app.privacy import PiiAnalysisError, PiiDetectedError, PiiSanitizer
 from evals.judge import OpenRouterJudge
 
@@ -89,41 +85,6 @@ async def test_llm_captured_payload_contains_tokens_not_original_values() -> Non
     )
 
     payload = str(agent.calls)
-    assert "+79991234567" not in payload
-    assert "user@example.com" not in payload
-    assert "[PHONE_1]" in payload
-    assert "[EMAIL_1]" in payload
-
-
-async def test_planner_guard_blocks_raw_pii_before_agent_call() -> None:
-    agent = _CapturingAgent('{"mode":"none","query":""}')
-    client = object.__new__(Ag2RetrievalPlannerClient)
-    client._agent = agent
-
-    result = await client.plan(
-        current_message="Условия кредита, телефон +79991234567",
-        last_source_title="Кредит",
-        history=[],
-    )
-
-    assert agent.calls == []
-    assert result == RetrievalPlan.none()
-
-
-async def test_planner_captured_payload_contains_tokens_not_original_values() -> None:
-    raw = "Кредит, телефон +79991234567, email user@example.com"
-    safe = PiiSanitizer().sanitize_text(raw).text
-    agent = _CapturingAgent('{"mode":"current","query":"Условия кредита"}')
-    client = object.__new__(Ag2RetrievalPlannerClient)
-    client._agent = agent
-
-    await client.plan(
-        current_message=safe,
-        last_source_title="Кредит",
-        history=[{"role": "user", "content": safe}],
-    )
-
-    payload = repr(agent.calls)
     assert "+79991234567" not in payload
     assert "user@example.com" not in payload
     assert "[PHONE_1]" in payload

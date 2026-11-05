@@ -91,15 +91,11 @@ class DialogSessionRepository:
         contact_refusals: int | None = None,
         contact_opt_out: bool | None = None,
         lead_intent_confirmation_pending: bool | None = None,
-        last_rag_source_id: UUID | None = None,
-        last_rag_source_title: str | None = None,
         expected_qualification_field: str | None = None,
         close: bool = False,
     ) -> None:
         values: dict = {
             "state": state,
-            "last_rag_source_id": last_rag_source_id,
-            "last_rag_source_title": last_rag_source_title,
             "expected_qualification_field": expected_qualification_field,
         }
         if contact_refusals is not None:

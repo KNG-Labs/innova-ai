@@ -82,14 +82,14 @@ def test_ag2_usage_snapshot_is_independent_from_mutable_cumulative_summary() -> 
     )
 
 
-def test_planner_and_main_agent_usage_add_without_judge_usage() -> None:
-    planner = AgentTokenUsage(
+def test_corrective_retry_usage_adds_to_main_agent_usage() -> None:
+    retry = AgentTokenUsage(
         prompt_tokens=10, completion_tokens=2, total_tokens=12, calls=1
     )
     main = AgentTokenUsage(
         prompt_tokens=20, completion_tokens=5, total_tokens=25, calls=1
     )
-    assert (planner + main).as_metadata() == {
+    assert (retry + main).as_metadata() == {
         "prompt_tokens": 30,
         "completion_tokens": 7,
         "total_tokens": 37,
