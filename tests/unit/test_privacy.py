@@ -5,6 +5,34 @@ from app.privacy import PiiAnalysisError, PiiDetectedError, PiiSanitizer
 pytestmark = pytest.mark.unit
 
 
+def test_knowledge_contacts_have_separate_tokens_and_keep_all_values() -> None:
+    pii = PiiSanitizer()
+    pii.seed_contacts({"phone": "+79991234567"})
+    private = pii.sanitize_text("+79991234567").text
+    safe, contacts = pii.sanitize_knowledge_text(
+        "+7 (999) 777-88-01, sales@example.com, @dealer_auto"
+    )
+
+    assert private == "[PHONE_1]"
+    assert safe == "[KB_CONTACT_1], [KB_CONTACT_2], [KB_CONTACT_3]"
+    assert contacts == {
+        "[KB_CONTACT_1]": "+7 (999) 777-88-01",
+        "[KB_CONTACT_2]": "sales@example.com",
+        "[KB_CONTACT_3]": "@dealer_auto",
+    }
+    PiiSanitizer.ensure_safe(safe)
+    assert pii.sanitize_text("+79991234567").text == private
+
+
+def test_knowledge_contact_map_is_limited_to_this_text() -> None:
+    pii = PiiSanitizer()
+    pii.sanitize_knowledge_text("sales@example.com")
+    assert pii.sanitize_knowledge_text("Часы работы: 9:00–21:00") == (
+        "Часы работы: 9:00–21:00",
+        {},
+    )
+
+
 def test_sanitizer_extracts_contacts_and_reuses_stable_tokens() -> None:
     sanitizer = PiiSanitizer()
 

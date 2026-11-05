@@ -160,6 +160,7 @@ class AgentService:
                 content=content,
             )
 
+            knowledge_contacts: dict[str, str] = {}
             if sanitized_message.contact_only:
                 # Контакт уже извлечён локально: никакие внешние AI-вызовы не нужны.
                 retrieved: tuple[RetrievedChunk, ...] = ()
@@ -173,9 +174,9 @@ class AgentService:
             else:
                 # RAG и LLM получают только локально очищенные данные.
                 retrieved = await self._retrieval.retrieve(sanitized_content)
-                retrieved_context = pii.sanitize_text(
+                retrieved_context, knowledge_contacts = pii.sanitize_knowledge_text(
                     format_chunks_for_prompt(retrieved)
-                ).text
+                )
 
                 decision = await self._llm_client.decide(
                     user_message=sanitized_content,
@@ -198,6 +199,7 @@ class AgentService:
                     decision,
                     pii=pii,
                     local_contact=local_contact,
+                    knowledge_contacts=knowledge_contacts,
                 )
 
             proposed_qualification_patch = dict(decision.qualification_patch)
@@ -257,6 +259,7 @@ class AgentService:
                     decision,
                     pii=pii,
                     local_contact=local_contact,
+                    knowledge_contacts=knowledge_contacts,
                 )
                 if (
                     decision.next_state != DialogState.FAQ
@@ -460,11 +463,15 @@ def _apply_local_privacy_result(
     *,
     pii: PiiSanitizer,
     local_contact: dict[str, str | None],
+    knowledge_contacts: dict[str, str],
 ) -> AgentDecision:
-    """Не доверять LLM извлечение контактов и не сохранять raw PII из ответа."""
+    """Восстановить только контакты текущей БЗ; контакт клиента извлечён локально."""
+    answer = pii.sanitize_text(decision.answer).text
+    for token, contact in knowledge_contacts.items():
+        answer = answer.replace(token, contact)
     return decision.model_copy(
         update={
-            "answer": pii.sanitize_text(decision.answer).text,
+            "answer": answer,
             "extracted_contact": local_contact or None,
             "lead_summary": (
                 pii.sanitize_text(decision.lead_summary).text
