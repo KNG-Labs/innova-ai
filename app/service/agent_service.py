@@ -7,11 +7,6 @@ from app.tracing import traced, update_observation
 
 from app.client.ag2_agent_client import LLMClient
 from app.client.queue_client import QueueClient
-from app.client.token_usage import (
-    AgentTokenUsage,
-    capture_token_usage_enabled,
-    consume_token_usage,
-)
 from app.repository.lead_repository import LeadRepository
 from app.repository.dialog_session_repository import DialogSessionRepository
 from app.repository.message_repository import MessageRepository
@@ -94,8 +89,6 @@ class AgentService:
             tags=["message", request.channel.value],
         ):
             current_state = DialogState(session.state)
-            capture_usage = capture_token_usage_enabled()
-            agent_usage = AgentTokenUsage()
 
             # Загрузить текущий draft лида для контекста
             lead = await self._leads.get_by_session_id(session.id)
@@ -173,10 +166,6 @@ class AgentService:
                     session.lead_intent_confirmation_pending
                 ),
             )
-            if capture_usage:
-                agent_usage += consume_token_usage(self._llm_client) or AgentTokenUsage(
-                    calls=1, complete=False
-                )
             decision = _apply_local_privacy_result(
                 decision,
                 pii=pii,
@@ -233,10 +222,6 @@ class AgentService:
                     ),
                     force_lead_intent_confirmation=True,
                 )
-                if capture_usage:
-                    agent_usage += consume_token_usage(
-                        self._llm_client
-                    ) or AgentTokenUsage(calls=1, complete=False)
                 decision = _apply_local_privacy_result(
                     decision,
                     pii=pii,
@@ -322,21 +307,10 @@ class AgentService:
             )
 
             # Сохранение ответа ассистента
-            message_metadata = None
-            if capture_usage:
-                message_metadata = {
-                    "eval_token_usage": {
-                        **agent_usage.as_metadata(),
-                        "components": {
-                            "agent": agent_usage.as_metadata(),
-                        },
-                    }
-                }
             assistant_message = await self._messages.create(
                 session_id=session.id,
                 role="assistant",
                 content=decision.answer,
-                message_metadata=message_metadata,
             )
 
             # Определить, что сессия закрывается

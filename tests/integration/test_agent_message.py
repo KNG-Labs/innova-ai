@@ -851,10 +851,7 @@ async def test_mixed_contact_is_sanitized_for_llm_history_and_embeddings(
         assert "user@example.com" not in lead.summary
 
 
-async def test_contact_only_message_uses_llm_with_masked_contact(
-    client, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setenv("EVAL_CAPTURE_TOKEN_USAGE", "1")
+async def test_contact_only_message_uses_llm_with_masked_contact(client) -> None:
 
     class _CapturingEmbedding:
         def __init__(self) -> None:
@@ -905,24 +902,7 @@ async def test_contact_only_message_uses_llm_with_masked_contact(
             Message, UUID(response.json()["assistant_message_id"])
         )
         assert assistant_message is not None
-        assert assistant_message.message_metadata == {
-            "eval_token_usage": {
-                "prompt_tokens": 0,
-                "completion_tokens": 0,
-                "total_tokens": 0,
-                "calls": 1,
-                "complete": False,
-                "components": {
-                    "agent": {
-                        "prompt_tokens": 0,
-                        "completion_tokens": 0,
-                        "total_tokens": 0,
-                        "calls": 1,
-                        "complete": False,
-                    },
-                },
-            }
-        }
+        assert assistant_message.message_metadata is None
         lead = await db.get(Lead, UUID(response.json()["lead_id"]))
         assert lead is not None
         assert lead.contact == {
