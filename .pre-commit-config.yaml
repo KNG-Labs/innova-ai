@@ -17,13 +17,13 @@ repos:
         entry: uv run --frozen ruff check --fix
         language: system
         types: [python]
-        files: '^(app/|tests/|main\.py$)'
+        files: '^(app/|tests/|evals/|main\.py$)'
       - id: ruff-format
         name: Ruff format
         entry: uv run --frozen ruff format
         language: system
         types: [python]
-        files: '^(app/|tests/|main\.py$)'
+        files: '^(app/|tests/|evals/|main\.py$)'
       - id: mypy
         name: mypy
         entry: uv run --frozen mypy app/ --ignore-missing-imports

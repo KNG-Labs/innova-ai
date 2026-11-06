@@ -25,7 +25,8 @@ dependencies = [
 
 [dependency-groups]
 eval = [
-    "deepeval==4.1.4",
+    "deepeval==4.3.3",
+    "typesafe-sdk==0.7.5",
 ]
 dev = [
     { include-group = "eval" },
