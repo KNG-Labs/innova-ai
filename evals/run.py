@@ -13,7 +13,13 @@ from uuid import uuid4
 from deepeval import evaluate
 from deepeval.dataset import Golden
 from deepeval.evaluate import AsyncConfig, CacheConfig, DisplayConfig
-from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
+from deepeval.metrics import (
+    AnswerRelevancyMetric,
+    ContextualPrecisionMetric,
+    ContextualRecallMetric,
+    ContextualRelevancyMetric,
+    FaithfulnessMetric,
+)
 from deepeval.models import TypeSafeModel
 from deepeval.test_case import LLMTestCase
 from fastapi import FastAPI
@@ -31,7 +37,7 @@ from app.service.knowledge_retrieval_service import (
 )
 
 DATASET = Path("evals/datasets/generation/golden.dataset.json")
-CORPUS = Path("docs/RAG/Данные для RAG.txt")
+CORPUS = Path("docs/RAG/Agent_memory.txt")
 THRESHOLD = 0.7
 
 
@@ -137,6 +143,7 @@ async def collect_cases(
                         LLMTestCase(
                             name=golden.name,
                             input=golden.input,
+                            expected_output=golden.expected_output,
                             actual_output=response.answer,
                             retrieval_context=[
                                 format_chunks_for_prompt((chunk,))
@@ -163,16 +170,30 @@ def score_cases(cases: list[LLMTestCase], output: Path) -> bool:
     if not cases or len({case.name for case in cases}) != len(cases):
         raise ValueError("Test cases must be non-empty and have unique names")
     cases = [safe_case(case) for case in cases]
+    missing_expected = [
+        case.name for case in cases if not (case.expected_output or "").strip()
+    ]
+    if missing_expected:
+        raise ValueError(
+            "Contextual Precision and Recall require expected_output; "
+            f"recollect predictions or add references for: {missing_expected}"
+        )
     requested_model = os.getenv("EVAL_JEV_MODEL", "jev-latest")
     model = ReportedTypeSafeModel(model=requested_model)
     grounded = [case for case in cases if case.retrieval_context]
     missing_context = [case.name for case in cases if not case.retrieval_context]
-    results = {"faithfulness_skipped_no_context": missing_context}
+    results = {
+        "faithfulness_skipped_no_context": missing_context,
+        "retrieval_metrics_skipped_no_context": missing_context,
+    }
     passed = not missing_context
     try:
         for name, metric_class, selected in (
             ("answer_relevancy", AnswerRelevancyMetric, cases),
             ("faithfulness", FaithfulnessMetric, grounded),
+            ("contextual_relevancy", ContextualRelevancyMetric, grounded),
+            ("contextual_precision", ContextualPrecisionMetric, grounded),
+            ("contextual_recall", ContextualRecallMetric, grounded),
         ):
             if not selected:
                 continue
@@ -214,7 +235,9 @@ def score_cases(cases: list[LLMTestCase], output: Path) -> bool:
         json.dumps(results, ensure_ascii=False, indent=2) + "\n"
     )
     if missing_context:
-        print(f"Faithfulness skipped (no context): {missing_context}")
+        print(
+            f"Faithfulness and retrieval metrics skipped (no context): {missing_context}"
+        )
     return passed
 
 

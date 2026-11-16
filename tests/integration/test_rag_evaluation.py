@@ -43,13 +43,21 @@ async def test_collects_actual_context_and_final_answer(client, monkeypatch, tmp
         )
     )
     cases = await run.collect_cases(
-        [Golden(name="hours", input="До скольких работает салон?")],
+        [
+            Golden(
+                name="hours",
+                input="До скольких работает салон?",
+                expected_output="Салон открыт до 21:00. Телефон +79997778801.",
+                context=["Synthetic context that must not replace actual retrieval"],
+            )
+        ],
         os.environ["TEST_DATABASE_URL"],
         corpus,
     )
     [case] = cases
     assert queries == ["До скольких работает салон?"]
     assert case.actual_output == "Салон открыт до 21:00. Телефон [PHONE_1]."
+    assert case.expected_output == "Салон открыт до 21:00. Телефон [PHONE_1]."
     assert case.retrieval_context == [
         "[Источник: Время работы]\nСалон открыт до 21:00. Телефон [PHONE_1]."
     ]
