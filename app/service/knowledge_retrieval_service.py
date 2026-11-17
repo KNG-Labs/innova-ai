@@ -1,31 +1,15 @@
-from dataclasses import dataclass
 import logging
-from uuid import UUID
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.client.embedding_client import EmbeddingClient
-from app.client.retrieval_planner_client import (
-    RetrievalMode,
-    RetrievalPlan,
-    RetrievalPlannerClient,
-)
-from app.client.token_usage import AgentTokenUsage, consume_token_usage
 from app.privacy import PrivacyBoundaryError, PiiSanitizer
 from app.tracing import traced, update_observation
 from app.repository.knowledge_repository import KnowledgeRepository
 from app.schemas.knowledge_schema import RetrievedChunk
-from app.service.retrieval_selector import RetrievalCandidate, select_source
 
 _DEFAULT_TOP_K = 5
 _DEFAULT_MIN_SCORE = 0.2
-
-
-@dataclass(frozen=True)
-class RetrievalResult:
-    chunks: tuple[RetrievedChunk, ...] = ()
-    source_id: UUID | None = None
-    source_title: str | None = None
 
 
 class KnowledgeRetrievalService:
@@ -33,135 +17,49 @@ class KnowledgeRetrievalService:
         self,
         db_session: AsyncSession,
         embedding_client: EmbeddingClient,
-        retrieval_planner: RetrievalPlannerClient,
         *,
         top_k: int = _DEFAULT_TOP_K,
         min_score: float = _DEFAULT_MIN_SCORE,
     ) -> None:
         self._repo = KnowledgeRepository(db_session)
         self._embedding = embedding_client
-        self._planner = retrieval_planner
         self._top_k = top_k
         self._min_score = min_score
 
-    def consume_planner_token_usage(self) -> AgentTokenUsage | None:
-        return consume_token_usage(self._planner)
-
     @traced("retrieve-context", as_type="retriever")
-    async def retrieve(
-        self,
-        query: str,
-        *,
-        last_source_id: UUID | None = None,
-        last_source_title: str | None = None,
-        history: list[dict] | None = None,
-    ) -> RetrievalResult:
+    async def retrieve(self, query: str) -> tuple[RetrievedChunk, ...]:
         update_observation(output={"chunks": []})
         try:
-            pii = PiiSanitizer()
-            normalized_query = " ".join(pii.sanitize_text(query).text.split())
-            normalized_title = pii.sanitize_text(last_source_title or "").text.strip()
-            safe_history = pii.sanitize_value((history or [])[-6:])
+            query = " ".join(PiiSanitizer().sanitize_text(query).text.split())
+            if not query:
+                return ()
+            update_observation(
+                input=query,
+                metadata={"top_k": self._top_k, "min_score": self._min_score},
+            )
+            [query_embedding] = await self._embedding.embed([query])
         except PrivacyBoundaryError:
             update_observation(level="WARNING", status_message="privacy_blocked")
-            logging.getLogger(__name__).warning(
-                "Retrieval blocked because local PII analysis failed"
-            )
-            return RetrievalResult()
-        update_observation(
-            input=normalized_query,
-            metadata={"top_k": self._top_k, "min_score": self._min_score},
-        )
-        if not normalized_query:
-            return RetrievalResult()
+            logging.getLogger(__name__).warning("Retrieval blocked by privacy boundary")
+            return ()
 
-        plan = RetrievalPlan(mode=RetrievalMode.CURRENT, query=normalized_query)
-        if last_source_id is not None and normalized_title:
-            try:
-                plan = await self._planner.plan(
-                    current_message=normalized_query,
-                    last_source_title=normalized_title,
-                    history=safe_history,
-                )
-            except Exception as exc:  # noqa: BLE001 - retrieval must abstain safely
-                logging.getLogger(__name__).warning(
-                    "Retrieval planner failed (%s): %r",
-                    type(exc).__name__,
-                    exc,
-                )
-                update_observation(
-                    level="WARNING",
-                    status_message="planner_failed",
-                    metadata={"fallback": True},
-                )
-                plan = RetrievalPlan.none()
-
-        update_observation(metadata={"mode": plan.mode.value})
-        if plan.mode == RetrievalMode.NONE:
-            return RetrievalResult()
-
-        try:
-            safe_plan_query = pii.sanitize_text(plan.query).text
-            [query_embedding] = await self._embedding.embed([safe_plan_query])
-        except PrivacyBoundaryError:
-            update_observation(level="WARNING", status_message="privacy_blocked")
-            logging.getLogger(__name__).warning(
-                "Retrieval embedding blocked by privacy boundary"
-            )
-            return RetrievalResult()
-        required_source_id = (
-            last_source_id if plan.mode == RetrievalMode.LAST_SOURCE else None
-        )
-        rows = await self._repo.search_chunks(
-            query_embedding,
-            self._top_k,
-            document_id=required_source_id,
-        )
-        candidates = [
-            RetrievalCandidate(
+        rows = await self._repo.search_chunks(query_embedding, self._top_k)
+        chunks = tuple(
+            RetrievedChunk(
                 document_id=chunk.document_id,
                 chunk_id=chunk.id,
-                chunk_index=chunk.chunk_index,
                 title=title,
                 score=score,
                 content=chunk.content,
             )
             for chunk, title, score in rows
             if score >= self._min_score
-        ]
-
-        selection = select_source(
-            candidates=candidates,
-            required_source_id=required_source_id,
-        )
-        if selection is None:
-            return RetrievalResult()
-
-        chunks = tuple(
-            RetrievedChunk(
-                document_id=candidate.document_id,
-                chunk_id=candidate.chunk_id,
-                title=candidate.title,
-                score=candidate.score,
-                content=candidate.content,
-            )
-            for candidate in selection.candidates
         )
         update_observation(
-            output={
-                "source_id": str(selection.source_id),
-                "chunks": [chunk.model_dump(mode="json") for chunk in chunks],
-            }
+            output={"chunks": [chunk.model_dump(mode="json") for chunk in chunks]}
         )
-        return RetrievalResult(
-            chunks=chunks,
-            source_id=selection.source_id,
-            source_title=selection.source_title,
-        )
+        return chunks
 
 
 def format_chunks_for_prompt(chunks: tuple[RetrievedChunk, ...]) -> str:
-    """Блок для AG2. Пусто -> ''."""
-    if not chunks:
-        return ""
     return "\n\n".join(f"[Источник: {c.title}]\n{c.content}" for c in chunks)

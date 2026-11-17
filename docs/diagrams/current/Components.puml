@@ -17,7 +17,7 @@ component "FastAPI" as API
 
 component "Диалоговое ядро\nAgentService\nState Machine\nKnowledge Services" as Core
 
-component "PiiSanitizer\nLLM / planner / embeddings" as PrivacyAI
+component "PiiSanitizer\nLLM / embeddings" as PrivacyAI
 
 database "PostgreSQL + pgvector\nдиалоги, лиды, база знаний" as PostgreSQL
 cloud "OpenRouter" as OpenRouter

@@ -26,4 +26,4 @@ ENV PATH="/app/.venv/bin:$PATH" \
     DEEPEVAL_NO_INSPECT_PROMPT=1 \
     DEEPEVAL_TELEMETRY_OPT_OUT=YES
 
-CMD ["python", "-m", "evals.runners.run"]
+CMD ["python", "-m", "evals.run"]

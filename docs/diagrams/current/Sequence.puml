@@ -16,7 +16,6 @@ participant "AgentService" as Agent
 participant "PiiSanitizer" as PII
 database "PostgreSQL + pgvector" as PG
 participant "KnowledgeRetrievalService" as Retrieval
-participant "Retrieval Planner\nAG2 adapter" as Planner
 participant "Embedding Client" as Embedding
 participant "Main LLM\nAG2 adapter" as LLM
 participant "OpenRouter" as OpenRouter
@@ -37,7 +36,7 @@ note right of Client
   Telegram contact пока преобразуется в текст:
   "Мой телефон: +7999..."
 
-  Telegram /start обрабатываются
+  Telegram /start обрабатывается
   коннектором локально и не входят
   в показанный ниже POST /message flow.
 end note
@@ -57,7 +56,7 @@ Agent -> PII : sanitize every history message
 PII --> Agent : history with stable tokens
 Agent -> PII : sanitize current content
 PII --> Agent : safe_content + local_contact\n+ contact_only flag
-Agent -> PII : sanitize qualification,\npage_title, last RAG source title
+Agent -> PII : sanitize qualification,\npage_title
 PII --> Agent : safe context values
 
 note right of PII
@@ -67,7 +66,7 @@ note right of PII
 
   Реальные значения возвращаются AgentService
   отдельно от AI payload и не передаются
-  в planner, embeddings или основной LLM.
+  в embeddings или основной LLM.
 end note
 
 Agent -> PG : INSERT raw user message
@@ -80,67 +79,36 @@ end note
 == 2. Выбор пути ==
 
 alt Сообщение содержит только контакт
-  Agent -> Agent : build deterministic\ncontact-only AgentDecision
-  note right of Agent #E8F5E9
-    Retrieval, planner, embeddings и LLM
-    полностью пропускаются.
-    Ответ строится из локального шаблона.
-  end note
+  Agent -> Agent : skip retrieval; use empty KB context
 
 else Обычное или смешанное сообщение
   == 2A. RAG retrieval ==
 
-  Agent -> Retrieval : retrieve(safe_content,\nsafe_history, safe_source_title)
-  Retrieval -> PII : sanitize query, history,\nsource title again
-  PII --> Retrieval : safe retrieval inputs
+  Agent -> Retrieval : retrieve(safe_content)
+  Retrieval -> PII : sanitize current query
+  PII --> Retrieval : safe query
+  Retrieval -> Embedding : embed([safe query])
+  Embedding -> PII : ensure_safe(texts)
 
-  opt Есть ранее выбранный RAG source
-    Retrieval -> Planner : plan(safe current message,\nsafe history, safe source title)
-    Planner -> PII : ensure_safe(planner messages)
-
-    alt Guard обнаружил поддерживаемые ПД
-      PII --> Planner : PiiDetectedError
-      Planner --> Retrieval : RetrievalPlan.none()\nHTTP не выполняется
-    else Payload безопасен
-      PII --> Planner : OK
-      Planner -> OpenRouter : chat completion\n(retrieval planning)
-      OpenRouter --> Planner : mode + standalone query
-      Planner --> Retrieval : RetrievalPlan
-    end
+  alt Guard обнаружил поддерживаемые ПД
+    PII --> Embedding : PiiDetectedError
+    Embedding --> Retrieval : exception; HTTP не выполняется
+    Retrieval --> Agent : empty chunks
+  else Payload безопасен
+    Embedding -> OpenRouter : embeddings request
+    OpenRouter --> Embedding : query vector
+    Embedding --> Retrieval : query vector
+    Retrieval -> PG : pgvector top-k search
+    PG --> Retrieval : chunks + scores
+    Retrieval -> Retrieval : keep score >= min_score
+    Retrieval --> Agent : chunks from matching documents
   end
 
-  alt RetrievalPlan.mode == none
-    Retrieval --> Agent : empty RetrievalResult
-  else Нужен поиск в базе знаний
-    Retrieval -> PII : sanitize planner query
-    PII --> Retrieval : safe_plan_query
-    Retrieval -> Embedding : embed([safe_plan_query])
-    Embedding -> PII : ensure_safe(texts)
+  Agent -> PII : sanitize_knowledge_text(formatted chunks)
+  PII --> Agent : safe context + KB_CONTACT token map
+end
 
-    alt Guard обнаружил поддерживаемые ПД
-      PII --> Embedding : PiiDetectedError
-      Embedding --> Retrieval : exception; HTTP не выполняется
-      Retrieval --> Agent : empty RetrievalResult
-    else Payload безопасен
-      PII --> Embedding : OK
-      Embedding -> OpenRouter : embeddings request
-      OpenRouter --> Embedding : query vector
-      Embedding --> Retrieval : query vector
-      Retrieval -> PG : pgvector top-k search
-      PG --> Retrieval : candidate chunks + scores
-
-      alt Нет кандидатов выше min_score
-        Retrieval --> Agent : empty RetrievalResult
-      else Релевантный источник выбран
-        Retrieval --> Agent : RetrievalResult(chunks, source)
-      end
-    end
-  end
-
-  Agent -> PII : sanitize formatted RAG context
-  PII --> Agent : safe prompt context
-
-  == 2B. Основное решение LLM ==
+== 2B. Основное решение LLM для всех сообщений ==
 
   Agent -> LLM : decide(safe current message,\nsafe history, safe qualification,\nsafe RAG context, safe page title)
   LLM -> PII : ensure_safe(all outbound messages)
@@ -159,13 +127,15 @@ else Обычное или смешанное сообщение
     note right of Agent
       Возможен один corrective retry.
       Он проходит через тот же LLM ensure_safe().
+      Если коррекция снова нарушает контракт,
+      API возвращает 502 без сохранения этого хода.
     end note
   end
 
   Agent -> Agent : ignore LLM extracted_contact;\nuse only local_contact
   Agent -> PII : sanitize final answer and lead_summary
   PII --> Agent : safe answer + safe summary
-end
+  Agent -> Agent : restore only current KB_CONTACT tokens in answer
 
 == 3. Локальная бизнес-логика и сохранение ==
 
@@ -173,8 +143,8 @@ Agent -> SM : apply qualification patch\n+ merge local contact\n+ resolve transi
 SM --> Agent : validated next state
 Agent -> Agent : contact refusal / opt-out logic\n+ compute missing fields
 
-Agent -> PG : INSERT sanitized assistant message
-Agent -> PG : UPDATE session state,\nRAG source, flags, closed_at
+Agent -> PG : INSERT assistant message with public KB contacts
+Agent -> PG : UPDATE session state,\nflags, closed_at
 Agent -> PII : sanitize new or existing summary
 PII --> Agent : summary without real contacts
 Agent -> PG : UPSERT lead draft\nqualification + real local contact\n+ safe summary

@@ -1,6 +1,7 @@
 import json
 
 import httpx
+import pytest
 from app.channel.telegram_bot import handle_update
 
 
@@ -19,7 +20,8 @@ def telegram_update(
     }
 
 
-async def test_text_is_forwarded_to_innova_and_answer_is_sent() -> None:
+@pytest.mark.parametrize("text", ["Ищу Toyota Camry", "/help"])
+async def test_text_is_forwarded_to_innova_and_answer_is_sent(text) -> None:
     calls: list[tuple[str, dict]] = []
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -45,14 +47,14 @@ async def test_text_is_forwarded_to_innova_and_answer_is_sent() -> None:
             client,
             "https://telegram.test/bot-token",
             "https://innova.test",
-            telegram_update(),
+            telegram_update(text=text),
         )
 
     innova_payload = calls[0][1]
     assert innova_payload == {
         "anonymous_id": "tg:700",
         "channel": "telegram",
-        "content": "Ищу Toyota Camry",
+        "content": text,
     }
 
     telegram_payload = calls[1][1]

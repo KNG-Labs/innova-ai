@@ -19,7 +19,7 @@ htmlcov/
 
 # DeepEval
 **/.deepeval/
-/evals/reports/runs/**/deepeval/
+/evals/reports/
 
 
 # IDE
