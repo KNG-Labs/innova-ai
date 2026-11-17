@@ -135,6 +135,12 @@ def test_order_numbers_and_digits_near_dates_are_not_phones(text: str) -> None:
     [
         ("Telegram @Ivan_Auto", "Telegram [TELEGRAM_1]"),
         ("Telegram: Ivan_Auto", "Telegram: [TELEGRAM_1]"),
+        ("https://t.me/Ivan_Auto", "[TELEGRAM_1]"),
+        ("https://t.me/Ivan_Auto/", "[TELEGRAM_1]"),
+        ("Telegram: https://t.me/Ivan_Auto", "Telegram: [TELEGRAM_1]"),
+        ("http://t.me/Ivan_Auto", "[TELEGRAM_1]"),
+        ("t.me/Ivan_Auto", "[TELEGRAM_1]"),
+        ("(https://t.me/Ivan_Auto).", "([TELEGRAM_1])."),
     ],
 )
 def test_telegram_handle_formats(text: str, expected: str) -> None:
@@ -142,6 +148,45 @@ def test_telegram_handle_formats(text: str, expected: str) -> None:
 
     assert result.text == expected
     assert result.contacts == {"telegram": "@ivan_auto"}
+    assert result.contact_only is True
+    with pytest.raises(PiiDetectedError):
+        PiiSanitizer.ensure_safe(text)
+    PiiSanitizer.ensure_safe(result.text)
+
+
+def test_telegram_url_reuses_handle_token() -> None:
+    sanitizer = PiiSanitizer()
+    sanitizer.seed_contacts({"telegram": "@ivan_auto"})
+
+    result = sanitizer.sanitize_text("https://t.me/Ivan_Auto и @ivan_auto")
+
+    assert result.text == "[TELEGRAM_1] и [TELEGRAM_1]"
+
+
+@pytest.mark.parametrize("prefix", ["", "Telegram: "])
+def test_knowledge_telegram_url_is_masked_and_preserved_whole(prefix: str) -> None:
+    raw = "https://t.me/Dealer_Auto"
+
+    safe, contacts = PiiSanitizer().sanitize_knowledge_text(f"{prefix}{raw}.")
+
+    assert safe == f"{prefix}[KB_CONTACT_1]."
+    assert contacts == {"[KB_CONTACT_1]": raw}
+    PiiSanitizer.ensure_safe(safe)
+
+
+def test_telegram_label_does_not_turn_url_scheme_into_username() -> None:
+    raw = "Telegram: https://example.com"
+
+    result = PiiSanitizer().sanitize_text(raw)
+
+    assert result.text == raw
+    assert result.contacts == {}
+
+
+def test_telegram_url_does_not_match_partial_overlong_username() -> None:
+    raw = "https://t.me/" + "a" * 33
+
+    assert PiiSanitizer().find_entities(raw) == ()
 
 
 def test_recursive_payload_sanitization_reuses_seeded_tokens() -> None:
