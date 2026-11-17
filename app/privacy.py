@@ -71,6 +71,11 @@ _ENTITY_KINDS = {
 }
 _TELEGRAM_PATTERNS = [
     Pattern(
+        name="telegram-url",
+        regex=r"(?<![\w@./-])(?:https?://)?t\.me/[A-Z][A-Z0-9_]{4,31}(?!\w)/?",
+        score=0.9,
+    ),
+    Pattern(
         name="telegram-handle",
         regex=r"(?<![\w@])@[A-Z][A-Z0-9_]{4,31}\b",
         score=0.8,
@@ -79,7 +84,7 @@ _TELEGRAM_PATTERNS = [
         name="telegram-labeled",
         regex=(
             r"(?<=\b(?:telegram|телеграм|tg)\s*[:=-]?\s*)"
-            r"[A-Z][A-Z0-9_]{4,31}\b"
+            r"[A-Z][A-Z0-9_]{4,31}\b(?!://)"
         ),
         score=0.8,
     ),
@@ -317,7 +322,8 @@ class PiiSanitizer:
             return PiiSanitizer._normalize_phone(value)
         if kind == PiiKind.EMAIL:
             return value.strip().casefold()
-        return f"@{value.strip().lstrip('@').casefold()}"
+        username = value.strip().rstrip("/").rsplit("/", 1)[-1]
+        return f"@{username.lstrip('@').casefold()}"
 
     @staticmethod
     def _normalize_phone(value: str) -> str:
