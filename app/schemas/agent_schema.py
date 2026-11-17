@@ -2,7 +2,7 @@ from enum import StrEnum
 from typing import Annotated
 from uuid import UUID
 
-from pydantic import Field, BaseModel, ConfigDict, field_validator
+from pydantic import Field, BaseModel, ConfigDict, PrivateAttr, field_validator
 
 from app.domain import QUALIFICATION_FIELDS
 
@@ -136,6 +136,8 @@ class AgentMessageResponse(BaseModel):
 class AgentDecision(BaseModel):
     """Структурированный ответ агента после обработки сообщения."""
 
+    _generation_failed: bool = PrivateAttr(default=False)
+
     answer: str
     intent: str
     next_state: DialogState
@@ -146,6 +148,10 @@ class AgentDecision(BaseModel):
     lead_summary: str | None = None
     contact_preference: ContactPreference = ContactPreference.NONE
     lead_intent_status: LeadIntentStatus = LeadIntentStatus.ABSENT
+
+    @property
+    def generation_failed(self) -> bool:
+        return self._generation_failed
 
     @field_validator("qualification_patch", mode="before")
     @classmethod

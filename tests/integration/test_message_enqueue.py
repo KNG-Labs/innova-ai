@@ -1,8 +1,14 @@
 import pytest
 from uuid import UUID
 
-from app.client.ag2_agent_client import FakeAg2AgentClient, _FALLBACK_DECISION
+from app.client.ag2_agent_client import (
+    Ag2AgentClient,
+    FakeAg2AgentClient,
+    _FALLBACK_DECISION,
+)
 from app.client.queue_client import FakeQueueClient
+from app.models.dialog_session_model import DialogSession
+from app.models.lead_model import Lead
 from app.schemas.agent_schema import ContactPreference, DialogState
 from main import app
 from tests.factories import agent_decision
@@ -94,6 +100,149 @@ async def contact_capture(client):
     assert response.status_code == 200
     assert response.json()["state"] == "CONTACT_CAPTURE"
     return response.json()
+
+
+@pytest.mark.parametrize("failure", ["timeout", "empty", "invalid"])
+async def test_last_contact_completes_lead_when_llm_reply_fails(
+    client, contact_capture, failure
+) -> None:
+    class _FailingAgent:
+        def generate_reply(self, **kwargs):
+            if failure == "timeout":
+                raise TimeoutError
+            return None if failure == "empty" else "invalid JSON"
+
+    llm = object.__new__(Ag2AgentClient)
+    llm._agent = _FailingAgent()
+    app.state.llm_client = llm
+
+    response = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "contact-correction-user",
+            "session_id": contact_capture["session_id"],
+            "content": "+79991234567",
+        },
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["state"] == "LEAD_READY"
+    assert data["missing_fields"] == []
+    assert "Заявка принята" in data["answer"]
+    assert "Попробуйте ещё раз" not in data["answer"]
+    async with app.state.db_session_maker() as db:
+        lead = await db.get(Lead, UUID(data["lead_id"]))
+        assert lead is not None
+        assert lead.status == "ready"
+        assert lead.contact == {"phone": "+79991234567"}
+        session = await db.get(DialogSession, UUID(data["session_id"]))
+        assert session is not None
+        assert session.state == "LEAD_READY"
+        assert session.closed_at is not None
+    assert len(app.state.queue_client.enqueued) == 1
+    assert app.state.queue_client.enqueued[0].lead_id == UUID(data["lead_id"])
+
+    # A repeated submission against the closed session cannot enqueue its lead again.
+    retry = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "contact-correction-user",
+            "session_id": data["session_id"],
+            "content": "+79991234567",
+        },
+    )
+    assert retry.status_code == 200
+    assert retry.json()["session_id"] != data["session_id"]
+    assert retry.json()["state"] != "LEAD_READY"
+    assert retry.json()["answer"] == _FALLBACK_DECISION.answer
+    assert len(app.state.queue_client.enqueued) == 1
+
+
+@pytest.mark.parametrize("state", [DialogState.FAQ, DialogState.CONTACT_CAPTURE])
+async def test_llm_failure_does_not_complete_unconfirmed_or_incomplete_lead(
+    client, contact_capture, state
+) -> None:
+    async with app.state.db_session_maker() as db:
+        lead = await db.get(Lead, UUID(contact_capture["lead_id"]))
+        session = await db.get(DialogSession, UUID(contact_capture["session_id"]))
+        assert lead is not None
+        assert session is not None
+        session.state = state.value
+        if state == DialogState.CONTACT_CAPTURE:
+            lead.qualification = {"car_model": "Toyota Camry"}
+        await db.commit()
+    app.state.llm_client = FakeAg2AgentClient(responses=[_FALLBACK_DECISION])
+
+    response = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "contact-correction-user",
+            "session_id": contact_capture["session_id"],
+            "content": "+79991234567",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["state"] == state.value
+    assert response.json()["answer"] == _FALLBACK_DECISION.answer
+    async with app.state.db_session_maker() as db:
+        lead = await db.get(Lead, UUID(contact_capture["lead_id"]))
+        assert lead is not None
+        assert lead.status == "draft"
+    assert not app.state.queue_client.enqueued
+
+
+@pytest.mark.parametrize("existing_contact", [False, True])
+@pytest.mark.parametrize(
+    "overrides",
+    [
+        {"next_state": DialogState.CLOSED},
+        {"contact_preference": "refusal"},
+        {"lead_intent_status": "declined"},
+    ],
+)
+async def test_complete_lead_is_not_enqueued_after_refusal_or_cancellation(
+    client, contact_capture, existing_contact, overrides
+) -> None:
+    if existing_contact:
+        async with app.state.db_session_maker() as db:
+            lead = await db.get(Lead, UUID(contact_capture["lead_id"]))
+            assert lead is not None
+            lead.contact = {"phone": "+79991234567"}
+            await db.commit()
+    app.state.llm_client = FakeAg2AgentClient(
+        responses=[
+            agent_decision(
+                **{
+                    "next_state": DialogState.LEAD_READY,
+                    "lead_ready": True,
+                    **overrides,
+                }
+            )
+        ]
+    )
+
+    response = await client.post(
+        "/message",
+        json={
+            "anonymous_id": "contact-correction-user",
+            "session_id": contact_capture["session_id"],
+            "content": (
+                "Отмените заявку"
+                if existing_contact
+                else "Не оформляйте заявку, +79991234567"
+            ),
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["state"] != "LEAD_READY"
+    async with app.state.db_session_maker() as db:
+        lead = await db.get(Lead, UUID(contact_capture["lead_id"]))
+        assert lead is not None
+        assert lead.status == "draft"
+    assert not app.state.queue_client.enqueued
 
 
 class _CapturingClient(FakeAg2AgentClient):
@@ -311,9 +460,13 @@ async def test_contact_capture_preserves_faq_and_refusal_without_correction(
 async def test_existing_contact_allows_readiness_without_correction(
     client, contact_capture
 ) -> None:
+    async with app.state.db_session_maker() as db:
+        lead = await db.get(Lead, UUID(contact_capture["lead_id"]))
+        assert lead is not None
+        lead.contact = {"phone": "+79991234567"}
+        await db.commit()
     llm = _CapturingClient(
         responses=[
-            agent_decision(next_state=DialogState.CONTACT_CAPTURE, missing_fields=[]),
             agent_decision(
                 answer="Заявка готова.",
                 next_state=DialogState.LEAD_READY,
@@ -326,19 +479,15 @@ async def test_existing_contact_allows_readiness_without_correction(
     payload = {
         "anonymous_id": "contact-correction-user",
         "session_id": contact_capture["session_id"],
-        "content": "+79991234567",
+        "content": "+70000000000",
     }
-    stored = await client.post("/message", json=payload)
-    assert stored.status_code == 200
-    assert stored.json()["state"] == "CONTACT_CAPTURE"
-
-    ready = await client.post("/message", json={**payload, "content": "+70000000000"})
+    ready = await client.post("/message", json=payload)
 
     assert ready.status_code == 200
     assert ready.json()["answer"] == "Заявка готова."
     assert ready.json()["state"] == "LEAD_READY"
     assert ready.json()["missing_fields"] == []
-    assert len(llm.calls) == 2
+    assert len(llm.calls) == 1
     assert all(not call.get("force_contact_correction", False) for call in llm.calls)
     lead = await client.get(f"/leads/{contact_capture['lead_id']}")
     assert lead.json()["contact"] == {"phone": "+79991234567"}
