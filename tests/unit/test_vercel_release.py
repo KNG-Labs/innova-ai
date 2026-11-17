@@ -3,7 +3,30 @@ from pathlib import Path
 
 import pytest
 
-from scripts.verify_vercel import verify_deployment
+from scripts.verify_vercel import deployment_url, verify_deployment
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"deployment": {"target": "production", "url": "https://innova.vercel.app"}},
+        {"target": "production", "url": "innova.vercel.app"},
+    ],
+)
+def test_deployment_url_accepts_native_and_js_cli_results(payload):
+    assert deployment_url(payload) == "https://innova.vercel.app"
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"target": "preview", "url": "innova.vercel.app"},
+        {"target": "production", "url": "https://untrusted.example"},
+    ],
+)
+def test_deployment_url_rejects_wrong_target_or_origin(payload):
+    with pytest.raises(ValueError):
+        deployment_url(payload)
 
 
 def fake_vercel(monkeypatch, *, exposed_admin=False, unhealthy=False):

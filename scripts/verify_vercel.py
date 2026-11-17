@@ -8,7 +8,7 @@ from tempfile import TemporaryDirectory
 from urllib.parse import urlsplit
 
 
-def verify_deployment(url: str) -> None:
+def _validate_origin(url: str) -> None:
     origin = urlsplit(url)
     if (
         origin.scheme != "https"
@@ -20,6 +20,20 @@ def verify_deployment(url: str) -> None:
     ):
         raise ValueError("Expected a Vercel HTTPS deployment origin")
 
+
+def deployment_url(payload: dict) -> str:
+    # Native CLI wraps the result; its JS fallback returns the deployment itself.
+    deployment = payload.get("deployment", payload)
+    if deployment["target"] != "production":
+        raise ValueError("Expected a production deployment")
+    value = deployment["url"]
+    url = value if value.startswith("https://") else f"https://{value}"
+    _validate_origin(url)
+    return url
+
+
+def verify_deployment(url: str) -> None:
+    _validate_origin(url)
     with TemporaryDirectory() as temporary:
         body = Path(temporary) / "body"
         headers = Path(temporary) / "headers"

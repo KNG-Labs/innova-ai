@@ -161,13 +161,8 @@ jobs:
           deployment_url="$(python - <<'PYTHON'
           import json
           from pathlib import Path
-          from urllib.parse import urlsplit
-          deployment = json.loads(Path("/tmp/innova-deployment.json").read_text())["deployment"]
-          assert deployment["target"] == "production"
-          url = urlsplit(deployment["url"])
-          assert url.scheme == "https" and (url.hostname or "").endswith(".vercel.app")
-          assert url.netloc == url.hostname and not url.path and not url.query and not url.fragment
-          print(deployment["url"])
+          from scripts.verify_vercel import deployment_url
+          print(deployment_url(json.loads(Path("/tmp/innova-deployment.json").read_text())))
           PYTHON
           )"
           printf 'url=%s\n' "$deployment_url" >> "$GITHUB_OUTPUT"
