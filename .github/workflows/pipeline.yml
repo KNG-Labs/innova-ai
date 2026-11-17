@@ -157,14 +157,19 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          deployment_url="$(vercel deploy --prebuilt --prod --skip-domain)"
-          DEPLOYMENT_URL="$deployment_url" python - <<'PYTHON'
-          import os
+          vercel deploy --prebuilt --prod --skip-domain --json > /tmp/innova-deployment.json
+          deployment_url="$(python - <<'PYTHON'
+          import json
+          from pathlib import Path
           from urllib.parse import urlsplit
-          url = urlsplit(os.environ["DEPLOYMENT_URL"])
+          deployment = json.loads(Path("/tmp/innova-deployment.json").read_text())["deployment"]
+          assert deployment["target"] == "production"
+          url = urlsplit(deployment["url"])
           assert url.scheme == "https" and (url.hostname or "").endswith(".vercel.app")
           assert url.netloc == url.hostname and not url.path and not url.query and not url.fragment
+          print(deployment["url"])
           PYTHON
+          )"
           printf 'url=%s\n' "$deployment_url" >> "$GITHUB_OUTPUT"
 
       - name: Check staged deployment without creating conversations
