@@ -144,6 +144,7 @@ class AgentDecision(BaseModel):
     qualification_patch: dict[str, str | None] = Field(default_factory=dict)
     missing_fields: list[str]
     lead_ready: bool
+    # LLM выбирает токены; сервис заменяет их проверенными локальными значениями.
     extracted_contact: dict[str, str | None] | None = None
     lead_summary: str | None = None
     contact_preference: ContactPreference = ContactPreference.NONE

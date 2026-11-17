@@ -31,7 +31,7 @@ async def test_ready_lead_enqueues_once(client) -> None:
                     "budget": "3 млн",
                     "purchase_type": "кредит",
                 },
-                extracted_contact={"name": "Иван", "phone": "+79991234567"},
+                extracted_contact={"phone": "[PHONE_1]"},
                 missing_fields=[],
                 lead_ready=True,
             ),
@@ -44,7 +44,7 @@ async def test_ready_lead_enqueues_once(client) -> None:
                     "budget": "3 млн",
                     "purchase_type": "кредит",
                 },
-                extracted_contact={"name": "Иван", "phone": "+79991234567"},
+                extracted_contact={"phone": "[PHONE_1]"},
                 missing_fields=[],
                 lead_ready=True,
             ),
@@ -103,8 +103,16 @@ async def contact_capture(client):
 
 
 @pytest.mark.parametrize("failure", ["timeout", "empty", "invalid"])
+@pytest.mark.parametrize(
+    ("contact", "expected_contact"),
+    [
+        ("+79991234567", {"phone": "+79991234567"}),
+        ("client@example.com", {"email": "client@example.com"}),
+        ("https://t.me/client_user", {"telegram": "@client_user"}),
+    ],
+)
 async def test_last_contact_completes_lead_when_llm_reply_fails(
-    client, contact_capture, failure
+    client, contact_capture, failure, contact, expected_contact
 ) -> None:
     class _FailingAgent:
         def generate_reply(self, **kwargs):
@@ -121,7 +129,7 @@ async def test_last_contact_completes_lead_when_llm_reply_fails(
         json={
             "anonymous_id": "contact-correction-user",
             "session_id": contact_capture["session_id"],
-            "content": "+79991234567",
+            "content": contact,
         },
     )
 
@@ -135,7 +143,7 @@ async def test_last_contact_completes_lead_when_llm_reply_fails(
         lead = await db.get(Lead, UUID(data["lead_id"]))
         assert lead is not None
         assert lead.status == "ready"
-        assert lead.contact == {"phone": "+79991234567"}
+        assert lead.contact == expected_contact
         session = await db.get(DialogSession, UUID(data["session_id"]))
         assert session is not None
         assert session.state == "LEAD_READY"
@@ -149,7 +157,7 @@ async def test_last_contact_completes_lead_when_llm_reply_fails(
         json={
             "anonymous_id": "contact-correction-user",
             "session_id": data["session_id"],
-            "content": "+79991234567",
+            "content": contact,
         },
     )
     assert retry.status_code == 200

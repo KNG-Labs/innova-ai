@@ -132,7 +132,7 @@ end
     end note
   end
 
-  Agent -> Agent : ignore LLM extracted_contact;\nuse only local_contact
+  Agent -> Agent : resolve selected tokens from current message only;\nignore arbitrary LLM contact values
   Agent -> PII : sanitize final answer and lead_summary
   PII --> Agent : safe answer + safe summary
   Agent -> Agent : restore only current KB_CONTACT tokens in answer

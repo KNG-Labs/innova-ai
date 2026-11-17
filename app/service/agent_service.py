@@ -12,7 +12,7 @@ from app.repository.dialog_session_repository import DialogSessionRepository
 from app.repository.message_repository import MessageRepository
 from app.repository.user_repository import UserRepository
 from app.exceptions import AgentResponseError
-from app.privacy import PiiSanitizer
+from app.privacy import PiiEntity, PiiSanitizer
 from app.schemas.agent_schema import (
     AgentMessageRequest,
     AgentMessageResponse,
@@ -121,7 +121,16 @@ class AgentService:
                     "current_state": current_state.value,
                 },
             )
-            local_contact: dict[str, str | None] = dict(sanitized_message.contacts)
+            # В ответ на запрос контакта однозначная контактная реплика не требует LLM.
+            local_contact: dict[str, str | None] = (
+                dict(sanitized_message.contacts)
+                if current_state == DialogState.CONTACT_CAPTURE
+                and not contact_opt_out
+                and sanitized_message.contact_only
+                and not is_information_question(content)
+                and len(sanitized_message.candidates) == len(sanitized_message.contacts)
+                else {}
+            )
             contact_before_llm = merge_contact(current_contact, local_contact)
             current_missing_fields = compute_missing_fields(
                 qualification_data,
@@ -170,6 +179,7 @@ class AgentService:
                 decision,
                 pii=pii,
                 local_contact=local_contact,
+                contact_candidates=sanitized_message.candidates,
                 knowledge_contacts=knowledge_contacts,
             )
 
@@ -226,6 +236,7 @@ class AgentService:
                     decision,
                     pii=pii,
                     local_contact=local_contact,
+                    contact_candidates=sanitized_message.candidates,
                     knowledge_contacts=knowledge_contacts,
                 )
                 if (
@@ -310,6 +321,8 @@ class AgentService:
             contact_confirmation_rejected = (
                 next_state == DialogState.CONTACT_CAPTURE
                 and missing_fields == ["contact"]
+                and decision.contact_preference != ContactPreference.REFUSAL
+                and decision.lead_intent_status != LeadIntentStatus.DECLINED
                 and (
                     decision.next_state == DialogState.LEAD_READY or decision.lead_ready
                 )
@@ -331,6 +344,7 @@ class AgentService:
                     correction,
                     pii=pii,
                     local_contact=local_contact,
+                    contact_candidates=sanitized_message.candidates,
                     knowledge_contacts=knowledge_contacts,
                 )
                 if (
@@ -454,16 +468,29 @@ def _apply_local_privacy_result(
     *,
     pii: PiiSanitizer,
     local_contact: dict[str, str | None],
+    contact_candidates: dict[str, PiiEntity],
     knowledge_contacts: dict[str, str],
 ) -> AgentDecision:
-    """Восстановить только контакты текущей БЗ; контакт клиента извлечён локально."""
+    """Разрешить выбор модели только в контакты текущей реплики, хранимые локально."""
+    selected_contact: dict[str, str | None] = {
+        entity.kind.value: entity.normalized
+        for token, entity in contact_candidates.items()
+        if (decision.extracted_contact or {}).get(entity.kind.value) == token
+    }
+    if (
+        decision.contact_preference == ContactPreference.REFUSAL
+        or decision.lead_intent_status == LeadIntentStatus.DECLINED
+    ):
+        selected_contact = {}
+    else:
+        selected_contact = {**local_contact, **selected_contact}
     answer = pii.sanitize_text(decision.answer).text
     for token, contact in knowledge_contacts.items():
         answer = answer.replace(token, contact)
     return decision.model_copy(
         update={
             "answer": answer,
-            "extracted_contact": local_contact or None,
+            "extracted_contact": selected_contact or None,
             "lead_summary": (
                 pii.sanitize_text(decision.lead_summary).text
                 if decision.lead_summary
