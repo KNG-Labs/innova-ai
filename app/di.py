@@ -26,6 +26,11 @@ from app.service.lead_service import LeadService
 
 
 async def init_app_state(app: FastAPI) -> None:
+    if (
+        getattr(app.state, "public_demo", False)
+        and get_delivery_provider() != "disabled"
+    ):
+        raise RuntimeError("PUBLIC_DEMO=1 requires LEAD_DELIVERY_PROVIDER=disabled")
     # Privacy boundary должна быть готова до создания внешних клиентов.
     initialize_pii_analyzer()
 

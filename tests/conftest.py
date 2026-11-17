@@ -9,6 +9,8 @@ TEST_DATABASE_URL = os.getenv(
 )
 
 TEST_ENV = {
+    "PUBLIC_DEMO": "0",
+    "VERCEL": "0",
     "PYTHON_DOTENV_DISABLED": "1",
     "DATABASE_URL": TEST_DATABASE_URL,
     "LLM_PROVIDER": "stub",

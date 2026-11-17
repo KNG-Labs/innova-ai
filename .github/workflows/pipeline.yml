@@ -15,7 +15,7 @@ concurrency:
 
 env:
   PYTHON_VERSION: "3.13"
-  APP_IMAGE: ghcr.io/kng-labs/innova-ai:${{ github.sha }}
+  VERCEL_CLI_VERSION: "65.16.0"
 
 jobs:
   checks:
@@ -75,117 +75,106 @@ jobs:
       - name: Run tests
         run: uv run pytest -p pytest_asyncio.plugin -q
 
-      - name: Build production image
-        run: |
-          docker build \
-            --label "org.opencontainers.image.source=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" \
-            --label "org.opencontainers.image.revision=${GITHUB_SHA}" \
-            --tag "${APP_IMAGE}" \
-            .
-
-      - name: Inspect production image
-        run: |
-          docker run --rm --entrypoint sh "${APP_IMAGE}" -c '
-            test "$(id -u)" != "0"
-            test ! -e /app/.env
-            test ! -e /app/.env.production
-            test ! -e /app/tests
-            test ! -e /app/docs
-            test ! -e /app/evals
-            test ! -e /app/.git
-          '
-          docker run --rm --network none -i \
-            -e PYTHON_DOTENV_DISABLED=1 -e REDIS_URL=memory:// \
-            "${APP_IMAGE}" python -B - <<'PY'
-          from sqlalchemy.orm import configure_mappers
-          from app.db.base import Base
-          from app.worker.lead_delivery import deliver_lead
-          configure_mappers()
-          assert "lead_delivery_attempts" in {t.name for t in Base.metadata.sorted_tables}
-          print(deliver_lead.name)
-          PY
-
-      - name: Save verified image
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          mkdir -p /tmp/innova-image
-          docker image inspect --format '{{.Id}}' "${APP_IMAGE}" > /tmp/innova-image/image-id
-          docker save --output /tmp/innova-image/image.tar "${APP_IMAGE}"
-
-      - name: Upload verified image
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      - name: Install Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
-          name: verified-image-${{ github.run_id }}
-          path: /tmp/innova-image/
-          if-no-files-found: error
-          retention-days: 1
-          compression-level: 0
-          overwrite: true
+          node-version: "24"
 
-  publish-and-deploy:
-    name: Publish and deploy
+      - name: Run chat interface tests
+        run: |
+          npm install --prefix /tmp/innova-demo-tests --no-save --no-audit --no-fund jsdom@26.1.0
+          NODE_PATH=/tmp/innova-demo-tests/node_modules node --test tests/frontend/demo.test.cjs
+
+  deploy-vercel:
+    name: Deploy INNOVA
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: checks
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     environment: production
+    env:
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      PYTHON_DOTENV_DISABLED: "1"
+      PUBLIC_DEMO: "1"
     steps:
-      - name: Check out repository
+      - name: Check out tested commit
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
-      - name: Download verified image
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          name: verified-image-${{ github.run_id }}
-          path: /tmp/innova-image
+          persist-credentials: false
 
-      - name: Load and verify image
+      - name: Install Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "24"
+
+      - name: Install uv and Python
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.11.15"
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install release tools
         run: |
-          docker load --input /tmp/innova-image/image.tar
-          EXPECTED_IMAGE_ID="$(cat /tmp/innova-image/image-id)"
-          ACTUAL_IMAGE_ID="$(docker image inspect --format '{{.Id}}' "${APP_IMAGE}")"
-          test -n "${EXPECTED_IMAGE_ID}"
-          test "${ACTUAL_IMAGE_ID}" = "${EXPECTED_IMAGE_ID}"
+          npm install --prefix /tmp/innova-vercel-tools --no-save --no-audit --no-fund "vercel@${VERCEL_CLI_VERSION}"
+          echo /tmp/innova-vercel-tools/node_modules/.bin >> "$GITHUB_PATH"
+          uv sync --frozen --no-dev
 
-      - name: Log in to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-
-      - name: Publish immutable image
-        run: docker push "${APP_IMAGE}"
-
-      - name: Configure SSH
+      - name: Pull Vercel production settings
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
-          SSH_KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          install -m 700 -d "${HOME}/.ssh"
-          printf '%s\n' "${SSH_PRIVATE_KEY}" >"${HOME}/.ssh/id_ed25519"
-          chmod 600 "${HOME}/.ssh/id_ed25519"
-          printf '%s\n' "${SSH_KNOWN_HOSTS}" >"${HOME}/.ssh/known_hosts"
-          chmod 600 "${HOME}/.ssh/known_hosts"
+          test -n "${VERCEL_ORG_ID}"
+          test -n "${VERCEL_PROJECT_ID}"
+          vercel pull --yes --environment=production
 
-      - name: Upload release bundle
+      - name: Build production function
         env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_PORT: ${{ secrets.VPS_PORT }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-        run: |
-          RELEASE_DIR="/opt/innova/releases/${GITHUB_SHA}"
-          tar -czf /tmp/innova-release.tgz docker-compose.prod.yml scripts
-          ssh -p "${VPS_PORT}" "${VPS_USER}@${VPS_HOST}" "mkdir -p '${RELEASE_DIR}'"
-          scp -P "${VPS_PORT}" /tmp/innova-release.tgz "${VPS_USER}@${VPS_HOST}:${RELEASE_DIR}/"
-          ssh -p "${VPS_PORT}" "${VPS_USER}@${VPS_HOST}" \
-            "tar -xzf '${RELEASE_DIR}/innova-release.tgz' -C '${RELEASE_DIR}'"
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        # shortcut: native build hangs in CLI 65.16.0; remove the JS runner after a verified fix.
+        run: node /tmp/innova-vercel-tools/node_modules/@vercel/cli-support/dist/vc.js build --prod
 
-      - name: Deploy release
+      - name: Migrate and seed demo database
         env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_PORT: ${{ secrets.VPS_PORT }}
-          VPS_USER: ${{ secrets.VPS_USER }}
+          DATABASE_URL: ${{ secrets.DEMO_DATABASE_URL }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          EMBEDDING_PROVIDER: openrouter
         run: |
-          RELEASE_DIR="/opt/innova/releases/${GITHUB_SHA}"
-          ssh -p "${VPS_PORT}" "${VPS_USER}@${VPS_HOST}" \
-            "bash '${RELEASE_DIR}/scripts/deploy.sh' '${APP_IMAGE}' '${RELEASE_DIR}'"
+          uv run --frozen --no-dev python - <<'PYTHON'
+          import os
+          from sqlalchemy.engine import make_url
+          url = make_url(os.environ["DATABASE_URL"])
+          assert url.drivername == "postgresql+asyncpg", "Expected asyncpg URL"
+          assert url.database == "innova", "Expected the dedicated application database"
+          assert (url.host or "").endswith(".neon.tech"), "Expected Neon hostname"
+          assert "-pooler." not in (url.host or ""), "Use the direct Neon endpoint"
+          assert url.query.get("ssl") == "verify-full", "TLS verification is required"
+          PYTHON
+          uv run --frozen --no-dev alembic upgrade head
+          uv run --frozen --no-dev python -m scripts.seed_knowledge docs/RAG/Agent_memory.txt
+
+      - name: Stage production deployment
+        id: stage
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          deployment_url="$(vercel deploy --prebuilt --prod --skip-domain)"
+          DEPLOYMENT_URL="$deployment_url" python - <<'PYTHON'
+          import os
+          from urllib.parse import urlsplit
+          url = urlsplit(os.environ["DEPLOYMENT_URL"])
+          assert url.scheme == "https" and (url.hostname or "").endswith(".vercel.app")
+          assert url.netloc == url.hostname and not url.path and not url.query and not url.fragment
+          PYTHON
+          printf 'url=%s\n' "$deployment_url" >> "$GITHUB_OUTPUT"
+
+      - name: Check staged deployment without creating conversations
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          DEPLOYMENT_URL: ${{ steps.stage.outputs.url }}
+        run: uv run --frozen --no-dev python -m scripts.verify_vercel "$DEPLOYMENT_URL"
+
+      - name: Promote verified deployment
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          DEPLOYMENT_URL: ${{ steps.stage.outputs.url }}
+        run: vercel promote "$DEPLOYMENT_URL" --yes
