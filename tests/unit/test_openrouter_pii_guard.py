@@ -28,7 +28,10 @@ class _CapturingEmbeddings:
         return SimpleNamespace(data=[SimpleNamespace(embedding=[1.0])])
 
 
-async def test_llm_guard_blocks_raw_pii_before_agent_call() -> None:
+@pytest.mark.parametrize("force_contact_correction", [False, True])
+async def test_llm_guard_blocks_raw_pii_before_agent_call(
+    force_contact_correction,
+) -> None:
     agent = _CapturingAgent("{}")
     client = object.__new__(Ag2AgentClient)
     client._agent = agent
@@ -38,6 +41,7 @@ async def test_llm_guard_blocks_raw_pii_before_agent_call() -> None:
         history=[],
         current_state="GREETING",
         qualification_data={},
+        force_contact_correction=force_contact_correction,
     )
 
     assert agent.calls == []
@@ -64,7 +68,10 @@ async def test_llm_provider_failure_returns_technical_fallback(error) -> None:
     )
 
 
-async def test_llm_captured_payload_contains_tokens_not_original_values() -> None:
+@pytest.mark.parametrize("force_contact_correction", [False, True])
+async def test_llm_captured_payload_contains_tokens_not_original_values(
+    force_contact_correction,
+) -> None:
     raw = "Хочу Camry, телефон +79991234567, email user@example.com"
     safe = PiiSanitizer().sanitize_text(raw).text
     agent = _CapturingAgent(
@@ -79,6 +86,7 @@ async def test_llm_captured_payload_contains_tokens_not_original_values() -> Non
         history=[{"role": "user", "content": safe}],
         current_state="GREETING",
         qualification_data={},
+        force_contact_correction=force_contact_correction,
     )
 
     payload = str(agent.calls)
@@ -86,6 +94,10 @@ async def test_llm_captured_payload_contains_tokens_not_original_values() -> Non
     assert "user@example.com" not in payload
     assert "[PHONE_1]" in payload
     assert "[EMAIL_1]" in payload
+    assert (
+        "[Принудительная коррекция контакта: "
+        f"{'true' if force_contact_correction else 'false'}]"
+    ) in payload
 
 
 async def test_embedding_guard_blocks_raw_pii_before_http_call() -> None:

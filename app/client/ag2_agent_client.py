@@ -58,6 +58,12 @@ _SYSTEM_PROMPT = f"""\
 - При [Принудительная коррекция намерения: true] верни next_state=FAQ,
   lead_intent_status=needs_confirmation, пустой qualification_patch и один вопрос
   о намерении оформить заявку. Backend отклонил преждевременную квалификацию.
+- При [Принудительная коррекция контакта: true] backend не принял контакт и
+  отклонил готовность заявки. Объясни это и попроси проверить телефон либо указать
+  email или Telegram. Не подтверждай сохранение контакта или готовность заявки.
+  При явном отказе соблюдай правило contact_preference. Верни
+  next_state=CONTACT_CAPTURE, lead_ready=false, missing_fields из
+  [Недостающие поля] и пустой qualification_patch.
 - Во время QUALIFICATION отвечай на попутный FAQ, сохраняй next_state=QUALIFICATION.
   Не заменяй ответ очередным вопросом и не меняй данные из-за справочного запроса.
 - contact_preference: refusal — явный отказ от любого контакта; resume — явное
@@ -117,6 +123,7 @@ class LLMClient(Protocol):
         contact_opt_out: bool = False,
         lead_intent_confirmation_pending: bool = False,
         force_lead_intent_confirmation: bool = False,
+        force_contact_correction: bool = False,
     ) -> AgentDecision: ...
 
 
@@ -155,10 +162,14 @@ class Ag2AgentClient(LLMClient):
         contact_opt_out: bool = False,
         lead_intent_confirmation_pending: bool = False,
         force_lead_intent_confirmation: bool = False,
+        force_contact_correction: bool = False,
     ) -> AgentDecision:
         """Получить решение LLM; при сбое вернуть техническое сообщение об ошибке."""
         update_observation(
-            metadata={"force_lead_intent_confirmation": force_lead_intent_confirmation}
+            metadata={
+                "force_lead_intent_confirmation": force_lead_intent_confirmation,
+                "force_contact_correction": force_contact_correction,
+            }
         )
         context = _build_context_message(
             current_state,
@@ -169,6 +180,7 @@ class Ag2AgentClient(LLMClient):
             contact_opt_out,
             lead_intent_confirmation_pending,
             force_lead_intent_confirmation,
+            force_contact_correction,
         )
         full_message = f"{context}\n\nСообщение пользователя: {user_message}"
         messages = history + [{"role": "user", "content": full_message}]
@@ -207,6 +219,7 @@ def _build_context_message(
     contact_opt_out: bool = False,
     lead_intent_confirmation_pending: bool = False,
     force_lead_intent_confirmation: bool = False,
+    force_contact_correction: bool = False,
 ) -> str:
     kb = retrieved_context.strip() or "ничего релевантного не найдено"
     lines = [
@@ -219,6 +232,8 @@ def _build_context_message(
         f"{'true' if lead_intent_confirmation_pending else 'false'}]",
         "[Принудительная коррекция намерения: "
         f"{'true' if force_lead_intent_confirmation else 'false'}]",
+        "[Принудительная коррекция контакта: "
+        f"{'true' if force_contact_correction else 'false'}]",
     ]
     if page_title:
         lines.append(f"[Страница сайта: {page_title}]")
@@ -272,6 +287,7 @@ class FakeAg2AgentClient(LLMClient):
         contact_opt_out: bool = False,
         lead_intent_confirmation_pending: bool = False,
         force_lead_intent_confirmation: bool = False,
+        force_contact_correction: bool = False,
     ) -> AgentDecision:
         if self._responses and self._call_count < len(self._responses):
             result = self._responses[self._call_count]

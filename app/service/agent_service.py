@@ -306,6 +306,43 @@ class AgentService:
                 merged_qual,
             )
 
+            missing_fields = compute_missing_fields(merged_qual, final_contact)
+            contact_confirmation_rejected = (
+                next_state == DialogState.CONTACT_CAPTURE
+                and missing_fields == ["contact"]
+                and (
+                    decision.next_state == DialogState.LEAD_READY or decision.lead_ready
+                )
+            )
+            if contact_confirmation_rejected:
+                correction = await self._llm_client.decide(
+                    user_message=sanitized_content,
+                    history=history,
+                    current_state=next_state.value,
+                    qualification_data=pii.sanitize_value(merged_qual),
+                    retrieved_context=retrieved_context,
+                    page_title=safe_page_title,
+                    missing_fields=missing_fields,
+                    contact_opt_out=contact_opt_out,
+                    lead_intent_confirmation_pending=lead_intent_confirmation_pending,
+                    force_contact_correction=True,
+                )
+                correction = _apply_local_privacy_result(
+                    correction,
+                    pii=pii,
+                    local_contact=local_contact,
+                    knowledge_contacts=knowledge_contacts,
+                )
+                if (
+                    not correction.answer.strip()
+                    or correction.next_state != DialogState.CONTACT_CAPTURE
+                    or correction.lead_ready
+                    or correction.missing_fields != missing_fields
+                    or correction.qualification_patch
+                ):
+                    raise AgentResponseError("Agent ignored contact correction")
+                decision = decision.model_copy(update={"answer": correction.answer})
+
             # Сохранение ответа ассистента
             assistant_message = await self._messages.create(
                 session_id=session.id,
@@ -360,8 +397,6 @@ class AgentService:
             await self._db_session.flush()
             lead_id = lead.id
 
-            missing_fields = compute_missing_fields(merged_qual, final_contact)
-
             await self._db_session.commit()
             update_observation(
                 output=decision.answer,
@@ -369,6 +404,7 @@ class AgentService:
                     "proposed_state": decision.next_state.value,
                     "next_state": next_state.value,
                     "qualification_start_rejected": rejected_qualification_start,
+                    "contact_confirmation_rejected": contact_confirmation_rejected,
                     "lead_became_ready": became_ready,
                     "persisted": True,
                 },

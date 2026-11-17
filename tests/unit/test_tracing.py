@@ -185,7 +185,8 @@ async def test_concurrent_ag2_generations_keep_parents_and_per_call_usage(
 
 
 @pytest.mark.parametrize("reply", [None, "not-json"])
-async def test_parse_fallback_is_visible(capture, reply):
+@pytest.mark.parametrize("force_contact_correction", [False, True])
+async def test_parse_fallback_is_visible(capture, reply, force_contact_correction):
     class Agent:
         def generate_reply(self, **kwargs):
             return reply
@@ -193,12 +194,22 @@ async def test_parse_fallback_is_visible(capture, reply):
     client = object.__new__(Ag2AgentClient)
     client._agent = Agent()
     decision = await client.decide(
-        user_message="Camry", history=[], current_state="FAQ", qualification_data={}
+        user_message="Camry",
+        history=[],
+        current_state="FAQ",
+        qualification_data={},
+        force_contact_correction=force_contact_correction,
     )
     assert decision.intent == "unknown"
     [span] = capture()
     assert span.attributes["langfuse.observation.level"] == "WARNING"
     assert json.loads(span.attributes["langfuse.observation.metadata.fallback"]) is True
+    assert (
+        json.loads(
+            span.attributes["langfuse.observation.metadata.force_contact_correction"]
+        )
+        is force_contact_correction
+    )
 
 
 @pytest.fixture
