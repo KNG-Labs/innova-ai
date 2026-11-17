@@ -321,6 +321,8 @@ class AgentService:
             contact_confirmation_rejected = (
                 next_state == DialogState.CONTACT_CAPTURE
                 and missing_fields == ["contact"]
+                and decision.contact_preference != ContactPreference.REFUSAL
+                and decision.lead_intent_status != LeadIntentStatus.DECLINED
                 and (
                     decision.next_state == DialogState.LEAD_READY or decision.lead_ready
                 )

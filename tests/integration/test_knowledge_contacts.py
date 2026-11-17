@@ -3,7 +3,7 @@ from uuid import UUID
 
 import pytest
 
-from app.client.ag2_agent_client import FakeAg2AgentClient
+from app.client.ag2_agent_client import FakeAg2AgentClient, _FALLBACK_DECISION
 from app.models.dialog_session_model import DialogSession
 from app.models.lead_model import Lead
 from app.privacy import PiiSanitizer
@@ -161,9 +161,16 @@ async def test_third_party_contact_does_not_confirm_lead_intent(client):
     assert not lead["contact"]
 
 
-@pytest.mark.parametrize("contact_opt_out", [False, True])
+@pytest.mark.parametrize(
+    ("contact_opt_out", "content"),
+    [
+        (False, "Это телефон +79991234567?"),
+        (True, "Это телефон +79991234567?"),
+        (True, "+79991234567"),
+    ],
+)
 async def test_contact_question_does_not_fill_contact_or_resume_collection(
-    client, contact_opt_out
+    client, contact_opt_out, content
 ):
     initial = await client.post(
         "/message", json={"anonymous_id": "contact-question", "content": "Привет"}
@@ -181,15 +188,13 @@ async def test_contact_question_does_not_fill_contact_or_resume_collection(
             "purchase_type": "наличные",
         }
         await db.commit()
-    app.state.llm_client = FakeAg2AgentClient(
-        responses=[agent_decision(answer="Уточните, о чьём телефоне идёт речь.")]
-    )
+    app.state.llm_client = FakeAg2AgentClient(responses=[_FALLBACK_DECISION])
     response = await client.post(
         "/message",
         json={
             "anonymous_id": "contact-question",
             "session_id": data["session_id"],
-            "content": "Это телефон +79991234567?",
+            "content": content,
         },
     )
     assert response.status_code == 200
