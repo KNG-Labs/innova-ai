@@ -29,15 +29,24 @@ class _CapturingEmbeddings:
 
 
 @pytest.mark.parametrize("force_contact_correction", [False, True])
+@pytest.mark.parametrize(
+    "raw",
+    [
+        "Мой телефон +79991234567",
+        "https://t.me/ivan_auto",
+        "Telegram: https://t.me/ivan_auto",
+    ],
+)
 async def test_llm_guard_blocks_raw_pii_before_agent_call(
     force_contact_correction,
+    raw,
 ) -> None:
     agent = _CapturingAgent("{}")
     client = object.__new__(Ag2AgentClient)
     client._agent = agent
 
     decision = await client.decide(
-        user_message="Мой телефон +79991234567",
+        user_message=raw,
         history=[],
         current_state="GREETING",
         qualification_data={},
@@ -72,7 +81,10 @@ async def test_llm_provider_failure_returns_technical_fallback(error) -> None:
 async def test_llm_captured_payload_contains_tokens_not_original_values(
     force_contact_correction,
 ) -> None:
-    raw = "Хочу Camry, телефон +79991234567, email user@example.com"
+    raw = (
+        "Хочу Camry, телефон +79991234567, email user@example.com, "
+        "Telegram: https://t.me/ivan_auto"
+    )
     safe = PiiSanitizer().sanitize_text(raw).text
     agent = _CapturingAgent(
         '{"answer":"Хорошо","intent":"general","next_state":"FAQ",'
@@ -92,22 +104,33 @@ async def test_llm_captured_payload_contains_tokens_not_original_values(
     payload = str(agent.calls)
     assert "+79991234567" not in payload
     assert "user@example.com" not in payload
+    assert "https://t.me/ivan_auto" not in payload
+    assert "ivan_auto" not in payload
     assert "[PHONE_1]" in payload
     assert "[EMAIL_1]" in payload
+    assert "[TELEGRAM_1]" in payload
     assert (
         "[Принудительная коррекция контакта: "
         f"{'true' if force_contact_correction else 'false'}]"
     ) in payload
 
 
-async def test_embedding_guard_blocks_raw_pii_before_http_call() -> None:
+@pytest.mark.parametrize(
+    "raw",
+    [
+        "Телефон +79991234567",
+        "https://t.me/ivan_auto",
+        "Telegram: https://t.me/ivan_auto",
+    ],
+)
+async def test_embedding_guard_blocks_raw_pii_before_http_call(raw) -> None:
     embeddings = _CapturingEmbeddings()
     client = object.__new__(OpenRouterEmbeddingClient)
     client._client = SimpleNamespace(embeddings=embeddings)
     client._model = "test-model"
 
     with pytest.raises(PiiDetectedError):
-        await client.embed(["Телефон +79991234567"])
+        await client.embed([raw])
 
     assert embeddings.calls == []
 
