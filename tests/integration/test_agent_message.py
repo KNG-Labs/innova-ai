@@ -732,7 +732,7 @@ async def test_post_message_threads_missing_fields_to_llm(client) -> None:
                 intent="lead_request",
                 next_state=DialogState.QUALIFICATION,
                 qualification_patch={"car_model": "Toyota Camry"},
-                extracted_contact={"phone": "+79991234567"},
+                extracted_contact={"phone": "[PHONE_1]"},
                 missing_fields=["budget", "purchase_type"],
             ),
             agent_decision(
@@ -765,7 +765,7 @@ async def test_post_message_threads_missing_fields_to_llm(client) -> None:
     )
 
     assert second_response.status_code == 200
-    assert captured[0] == ["car_model", "budget", "purchase_type"]
+    assert captured[0] == ["car_model", "budget", "purchase_type", "contact"]
     assert captured[1] == ["budget", "purchase_type"]
 
 
@@ -796,7 +796,7 @@ async def test_mixed_contact_is_sanitized_for_llm_history_and_embeddings(
                 intent="lead_request",
                 next_state=DialogState.QUALIFICATION,
                 qualification_patch={"car_model": "Toyota Camry"},
-                extracted_contact={"phone": "+70000000000"},
+                extracted_contact={"phone": "[PHONE_1]", "email": "[EMAIL_1]"},
                 missing_fields=["budget", "purchase_type"],
                 lead_summary=("Позвонить +79991234567 или написать user@example.com"),
             ),
@@ -864,7 +864,16 @@ async def test_contact_only_message_uses_llm_with_masked_contact(client) -> None
     class _CapturingClient(FakeAg2AgentClient):
         def __init__(self) -> None:
             super().__init__(
-                responses=[agent_decision(answer="Как могу помочь дальше?")]
+                responses=[
+                    agent_decision(
+                        answer="Как могу помочь дальше?",
+                        extracted_contact={
+                            "phone": "[PHONE_1]",
+                            "email": "[EMAIL_1]",
+                            "telegram": "[TELEGRAM_1]",
+                        },
+                    )
+                ]
             )
             self.calls: list[dict] = []
 
@@ -890,7 +899,12 @@ async def test_contact_only_message_uses_llm_with_masked_contact(client) -> None
     assert response.status_code == 200
     assert response.json()["answer"] == "Как могу помочь дальше?"
     assert len(llm.calls) == 1
-    assert llm.calls[0]["missing_fields"] == ["car_model", "budget", "purchase_type"]
+    assert llm.calls[0]["missing_fields"] == [
+        "car_model",
+        "budget",
+        "purchase_type",
+        "contact",
+    ]
     assert "[PHONE_1]" in llm.calls[0]["user_message"]
     assert "+79991234567" not in repr(llm.calls)
     assert "user@example.com" not in repr(llm.calls)

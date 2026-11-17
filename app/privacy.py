@@ -55,6 +55,7 @@ class PiiEntity:
 class SanitizedText:
     text: str
     contacts: dict[str, str]
+    candidates: dict[str, PiiEntity]
     contact_only: bool
 
 
@@ -201,19 +202,23 @@ class PiiSanitizer:
     def sanitize_text(self, text: str) -> SanitizedText:
         entities = self.find_entities(text)
         contacts: dict[str, str] = {}
+        candidates: dict[str, PiiEntity] = {}
         parts: list[str] = []
         cursor = 0
 
         for entity in entities:
             parts.append(text[cursor : entity.start])
-            parts.append(self._token_for(entity.kind, entity.normalized))
+            token = self._token_for(entity.kind, entity.normalized)
+            parts.append(token)
             contacts[entity.kind.value] = entity.normalized
+            candidates[token] = entity
             cursor = entity.end
 
         parts.append(text[cursor:])
         return SanitizedText(
             text="".join(parts),
             contacts=contacts,
+            candidates=candidates,
             contact_only=bool(entities) and self._is_contact_only(text, entities),
         )
 

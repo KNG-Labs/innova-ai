@@ -51,7 +51,7 @@ async def test_full_lead_flow_reaches_lead_ready(client) -> None:
                 next_state=DialogState.LEAD_READY,
                 missing_fields=[],
                 lead_ready=True,
-                extracted_contact={"phone": "+79991234567", "name": "Иван"},
+                extracted_contact={"phone": "[PHONE_1]"},
                 lead_summary="Клиент хочет Toyota Camry в кредит, бюджет 2.5 млн.",
             ),
         ]
