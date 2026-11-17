@@ -1,11 +1,6 @@
 import pytest
 
 from app.client.ag2_agent_client import FakeAg2AgentClient
-from app.client.retrieval_planner_client import (
-    FakeRetrievalPlannerClient,
-    RetrievalMode,
-    RetrievalPlan,
-)
 from app.schemas.agent_schema import DialogState
 from app.schemas.agent_schema import LeadIntentStatus
 from main import app
@@ -695,7 +690,6 @@ async def test_post_message_threads_page_title_to_llm(client) -> None:
         responses=[
             agent_decision(
                 answer="Подскажу по Camry.",
-                next_state=DialogState.QUALIFICATION,
             ),
         ]
     )
@@ -857,10 +851,7 @@ async def test_mixed_contact_is_sanitized_for_llm_history_and_embeddings(
         assert "user@example.com" not in lead.summary
 
 
-async def test_contact_only_message_skips_all_external_ai_calls(
-    client, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setenv("EVAL_CAPTURE_TOKEN_USAGE", "1")
+async def test_contact_only_message_uses_llm_with_masked_contact(client) -> None:
 
     class _CapturingEmbedding:
         def __init__(self) -> None:
@@ -872,7 +863,9 @@ async def test_contact_only_message_skips_all_external_ai_calls(
 
     class _CapturingClient(FakeAg2AgentClient):
         def __init__(self) -> None:
-            super().__init__()
+            super().__init__(
+                responses=[agent_decision(answer="Как могу помочь дальше?")]
+            )
             self.calls: list[dict] = []
 
         async def decide(self, *args, **kwargs):
@@ -881,10 +874,8 @@ async def test_contact_only_message_skips_all_external_ai_calls(
 
     embedding = _CapturingEmbedding()
     llm = _CapturingClient()
-    planner = FakeRetrievalPlannerClient()
     app.state.embedding_client = embedding
     app.state.llm_client = llm
-    app.state.retrieval_planner_client = planner
 
     response = await client.post(
         "/message",
@@ -897,9 +888,13 @@ async def test_contact_only_message_skips_all_external_ai_calls(
     )
 
     assert response.status_code == 200
-    assert response.json()["answer"].startswith("Спасибо, контакт сохранён.")
-    assert llm.calls == []
-    assert planner.calls == []
+    assert response.json()["answer"] == "Как могу помочь дальше?"
+    assert len(llm.calls) == 1
+    assert llm.calls[0]["missing_fields"] == ["car_model", "budget", "purchase_type"]
+    assert "[PHONE_1]" in llm.calls[0]["user_message"]
+    assert "+79991234567" not in repr(llm.calls)
+    assert "user@example.com" not in repr(llm.calls)
+    assert "@ivan_auto" not in repr(llm.calls)
     assert embedding.calls == []
 
     async with app.state.db_session_maker() as db:
@@ -907,31 +902,7 @@ async def test_contact_only_message_skips_all_external_ai_calls(
             Message, UUID(response.json()["assistant_message_id"])
         )
         assert assistant_message is not None
-        assert assistant_message.message_metadata == {
-            "eval_token_usage": {
-                "prompt_tokens": 0,
-                "completion_tokens": 0,
-                "total_tokens": 0,
-                "calls": 0,
-                "complete": True,
-                "components": {
-                    "retrieval_planner": {
-                        "prompt_tokens": 0,
-                        "completion_tokens": 0,
-                        "total_tokens": 0,
-                        "calls": 0,
-                        "complete": True,
-                    },
-                    "agent": {
-                        "prompt_tokens": 0,
-                        "completion_tokens": 0,
-                        "total_tokens": 0,
-                        "calls": 0,
-                        "complete": True,
-                    },
-                },
-            }
-        }
+        assert assistant_message.message_metadata is None
         lead = await db.get(Lead, UUID(response.json()["lead_id"]))
         assert lead is not None
         assert lead.contact == {
@@ -1093,132 +1064,9 @@ async def test_faq_during_qualification_preserves_data_and_can_resume(client) ->
         row = await db.get(DialogSession, UUID(session_id))
         assert row is not None
         assert row.expected_qualification_field == "budget"
-        assert row.last_rag_source_title == "Программа Trade-in"
 
 
-async def test_trade_in_follow_up_does_not_send_credit_context_to_llm(client) -> None:
-    captured_contexts: list[str] = []
-
-    class _TradeInEmbedding:
-        async def embed(self, texts):
-            embeddings = []
-            for text in texts:
-                normalized = text.casefold()
-                if "trade" in normalized or "трей" in normalized:
-                    vector = [1.0, 0.0]
-                elif "кредит" in normalized:
-                    vector = [0.0, 1.0]
-                else:
-                    vector = [0.6, 0.8]
-                embeddings.append(vector + [0.0] * 1534)
-            return embeddings
-
-    class _CapturingClient(FakeAg2AgentClient):
-        async def decide(self, *args, retrieved_context="", **kwargs):
-            captured_contexts.append(retrieved_context)
-            return await super().decide(
-                *args,
-                retrieved_context=retrieved_context,
-                **kwargs,
-            )
-
-    app.state.embedding_client = _TradeInEmbedding()
-    app.state.retrieval_planner_client = FakeRetrievalPlannerClient(
-        [
-            RetrievalPlan(
-                mode=RetrievalMode.LAST_SOURCE,
-                query="Условия программы Trade-in",
-            ),
-            RetrievalPlan(
-                mode=RetrievalMode.LAST_SOURCE,
-                query="Условия программы Trade-in",
-            ),
-            RetrievalPlan(
-                mode=RetrievalMode.LAST_SOURCE,
-                query="Подробности программы Trade-in",
-            ),
-        ]
-    )
-    knowledge = await client.post(
-        "/knowledge/documents",
-        json=[
-            {
-                "title": "Программа Trade-in",
-                "content": (
-                    "Оценка автомобиля по программе trade-in бесплатна. "
-                    "Для оценки нужны ПТС, СТС и паспорт собственника."
-                ),
-            },
-            {
-                "title": "Кредитование и финансирование",
-                "content": (
-                    "Автокредит оформляется через банки-партнёры. "
-                    "Первоначальный взнос — от 10%."
-                ),
-            },
-        ],
-    )
-    assert knowledge.status_code == 201
-
-    app.state.llm_client = _CapturingClient(
-        responses=[
-            agent_decision(
-                answer="Trade-in позволяет сдать автомобиль в зачёт нового.",
-            ),
-            agent_decision(
-                answer="Оценка бесплатна; нужны ПТС, СТС и паспорт собственника.",
-            ),
-            agent_decision(
-                answer="Оценка бесплатна и занимает 30–40 минут.",
-            ),
-            agent_decision(
-                answer="Для оценки нужны ПТС или ЭПТС, СТС и паспорт.",
-            ),
-        ]
-    )
-
-    first = await client.post(
-        "/message",
-        json={
-            "anonymous_id": "trade-in-follow-up-user",
-            "content": "Расскажи про треййдин",
-        },
-    )
-    second = await client.post(
-        "/message",
-        json={
-            "anonymous_id": "trade-in-follow-up-user",
-            "session_id": first.json()["session_id"],
-            "content": "А условия",
-        },
-    )
-    third = await client.post(
-        "/message",
-        json={
-            "anonymous_id": "trade-in-follow-up-user",
-            "session_id": first.json()["session_id"],
-            "content": "Условия",
-        },
-    )
-    fourth = await client.post(
-        "/message",
-        json={
-            "anonymous_id": "trade-in-follow-up-user",
-            "session_id": first.json()["session_id"],
-            "content": "Подробнее",
-        },
-    )
-
-    assert second.status_code == 200
-    assert "кредит" not in second.json()["answer"].casefold()
-    assert third.json()["answer"].startswith("Оценка бесплатна")
-    assert fourth.json()["answer"].startswith("Для оценки нужны")
-    for context in captured_contexts[1:]:
-        assert "[Источник: Программа Trade-in]" in context
-        assert "Кредитование и финансирование" not in context
-
-
-async def test_explicit_credit_topic_replaces_saved_trade_in_source(client) -> None:
+async def test_each_message_searches_current_topic(client) -> None:
     embedding_calls: list[list[str]] = []
     captured_contexts: list[str] = []
 
@@ -1291,14 +1139,8 @@ async def test_explicit_credit_topic_replaces_saved_trade_in_source(client) -> N
     assert "[Источник: Кредитование и финансирование]" in captured_contexts[1]
     assert "Программа Trade-in" not in captured_contexts[1]
 
-    session_maker = app.state.db_session_maker
-    async with session_maker() as db:
-        row = await db.get(DialogSession, UUID(first.json()["session_id"]))
-        assert row is not None
-        assert row.last_rag_source_title == "Кредитование и финансирование"
 
-
-async def test_low_relevance_keeps_previous_confirmed_source(client) -> None:
+async def test_low_relevance_returns_empty_context(client) -> None:
     captured_contexts: list[str] = []
 
     class _Embedding:
@@ -1323,9 +1165,7 @@ async def test_low_relevance_keeps_previous_confirmed_source(client) -> None:
             )
 
     app.state.embedding_client = _Embedding()
-    app.state.retrieval_planner_client = FakeRetrievalPlannerClient(
-        [RetrievalPlan.none()]
-    )
+
     knowledge = await client.post(
         "/knowledge/documents",
         json=[
@@ -1362,14 +1202,9 @@ async def test_low_relevance_keeps_previous_confirmed_source(client) -> None:
 
     assert second.status_code == 200
     assert captured_contexts[1] == ""
-    session_maker = app.state.db_session_maker
-    async with session_maker() as db:
-        row = await db.get(DialogSession, UUID(first.json()["session_id"]))
-        assert row is not None
-        assert row.last_rag_source_title == "Программа Trade-in"
 
 
-async def test_rag_source_is_not_shared_between_users_or_channels(client) -> None:
+async def test_current_query_is_independent_of_other_users_and_channels(client) -> None:
     captured_contexts: list[str] = []
 
     class _Embedding:
@@ -1443,7 +1278,7 @@ async def test_rag_source_is_not_shared_between_users_or_channels(client) -> Non
     assert captured_contexts[1:] == ["", ""]
 
 
-async def test_credit_offer_confirmation_retrieves_credit_and_keeps_original_yes(
+async def test_confirmation_keeps_original_message_without_rewriting_query(
     client,
 ) -> None:
     captured_user_messages: list[str] = []
@@ -1476,14 +1311,7 @@ async def test_credit_offer_confirmation_retrieves_credit_and_keeps_original_yes
             )
 
     app.state.embedding_client = _CreditEmbedding()
-    app.state.retrieval_planner_client = FakeRetrievalPlannerClient(
-        [
-            RetrievalPlan(
-                mode=RetrievalMode.LAST_SOURCE,
-                query="Условия автокредитования",
-            )
-        ]
-    )
+
     knowledge = await client.post(
         "/knowledge/documents",
         json=[
@@ -1530,15 +1358,10 @@ async def test_credit_offer_confirmation_retrieves_credit_and_keeps_original_yes
 
     assert second.status_code == 200
     assert captured_user_messages == ["Кредит что такое?", "Да"]
-    assert "[Источник: Кредитование и финансирование]" in captured_contexts[1]
+    assert "[Источник: Кредитование и финансирование]" in captured_contexts[0]
+    assert captured_contexts[1] == ""
     assert "бюджет" not in second.json()["answer"].casefold()
     assert second.json()["state"] == "FAQ"
-
-    session_maker = app.state.db_session_maker
-    async with session_maker() as db:
-        row = await db.get(DialogSession, UUID(first.json()["session_id"]))
-        assert row is not None
-        assert row.last_rag_source_title == "Кредитование и финансирование"
 
 
 async def test_credit_word_cannot_start_qualification_from_faq(client) -> None:
@@ -1563,6 +1386,10 @@ async def test_credit_word_cannot_start_qualification_from_faq(client) -> None:
                 next_state=DialogState.QUALIFICATION,
                 qualification_patch={"purchase_type": "кредит"},
                 missing_fields=["car_model", "budget", "contact"],
+            ),
+            agent_decision(
+                answer="Хотите оформить покупку в кредит?",
+                lead_intent_status=LeadIntentStatus.NEEDS_CONFIRMATION,
             ),
         ]
     )
@@ -1702,9 +1529,7 @@ async def test_yes_after_purchase_confirmation_starts_qualification_and_restores
         ],
     )
     assert knowledge.status_code == 201
-    app.state.retrieval_planner_client = FakeRetrievalPlannerClient(
-        [RetrievalPlan.none()]
-    )
+
     app.state.llm_client = _CapturingClient(
         responses=[
             agent_decision(
@@ -1787,9 +1612,7 @@ async def test_nonconfirming_turn_clears_pending_and_later_yes_stays_faq(
         ],
     )
     assert knowledge.status_code == 201
-    app.state.retrieval_planner_client = FakeRetrievalPlannerClient(
-        [RetrievalPlan.none(), RetrievalPlan.none()]
-    )
+
     app.state.llm_client = _CapturingClient(
         responses=[
             agent_decision(
@@ -1871,12 +1694,18 @@ async def test_rejected_qualification_start_gets_one_corrective_retry(client) ->
     )
 
     assert response.json()["state"] == "FAQ"
+    assert (
+        response.json()["answer"]
+        == "Хотите, чтобы я помог подобрать Skoda для покупки?"
+    )
     assert correction_flags == [False, True]
     lead = await client.get(f"/leads/{response.json()['lead_id']}")
     assert lead.json()["qualification"] == {}
 
 
-async def test_repeated_bad_qualification_uses_safe_fallback(client) -> None:
+async def test_repeated_bad_qualification_returns_error_without_partial_writes(
+    client,
+) -> None:
     invalid = agent_decision(
         answer="Начнём подбор.",
         intent="lead_request",
@@ -1890,12 +1719,14 @@ async def test_repeated_bad_qualification_uses_safe_fallback(client) -> None:
         json={"anonymous_id": "fallback-intent-user", "content": "Skoda"},
     )
 
-    assert response.json()["state"] == "FAQ"
-    assert response.json()["answer"] == (
-        "Уточните, пожалуйста: хотите, чтобы я помог подобрать автомобиль для покупки?"
-    )
-    lead = await client.get(f"/leads/{response.json()['lead_id']}")
-    assert lead.json()["qualification"] == {}
+    assert response.status_code == 502
+    assert response.json() == {"detail": "Agent response unavailable"}
+    async with app.state.db_session_maker() as db:
+        from sqlalchemy import select, func
+
+        assert await db.scalar(select(func.count()).select_from(Message)) == 0
+        assert await db.scalar(select(func.count()).select_from(Lead)) == 0
+        assert await db.scalar(select(func.count()).select_from(DialogSession)) == 0
 
 
 async def test_intent_confirmation_pending_is_isolated_by_user_and_channel(

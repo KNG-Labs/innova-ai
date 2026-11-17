@@ -217,6 +217,19 @@ class PiiSanitizer:
             contact_only=bool(entities) and self._is_contact_only(text, entities),
         )
 
+    def sanitize_knowledge_text(self, text: str) -> tuple[str, dict[str, str]]:
+        """Маскировать контакты публичной БЗ отдельно от контактов клиента."""
+        parts: list[str] = []
+        contacts: dict[str, str] = {}
+        cursor = 0
+        for entity in self.find_entities(text):
+            token = f"[KB_CONTACT_{len(contacts) + 1}]"
+            parts.extend((text[cursor : entity.start], token))
+            contacts[token] = entity.raw
+            cursor = entity.end
+        parts.append(text[cursor:])
+        return "".join(parts), contacts
+
     def sanitize_value(self, value: Any) -> Any:
         """Рекурсивно очистить строки в JSON-подобной структуре."""
 

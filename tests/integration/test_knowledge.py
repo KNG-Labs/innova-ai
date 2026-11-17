@@ -4,7 +4,6 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
 from app.client.embedding_client import FakeEmbeddingClient
-from app.client.retrieval_planner_client import FakeRetrievalPlannerClient
 from app.db.base import Base
 from app.schemas.knowledge_schema import KnowledgeDocumentCreate
 from app.service.knowledge_ingestion_service import KnowledgeIngestionService
@@ -52,12 +51,11 @@ async def test_relevant_faq_is_retrieved(session):
     retrieval = KnowledgeRetrievalService(
         session,
         FakeEmbeddingClient(),
-        FakeRetrievalPlannerClient(),
         min_score=0.2,
     )
     result = await retrieval.retrieve("сколько стоит внедрение пилота")
-    assert result.chunks
-    assert any("150000" in c.content for c in result.chunks)
+    assert result
+    assert any("150000" in c.content for c in result)
 
 
 async def test_unknown_question_returns_nothing(session):
@@ -65,11 +63,10 @@ async def test_unknown_question_returns_nothing(session):
     retrieval = KnowledgeRetrievalService(
         session,
         FakeEmbeddingClient(),
-        FakeRetrievalPlannerClient(),
         min_score=0.2,
     )
     result = await retrieval.retrieve("как приготовить домашний борщ")
-    assert result.chunks == ()
+    assert result == ()
 
 
 async def test_ingest_and_list_via_api(client):

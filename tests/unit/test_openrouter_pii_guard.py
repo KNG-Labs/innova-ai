@@ -4,12 +4,7 @@ import pytest
 
 from app.client.ag2_agent_client import Ag2AgentClient
 from app.client.embedding_client import OpenRouterEmbeddingClient
-from app.client.retrieval_planner_client import (
-    Ag2RetrievalPlannerClient,
-    RetrievalPlan,
-)
 from app.privacy import PiiAnalysisError, PiiDetectedError, PiiSanitizer
-from evals.judge import OpenRouterJudge
 
 pytestmark = pytest.mark.unit
 
@@ -33,28 +28,6 @@ class _CapturingEmbeddings:
         return SimpleNamespace(data=[SimpleNamespace(embedding=[1.0])])
 
 
-class _CapturingJudgeCompletions:
-    def __init__(self) -> None:
-        self.calls: list[dict] = []
-
-    def create(self, **kwargs):
-        self.calls.append(kwargs)
-        return SimpleNamespace(
-            choices=[SimpleNamespace(message=SimpleNamespace(content="{}"))]
-        )
-
-
-class _CapturingAsyncJudgeCompletions:
-    def __init__(self) -> None:
-        self.calls: list[dict] = []
-
-    async def create(self, **kwargs):
-        self.calls.append(kwargs)
-        return SimpleNamespace(
-            choices=[SimpleNamespace(message=SimpleNamespace(content="{}"))]
-        )
-
-
 async def test_llm_guard_blocks_raw_pii_before_agent_call() -> None:
     agent = _CapturingAgent("{}")
     client = object.__new__(Ag2AgentClient)
@@ -69,6 +42,26 @@ async def test_llm_guard_blocks_raw_pii_before_agent_call() -> None:
 
     assert agent.calls == []
     assert decision.intent == "unknown"
+
+
+@pytest.mark.parametrize("error", [TimeoutError, RuntimeError])
+async def test_llm_provider_failure_returns_technical_fallback(error) -> None:
+    class _FailingAgent:
+        def generate_reply(self, **kwargs):
+            raise error("provider failure")
+
+    client = object.__new__(Ag2AgentClient)
+    client._agent = _FailingAgent()
+    decision = await client.decide(
+        user_message="Привет",
+        history=[],
+        current_state="FAQ",
+        qualification_data={},
+    )
+    assert decision.intent == "unknown"
+    assert (
+        decision.answer == "Извините, не удалось обработать запрос. Попробуйте ещё раз."
+    )
 
 
 async def test_llm_captured_payload_contains_tokens_not_original_values() -> None:
@@ -89,41 +82,6 @@ async def test_llm_captured_payload_contains_tokens_not_original_values() -> Non
     )
 
     payload = str(agent.calls)
-    assert "+79991234567" not in payload
-    assert "user@example.com" not in payload
-    assert "[PHONE_1]" in payload
-    assert "[EMAIL_1]" in payload
-
-
-async def test_planner_guard_blocks_raw_pii_before_agent_call() -> None:
-    agent = _CapturingAgent('{"mode":"none","query":""}')
-    client = object.__new__(Ag2RetrievalPlannerClient)
-    client._agent = agent
-
-    result = await client.plan(
-        current_message="Условия кредита, телефон +79991234567",
-        last_source_title="Кредит",
-        history=[],
-    )
-
-    assert agent.calls == []
-    assert result == RetrievalPlan.none()
-
-
-async def test_planner_captured_payload_contains_tokens_not_original_values() -> None:
-    raw = "Кредит, телефон +79991234567, email user@example.com"
-    safe = PiiSanitizer().sanitize_text(raw).text
-    agent = _CapturingAgent('{"mode":"current","query":"Условия кредита"}')
-    client = object.__new__(Ag2RetrievalPlannerClient)
-    client._agent = agent
-
-    await client.plan(
-        current_message=safe,
-        last_source_title="Кредит",
-        history=[{"role": "user", "content": safe}],
-    )
-
-    payload = repr(agent.calls)
     assert "+79991234567" not in payload
     assert "user@example.com" not in payload
     assert "[PHONE_1]" in payload
@@ -169,33 +127,3 @@ async def test_embedding_analyzer_failure_is_fail_closed(monkeypatch) -> None:
         await client.embed(["Безопасный на вид текст"])
 
     assert embeddings.calls == []
-
-
-def test_eval_judge_pseudonymizes_pii_and_preserves_value_identity() -> None:
-    completions = _CapturingJudgeCompletions()
-    judge = OpenRouterJudge(model="test-judge", api_key="test-key")
-    judge._client = SimpleNamespace(chat=SimpleNamespace(completions=completions))
-
-    judge.generate(
-        "Ответ: +7 (999) 777-88-01; ожидается +79997778801; "
-        "другой номер +1 415 555 2671"
-    )
-
-    payload = repr(completions.calls)
-    assert "+7 (999) 777-88-01" not in payload
-    assert "+79997778801" not in payload
-    assert "+1 415 555 2671" not in payload
-    assert payload.count("[PHONE_1]") == 2
-    assert payload.count("[PHONE_2]") == 1
-
-
-async def test_eval_judge_async_pseudonymizes_pii() -> None:
-    completions = _CapturingAsyncJudgeCompletions()
-    judge = OpenRouterJudge(model="test-judge", api_key="test-key")
-    judge._async_client = SimpleNamespace(chat=SimpleNamespace(completions=completions))
-
-    await judge.a_generate("Телефон дилера: +7 (999) 777-88-01")
-
-    payload = repr(completions.calls)
-    assert "+7 (999) 777-88-01" not in payload
-    assert "[PHONE_1]" in payload

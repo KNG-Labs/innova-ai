@@ -7,6 +7,10 @@ class InnovaAIError(Exception):
     """Базовое исключение"""
 
 
+class AgentResponseError(InnovaAIError):
+    """Не удалось получить допустимый ответ агента."""
+
+
 class SessionOwnershipError(InnovaAIError):
     """
     Попытка использовать сессию, принадлежащую другому пользователю.

@@ -6,6 +6,7 @@ from typing import AsyncIterator
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.di import close_app_state, init_app_state
@@ -39,20 +40,29 @@ async def lifespan(current_app: FastAPI) -> AsyncIterator[None]:
         await close_app_state(current_app)
 
 
-app = FastAPI(lifespan=lifespan)
+def create_app() -> FastAPI:
+    current_app = FastAPI(lifespan=lifespan)
+    current_app.state.public_demo = os.getenv("PUBLIC_DEMO", "0") == "1"
+    current_app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_cors_origins(),
+        allow_credentials=False,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+    current_app.include_router(message_router, tags=["Messages"])
+    current_app.include_router(health_router)
+    if not current_app.state.public_demo:
+        current_app.include_router(session_router)
+        current_app.include_router(lead_router)
+        current_app.include_router(knowledge_router)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=_cors_origins(),
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+    @current_app.get("/", include_in_schema=False)
+    async def home() -> RedirectResponse:
+        return RedirectResponse("/static/widget-demo.html")
 
-app.include_router(message_router, tags=["Messages"])
-app.include_router(session_router)
-app.include_router(lead_router)
-app.include_router(knowledge_router)
-app.include_router(health_router)
+    current_app.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static")
+    return current_app
 
-app.mount("/static", StaticFiles(directory=_STATIC_DIR), name="static")
+
+app = create_app()

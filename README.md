@@ -38,6 +38,8 @@ docker compose up --build api worker
 Настройка провайдеров, запуск Telegram-бота и работа с кодом описаны в
 [инструкции по разработке](docs/DEVELOPMENT.md).
 API пока не имеет аутентификации; административные методы нельзя открывать в интернет.
+Для публичного демо задайте `PUBLIC_DEMO=1` и `LEAD_DELIVERY_PROVIDER=disabled`:
+маршруты управления знаниями, лидами и просмотра сессий будут отключены.
 
 ## Документация
 
@@ -45,7 +47,8 @@ API пока не имеет аутентификации; администра�
 - [API и демонстрационная страница](docs/API.md)
 - [Текущая архитектура, состояния диалога и ограничения](docs/ARCHITECTURE.md)
 - [Доставка лидов: повторы и ручная проверка](docs/operations/CELERY.md)
-- [CI/CD](docs/operations/CI_CD.md) и [развёртывание на VPS](docs/operations/VPS_DEPLOY.md)
+- [CI/CD](docs/operations/CI_CD.md) и [публичное демо на Vercel](docs/operations/VERCEL_DEPLOY.md)
+- [Прежнее развёртывание на VPS](docs/operations/VPS_DEPLOY.md)
 - [Оценка качества и метрики](docs/EVALUATION.md)
 - [Трассировка Langfuse](docs/operations/LANGFUSE.md)
 - [Продуктовое видение](docs/PRD.md) и [целевая архитектура](docs/System_Design.md)
