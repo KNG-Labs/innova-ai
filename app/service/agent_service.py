@@ -343,6 +343,16 @@ class AgentService:
                     raise AgentResponseError("Agent ignored contact correction")
                 decision = decision.model_copy(update={"answer": correction.answer})
 
+            if decision.generation_failed and next_state == DialogState.LEAD_READY:
+                decision = decision.model_copy(
+                    update={
+                        "answer": (
+                            "Заявка принята. Не удалось сформировать ответ; "
+                            "повторно отправлять заявку не нужно."
+                        )
+                    }
+                )
+
             # Сохранение ответа ассистента
             assistant_message = await self._messages.create(
                 session_id=session.id,

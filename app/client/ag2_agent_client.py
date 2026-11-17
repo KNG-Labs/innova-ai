@@ -24,6 +24,7 @@ _FALLBACK_DECISION = AgentDecision(
     lead_ready=False,
     lead_summary=None,
 )
+_FALLBACK_DECISION._generation_failed = True
 
 _fields_desc = "\n".join(f"- {k}: {v}" for k, v in QUALIFICATION_FIELDS.items())
 _SYSTEM_PROMPT = f"""\

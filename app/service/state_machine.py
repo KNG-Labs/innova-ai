@@ -1,6 +1,11 @@
 import re
 
-from app.schemas.agent_schema import AgentDecision, DialogState, LeadIntentStatus
+from app.schemas.agent_schema import (
+    AgentDecision,
+    ContactPreference,
+    DialogState,
+    LeadIntentStatus,
+)
 from app.domain import REQUIRED_QUAL
 
 
@@ -104,6 +109,21 @@ def resolve_next_state(
     """
 
     suggested = decision.next_state
+
+    if (
+        decision.contact_preference == ContactPreference.REFUSAL
+        or decision.lead_intent_status == LeadIntentStatus.DECLINED
+    ):
+        if suggested == DialogState.LEAD_READY:
+            suggested = current
+    # Новый принятый контакт завершает подтверждённую заявку даже при сбое LLM.
+    elif (
+        current == DialogState.CONTACT_CAPTURE
+        and suggested != DialogState.CLOSED
+        and is_contact_valid(decision.extracted_contact)
+        and is_lead_ready(merged_qualification, merged_contact)
+    ):
+        return DialogState.LEAD_READY
 
     if (
         current in {DialogState.GREETING, DialogState.FAQ}
