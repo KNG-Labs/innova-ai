@@ -110,6 +110,11 @@ async def test_concurrent_ag2_generations_keep_parents_and_per_call_usage(
 ):
     def send(self, request, **kwargs):
         payload = json.loads(request.content)
+        response_format = payload["response_format"]
+        assert response_format["type"] == "json_schema"
+        assert response_format["json_schema"]["name"] == "AgentDecision"
+        assert response_format["json_schema"]["strict"] is True
+        assert payload["provider"]["require_parameters"] is True
         first = "first" in payload["messages"][-1]["content"]
         tokens = 11 if first else 22
         decision = {

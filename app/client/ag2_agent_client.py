@@ -147,6 +147,8 @@ class Ag2AgentClient(LLMClient):
                 "api_key": api_key,
                 "base_url": base_url,
                 "price": [0, 0],
+                "response_format": AgentDecision,
+                "extra_body": {"provider": {"require_parameters": True}},
             }
         )
         self._agent = ConversableAgent(
