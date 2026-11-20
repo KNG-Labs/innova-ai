@@ -1,0 +1,313 @@
+[
+  {
+    "name": "test_drive_follow_up",
+    "split": "test",
+    "category": "rag_follow_up",
+    "expected_outcome": "На первый вопрос ассистент называет паспорт и водительское удостоверение категории B со стажем от двух лет. В следующей реплике понимает, что речь о тест-драйве, и сообщает, что стандартная поездка бесплатна и длится 30 минут. Диалог остаётся консультацией.",
+    "expected_queue_jobs": 0,
+    "turns": [
+      {
+        "input": "Какие документы нужны для тест-драйва?",
+        "expected_output": "Паспорт и водительское удостоверение категории B. Требуется стаж вождения от двух лет.",
+        "expected_state": "FAQ",
+        "expect_retrieval": true
+      },
+      {
+        "input": "А сколько обычно длится поездка и сколько стоит?",
+        "expected_output": "Стандартный тест-драйв длится 30 минут и предоставляется бесплатно.",
+        "expected_state": "FAQ",
+        "expect_retrieval": true
+      }
+    ]
+  },
+  {
+    "name": "purchase_confirmation_and_own_contact",
+    "split": "test",
+    "category": "lead_completion",
+    "expected_outcome": "Упоминание Hyundai Creta вызывает вопрос о намерении купить и оставляет диалог в FAQ. После подтверждения ассистент учитывает Hyundai Creta, уточняет недостающие данные, затем просит контакт. Адрес на example.com распознаётся как предоставленный клиентом контакт. Ассистент сообщает, что заявка принята, без обещаний звонка или фактической доставки.",
+    "expected_queue_jobs": 1,
+    "turns": [
+      {
+        "input": "Меня интересует Hyundai Creta.",
+        "expected_output": "Задаёт один вопрос, нужна ли помощь с покупкой Hyundai Creta.",
+        "expected_state": "FAQ",
+        "expected_missing_fields": ["car_model", "budget", "purchase_type", "contact"]
+      },
+      {
+        "input": "Да, помогите с покупкой.",
+        "expected_output": "Учитывает модель Hyundai Creta из предыдущего сообщения и уточняет бюджет.",
+        "expected_state": "QUALIFICATION",
+        "expected_missing_fields": ["budget", "purchase_type", "contact"]
+      },
+      {
+        "input": "До 2,3 млн рублей, оплачу наличными.",
+        "expected_output": "Учитывает бюджет и оплату наличными, просит указать один из способов связи.",
+        "expected_state": "CONTACT_CAPTURE",
+        "expected_missing_fields": ["contact"],
+        "expected_lead_status": "draft"
+      },
+      {
+        "input": "creta-buyer@example.com",
+        "expected_output": "Подтверждает приём заявки без повторения адреса электронной почты и без дополнительных вопросов.",
+        "expected_state": "LEAD_READY",
+        "expected_missing_fields": [],
+        "expected_lead_status": "ready",
+        "expect_retrieval": false
+      }
+    ]
+  },
+  {
+    "name": "model_switch",
+    "split": "test",
+    "category": "topic_switch",
+    "expected_outcome": "Ассистент приводит расход гибридной Toyota Camry около 4,8 л на 100 км, затем переключается на Kia Rio. Для седана Kia Rio называет объём багажника 480 л и поясняет, что точный объём для хэтчбека в базе не указан.",
+    "expected_queue_jobs": 0,
+    "turns": [
+      {
+        "input": "Какой расход у гибридной Toyota Camry в смешанном цикле?",
+        "expected_output": "У гибридной Toyota Camry расход около 4,8 л на 100 км в смешанном цикле.",
+        "expected_state": "FAQ",
+        "expect_retrieval": true
+      },
+      {
+        "input": "Теперь про Kia Rio. Сколько литров в багажнике седана?",
+        "expected_output": "Багажник седана Kia Rio вмещает 480 литров.",
+        "expected_state": "FAQ",
+        "expect_retrieval": true
+      },
+      {
+        "input": "Тогда у хэтчбека какой объём?",
+        "expected_output": "Продолжает говорить о Kia Rio и честно сообщает, что точный объём багажника хэтчбека в базе не указан.",
+        "expected_state": "FAQ"
+      }
+    ]
+  },
+  {
+    "name": "qualification_interrupted_by_trade_in_faq",
+    "split": "test",
+    "category": "qualification_interruption",
+    "expected_outcome": "После просьбы купить Kia Rio ассистент просит назвать бюджет. На попутный вопрос о документах для оценки по трейд-ин отвечает по базе: ПТС или ЭПТС, СТС и паспорт собственника. Продолжает квалификацию с уже выбранной Kia Rio. При получении бюджета и способа покупки переходит к запросу контакта.",
+    "expected_queue_jobs": 0,
+    "turns": [
+      {
+        "input": "Хочу купить Kia Rio.",
+        "expected_output": "Учитывает Kia Rio и спрашивает бюджет.",
+        "expected_state": "QUALIFICATION",
+        "expected_missing_fields": ["budget", "purchase_type", "contact"]
+      },
+      {
+        "input": "Подожди, какие документы нужны для оценки по трейд-ин?",
+        "expected_output": "Для оценки нужны ПТС или ЭПТС, СТС и паспорт собственника. Сохраняет выбранную модель и продолжает консультацию.",
+        "expected_state": "QUALIFICATION",
+        "expected_missing_fields": ["budget", "purchase_type", "contact"],
+        "expect_retrieval": true
+      },
+      {
+        "input": "Рассчитываю максимум на 1,8 млн, беру в трейд-ин.",
+        "expected_output": "Учитывает бюджет и трейд-ин как способ покупки. Просит контакт для заявки.",
+        "expected_state": "CONTACT_CAPTURE",
+        "expected_missing_fields": ["contact"]
+      }
+    ]
+  },
+  {
+    "name": "third_party_email_does_not_complete_lead",
+    "split": "test",
+    "category": "contact_ownership",
+    "expected_outcome": "После сбора модели, бюджета и способа покупки ассистент просит контакт. Из сообщения с чужим адресом понимает, что этот адрес для заявки не предоставлен. На уточнение подтверждает, что достаточно собственной электронной почты. Заявка остаётся без контакта.",
+    "expected_queue_jobs": 0,
+    "turns": [
+      {
+        "input": "Хочу купить Toyota Camry. Бюджет 3,3 млн рублей, покупка в кредит.",
+        "expected_output": "Просит контакт, сохранив модель, бюджет и способ покупки.",
+        "expected_state": "CONTACT_CAPTURE",
+        "expected_missing_fields": ["contact"]
+      },
+      {
+        "input": "В примере в инструкции была почта другого человека: other-buyer@example.com. Я привожу её только как пример.",
+        "expected_output": "Распознаёт чужой адрес в примере. Заявка всё ещё ожидает контакт клиента.",
+        "expected_state": "CONTACT_CAPTURE",
+        "expected_missing_fields": ["contact"],
+        "expected_lead_status": "draft"
+      },
+      {
+        "input": "Подойдёт моя электронная почта или нужен телефон?",
+        "expected_output": "Достаточно одного способа связи, в том числе собственной электронной почты.",
+        "expected_state": "CONTACT_CAPTURE",
+        "expected_missing_fields": ["contact"]
+      }
+    ]
+  },
+  {
+    "name": "contact_opt_out_and_faq",
+    "split": "test",
+    "category": "contact_opt_out",
+    "expected_outcome": "После двух явных отказов от передачи контакта ассистент прекращает сбор контакта. На последующий вопрос сообщает, что действующий автокредит погашается через выдавший его банк, по правилам банка. В ответах на отказы и последующий вопрос сохраняет отказ пользователя от сбора контакта.",
+    "expected_queue_jobs": 0,
+    "turns": [
+      {
+        "input": "Хочу купить Toyota Camry, бюджет до 3,5 млн рублей, в кредит.",
+        "expected_output": "Просит указать контакт для заявки.",
+        "expected_state": "CONTACT_CAPTURE",
+        "expected_missing_fields": ["contact"]
+      },
+      {
+        "input": "Я не хочу оставлять никакие контакты.",
+        "expected_output": "Уважает отказ от передачи контактов, отвечает без встречного вопроса.",
+        "expected_state": "CONTACT_CAPTURE",
+        "expected_missing_fields": ["contact"]
+      },
+      {
+        "input": "Точно нет, контакты не оставлю.",
+        "expected_output": "Подтверждает, что можно продолжить консультацию без контакта.",
+        "expected_state": "FAQ",
+        "expected_missing_fields": ["contact"],
+        "expected_lead_status": "draft"
+      },
+      {
+        "input": "Как погасить автокредит раньше срока?",
+        "expected_output": "Порядок определяет банк, выдавший кредит. Обычно можно погасить кредит полностью или частично без комиссии после уведомления банка по его правилам.",
+        "expected_state": "FAQ",
+        "expected_missing_fields": ["contact"],
+        "expect_retrieval": true
+      }
+    ]
+  },
+  {
+    "name": "order_terms_after_availability_comparison",
+    "split": "test",
+    "category": "rag_follow_up",
+    "expected_outcome": "Ассистент различает Kia Rio из списка машин в наличии и Skoda Kodiaq под заказ. На вопрос о поставке последней модели указывает ориентир 30–90 дней и говорит, что точный срок фиксируется в договоре после подтверждения заказа.",
+    "expected_queue_jobs": 0,
+    "turns": [
+      {
+        "input": "Что из этих двух моделей в наличии, а что только под заказ: Kia Rio и Skoda Kodiaq?",
+        "expected_output": "Kia Rio есть в списке автомобилей в наличии, Skoda Kodiaq доступна под заказ. Текущую доступность конкретной комплектации нужно подтвердить.",
+        "expected_state": "FAQ",
+        "expect_retrieval": true
+      },
+      {
+        "input": "Сколько тогда обычно ждать вторую?",
+        "expected_output": "Понимает, что вторая модель — Skoda Kodiaq. Обычный срок поставки под заказ от 30 до 90 дней, точный срок фиксируется в договоре.",
+        "expected_state": "FAQ",
+        "expect_retrieval": true
+      }
+    ]
+  },
+  {
+    "name": "availability_requires_verification",
+    "split": "test",
+    "category": "unanswerable_detail",
+    "expected_outcome": "Ассистент перечисляет комплектации Toyota Camry из базы и различает справочный ассортимент и доступность машины прямо сейчас. Для чёрной Camry Prestige не придумывает наличие, VIN или итоговую цену. Объясняет, что эти данные подтверждает менеджер.",
+    "expected_queue_jobs": 0,
+    "turns": [
+      {
+        "input": "Какие комплектации бывают у Toyota Camry?",
+        "expected_output": "Toyota Camry представлена в комплектациях Comfort, Elegance и Prestige.",
+        "expected_state": "FAQ",
+        "expect_retrieval": true
+      },
+      {
+        "input": "Чёрная Prestige прямо сейчас свободна? Какой у неё VIN и точная цена?",
+        "expected_output": "В базе нет подтверждённых сведений о наличии конкретной чёрной Toyota Camry Prestige, её VIN или итоговой цене. Эти данные нужно уточнить у менеджера.",
+        "expected_state": "FAQ"
+      }
+    ]
+  },
+  {
+    "name": "credit_terms_and_personal_rate",
+    "split": "test",
+    "category": "unanswerable_detail",
+    "expected_outcome": "Ассистент сообщает срок автокредита от одного до семи лет и минимальный первоначальный взнос от 10%. На вопрос о персональной ставке объясняет, что её определяет банковское предложение по заявке. Фиксированную ставку или одобрение не обещает.",
+    "expected_queue_jobs": 0,
+    "turns": [
+      {
+        "input": "На какой срок дают автокредит и какой минимальный взнос?",
+        "expected_output": "Обычный срок автокредита от 1 до 7 лет. Минимальный первоначальный взнос начинается от 10% стоимости автомобиля.",
+        "expected_state": "FAQ",
+        "expect_retrieval": true
+      },
+      {
+        "input": "Если я внесу эти 10%, какая точная ставка будет лично у меня?",
+        "expected_output": "Размер взноса сам по себе не определяет ставку. Точная ставка зависит от банка, программы и решения по заявке.",
+        "expected_state": "FAQ"
+      }
+    ]
+  },
+  {
+    "name": "reservation_payment_and_cancellation",
+    "split": "calibration",
+    "category": "rag_follow_up",
+    "expected_outcome": "Ассистент называет срок брони машины в наличии 48 часов и обеспечительный платёж 20 000 рублей. На вопрос об отмене понимает, о каком платеже речь. Указывает возможность отмены до подписания основного договора, до трёх рабочих дней на рассмотрение заявления и обычный срок зачисления от 3 до 10 рабочих дней.",
+    "expected_queue_jobs": 0,
+    "turns": [
+      {
+        "input": "На сколько можно забронировать машину из наличия и сколько надо внести?",
+        "expected_output": "Бронь автомобиля в наличии действует 48 часов, обеспечительный платёж составляет 20 000 рублей и засчитывается в стоимость покупки.",
+        "expected_state": "FAQ",
+        "expect_retrieval": true
+      },
+      {
+        "input": "А если передумаю до подписания основного договора, как долго будут возвращать платёж?",
+        "expected_output": "Бронь можно отменить до подписания основного договора. Заявление о возврате рассматривается до трёх рабочих дней, зачисление обычно занимает ещё от 3 до 10 рабочих дней и зависит от банка.",
+        "expected_state": "FAQ",
+        "expect_retrieval": true
+      }
+    ]
+  },
+  {
+    "name": "budget_correction_during_qualification",
+    "split": "calibration",
+    "category": "qualification_correction",
+    "expected_outcome": "Ассистент сохраняет Mazda CX-5. Когда клиент снижает бюджет с 3,5 до 3 млн рублей, принимает новый лимит и продолжает уточнять только способ покупки. После выбора наличных учитывает изменённый бюджет и просит контакт.",
+    "expected_queue_jobs": 0,
+    "turns": [
+      {
+        "input": "Хочу купить Mazda CX-5. Бюджет до 3,5 млн рублей.",
+        "expected_output": "Учитывает Mazda CX-5 и бюджет и спрашивает о способе покупки.",
+        "expected_state": "QUALIFICATION",
+        "expected_missing_fields": ["purchase_type", "contact"]
+      },
+      {
+        "input": "Поправка: 3 миллиона максимум, предыдущую сумму не учитывай.",
+        "expected_output": "Подтверждает новый бюджет до 3 млн рублей и спрашивает о способе покупки.",
+        "expected_state": "QUALIFICATION",
+        "expected_missing_fields": ["purchase_type", "contact"]
+      },
+      {
+        "input": "Наличными. Оформляем по новому лимиту.",
+        "expected_output": "Учитывает новый предел 3 млн рублей и оплату наличными. Просит контакт для заявки.",
+        "expected_state": "CONTACT_CAPTURE",
+        "expected_missing_fields": ["contact"]
+      }
+    ]
+  },
+  {
+    "name": "confirmation_does_not_carry_past_decline",
+    "split": "calibration",
+    "category": "purchase_intent",
+    "expected_outcome": "Общее упоминание Hyundai Tucson вызывает один вопрос о намерении купить. Клиент отказывается и задаёт вопрос о городской доставке. Ассистент сообщает, что доставка стоит 5 000 рублей и возможна после полной оплаты. Последующее «Да, понятно» воспринимает как подтверждение понимания ответа. Весь диалог остаётся в FAQ и не запускает оформление заявки.",
+    "expected_queue_jobs": 0,
+    "turns": [
+      {
+        "input": "Меня интересует Hyundai Tucson.",
+        "expected_output": "Уточняет, нужна ли помощь с покупкой Hyundai Tucson.",
+        "expected_state": "FAQ",
+        "expected_missing_fields": ["car_model", "budget", "purchase_type", "contact"]
+      },
+      {
+        "input": "Нет, заявку не хочу. Сколько стоит доставка по городу?",
+        "expected_output": "Доставка в пределах города стоит 5 000 рублей и возможна после полной оплаты.",
+        "expected_state": "FAQ",
+        "expected_missing_fields": ["car_model", "budget", "purchase_type", "contact"],
+        "expect_retrieval": true
+      },
+      {
+        "input": "Да, понятно. Спасибо!",
+        "expected_output": "Кратко завершает консультацию без перехода к сбору данных.",
+        "expected_state": "FAQ",
+        "expected_missing_fields": ["car_model", "budget", "purchase_type", "contact"]
+      }
+    ]
+  }
+]

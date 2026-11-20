@@ -5,6 +5,8 @@ import asyncio
 import hashlib
 import json
 import os
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from importlib.metadata import version
 from pathlib import Path
@@ -94,9 +96,8 @@ def safe_case(case: LLMTestCase) -> LLMTestCase:
     return LLMTestCase.model_validate(payload)
 
 
-async def collect_cases(
-    goldens: list[Golden], database_url: str, corpus: Path
-) -> list[LLMTestCase]:
+@asynccontextmanager
+async def eval_app(database_url: str, corpus: Path) -> AsyncIterator[FastAPI]:
     require_eval_database(database_url)
     # Force all application resources into the same isolated evaluation run.
     os.environ.update(
@@ -108,7 +109,6 @@ async def collect_cases(
         LANGFUSE_TRACING_ENABLED="false",
     )
     app = FastAPI()
-    cases: list[LLMTestCase] = []
     try:
         await init_app_state(app)
         async with app.state.db_session_maker() as db:
@@ -119,6 +119,17 @@ async def collect_cases(
             await KnowledgeIngestionService(db, app.state.embedding_client).replace_all(
                 documents
             )
+        yield app
+    finally:
+        await close_app_state(app)
+
+
+async def collect_cases(
+    goldens: list[Golden], database_url: str, corpus: Path
+) -> list[LLMTestCase]:
+    cases: list[LLMTestCase] = []
+    async with eval_app(database_url, corpus) as app:
+        async with app.state.db_session_maker() as db:
             for golden in goldens:
                 retrieval = RecordingRetrieval(
                     db,
@@ -161,9 +172,20 @@ async def collect_cases(
                     )
                 )
                 print(f"Collected {golden.name}: {len(retrieval.chunks)} chunks")
-    finally:
-        await close_app_state(app)
     return cases
+
+
+def write_judge_manifest(output: Path, requested_model: str, model) -> None:
+    manifest_path = output / "manifest.json"
+    manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
+    manifest["judge"] = {
+        "provider": "typesafe",
+        "requested_model": requested_model,
+        "response_models": sorted(model.response_models),
+        "deepeval_version": version("deepeval"),
+        "typesafe_sdk_version": version("typesafe-sdk"),
+    }
+    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
 
 
 def score_cases(cases: list[LLMTestCase], output: Path) -> bool:
@@ -217,20 +239,7 @@ def score_cases(cases: list[LLMTestCase], output: Path) -> bool:
             results[name] = result.model_dump(mode="json")
             passed = passed and all(item.success for item in result.test_results)
     finally:
-        manifest_path = output / "manifest.json"
-        manifest = (
-            json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
-        )
-        manifest["judge"] = {
-            "provider": "typesafe",
-            "requested_model": requested_model,
-            "response_models": sorted(model.response_models),
-            "deepeval_version": version("deepeval"),
-            "typesafe_sdk_version": version("typesafe-sdk"),
-        }
-        manifest_path.write_text(
-            json.dumps(manifest, ensure_ascii=False, indent=2) + "\n"
-        )
+        write_judge_manifest(output, requested_model, model)
     (output / "results.json").write_text(
         json.dumps(results, ensure_ascii=False, indent=2) + "\n"
     )
@@ -241,9 +250,15 @@ def score_cases(cases: list[LLMTestCase], output: Path) -> bool:
     return passed
 
 
-def main() -> None:
+def main(*, conversational: bool = False) -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--dataset", type=Path, default=DATASET)
+    parser.add_argument(
+        "--conversations",
+        action="store_true",
+        default=conversational,
+        help="Replay multi-turn regression scenarios",
+    )
+    parser.add_argument("--dataset", type=Path)
     parser.add_argument(
         "--split", choices=["calibration", "test", "regression"], default="test"
     )
@@ -258,15 +273,38 @@ def main() -> None:
         parser.error("--collect-only and --predictions cannot be combined")
     if not args.collect_only and not os.getenv("TYPESAFE_API_KEY"):
         parser.error("Set TYPESAFE_API_KEY or run uv with --env-file .env")
+    if args.conversations:
+        from evals.conversations import (
+            DATASET as CONVERSATIONS_DATASET,
+            collect_conversations,
+            load_conversations,
+            load_scenarios,
+            score_conversations,
+            write_checks,
+        )
+
+        dataset = args.dataset or CONVERSATIONS_DATASET
+        collect, load, score = (
+            collect_conversations,
+            load_scenarios,
+            score_conversations,
+        )
+    else:
+        dataset = args.dataset or DATASET
+        collect, load, score = collect_cases, load_goldens, score_cases
+
     output = args.output or Path("evals/reports") / datetime.now(UTC).strftime(
         "%Y%m%dT%H%M%S%fZ"
     )
     output.mkdir(parents=True, exist_ok=False)
     if args.predictions:
-        cases = [
-            safe_case(LLMTestCase.model_validate(row))
-            for row in json.loads(args.predictions.read_text())
-        ]
+        if args.conversations:
+            cases = load_conversations(args.predictions)
+        else:
+            cases = [
+                safe_case(LLMTestCase.model_validate(row))
+                for row in json.loads(args.predictions.read_text())
+            ]
         manifest = {
             "predictions_sha256": hashlib.sha256(
                 args.predictions.read_bytes()
@@ -275,10 +313,10 @@ def main() -> None:
     else:
         database_url = os.environ.get("EVAL_DATABASE_URL", "")
         require_eval_database(database_url)
-        goldens = load_goldens(args.dataset, args.split, args.limit)
-        cases = asyncio.run(collect_cases(goldens, database_url, CORPUS))
+        goldens = load(dataset, args.split, args.limit)
+        cases = asyncio.run(collect(goldens, database_url, CORPUS))
         manifest = {
-            "dataset_sha256": hashlib.sha256(args.dataset.read_bytes()).hexdigest(),
+            "dataset_sha256": hashlib.sha256(dataset.read_bytes()).hexdigest(),
             "corpus_sha256": hashlib.sha256(CORPUS.read_bytes()).hexdigest(),
             "agent_sha256": hashlib.sha256(
                 Path("app/client/ag2_agent_client.py").read_bytes()
@@ -300,6 +338,7 @@ def main() -> None:
         + "\n"
     )
     manifest.update(
+        mode="conversations" if args.conversations else "single-turn",
         case_count=len(cases),
         threshold=THRESHOLD,
     )
@@ -307,7 +346,10 @@ def main() -> None:
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n"
     )
     print(f"Reports: {output}")
-    if not args.collect_only and not score_cases(cases, output):
+    if args.collect_only:
+        if args.conversations and not write_checks(cases, output):
+            raise SystemExit(1)
+    elif not score(cases, output):
         raise SystemExit(1)
 
 

@@ -245,3 +245,47 @@ def test_records_api_model_without_changing_native_conversion(returned_model):
     answers, _cost = model._from_sdk_response(response)
     assert model.response_models == {returned_model}
     assert answers.nouls["relevant"].probability == 0.8
+
+
+def test_conversation_metrics_use_history_reference_and_backend_checks(
+    monkeypatch, tmp_path
+):
+    from deepeval.test_case import ConversationalTestCase, Turn
+    from evals import conversations
+
+    judge = FakeJev()
+    monkeypatch.setattr(conversations, "ReportedTypeSafeModel", lambda **kwargs: judge)
+    case = ConversationalTestCase(
+        name="reservation",
+        expected_outcome="Клиент знает срок брони.",
+        turns=[
+            Turn(role="user", content="Можно забронировать машину?"),
+            Turn(role="assistant", content="Да.", retrieval_context=["Срок 48 часов."]),
+            Turn(role="user", content="На сколько?"),
+            Turn(
+                role="assistant",
+                content="На 48 часов.",
+                retrieval_context=["Срок 48 часов."],
+            ),
+        ],
+        metadata={"queue_jobs": 1, "expected_queue_jobs": 0},
+    )
+    assert not conversations.score_conversations([case], tmp_path)
+    checks = json.loads((tmp_path / "checks.json").read_text())
+    assert checks["reservation"]["failures"] == [
+        {"field": "queue_jobs", "expected": 0, "actual": 1}
+    ]
+    assert len(judge.states) == 4
+    assert all(len(state["turns"]) == 4 for state in judge.states)
+    assert any(
+        state.get("test_case", {}).get("expected_outcome") == case.expected_outcome
+        for state in judge.states
+    )
+    results = json.loads((tmp_path / "results.json").read_text())
+    for metric in (
+        "expected_outcome",
+        "knowledge_retention",
+        "turn_relevancy",
+        "turn_faithfulness",
+    ):
+        assert results[metric]["test_results"][0]["success"]
